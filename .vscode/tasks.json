@@ -1,0 +1,38 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build Debug",
+            "type": "shell",
+            "command": "xcodebuild",
+            // SYMROOT matches xcode's default derived data path,
+            // otherwise it will put its temporary build files in the project directory
+            // this is the same path as xcode and is optional
+            "args": [
+                "-project",
+                "${workspaceFolder}/Builds/MacOSX/MontageApp.xcodeproj",
+                "-alltargets",
+                "-configuration",
+                "Debug",
+                "SYMROOT=~/Library/Developer/Xcode/DerivedData"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "run Debug",
+            "type": "shell",
+            "command": "open",
+            "args": [
+                "${workspaceFolder}/Builds/MacOSX/build/Debug/MontageApp.app"
+            ],
+            "group": {
+                // NB: adding this task to the build group and setting it as the default means it can be run as the main build task
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": ["build Debug"]
+        }
+    ]
+}
