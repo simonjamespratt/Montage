@@ -20,6 +20,10 @@ MainComponent::MainComponent() : state(Stopped)
     stopButton.onClick = [this] { stopButtonClicked(); };
     stopButton.setEnabled (false);
 
+    addAndMakeVisible(&currentTimePosition);
+
+    startTimer(20);
+
     // Set the size of the component after you add any child components
     setSize (300, 200);
 
@@ -32,6 +36,7 @@ MainComponent::MainComponent() : state(Stopped)
 
 MainComponent::~MainComponent()
 {
+    stopTimer();
     // This shuts down the audio device and clears the audio source.
     shutdownAudio();
 }
@@ -154,6 +159,16 @@ void MainComponent::stopButtonClicked()
         changeState (Stopping);
 }
 
+void MainComponent::timerCallback()
+{
+    RelativeTime position (transportSource.getCurrentPosition());
+    auto minutes = ((int) position.inMinutes()) % 60;
+    auto seconds = ((int) position.inSeconds()) % 60;
+    auto millis  = ((int) position.inMilliseconds()) % 1000;
+    auto positionString = String::formatted ("%02d:%02d:%03d", minutes, seconds, millis);
+    currentTimePosition.setText(positionString, dontSendNotification);
+}
+
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
@@ -172,4 +187,5 @@ void MainComponent::resized()
     openButton.setBounds (10, 10, getWidth() - 20, 20);
     playButton.setBounds (10, 40, getWidth() - 20, 20);
     stopButton.setBounds (10, 70, getWidth() - 20, 20);
+    currentTimePosition.setBounds (10, 100, getWidth() - 20, 20);
 }

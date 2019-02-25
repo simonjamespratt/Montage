@@ -6,7 +6,7 @@
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent   : public AudioAppComponent, public ChangeListener
+class MainComponent   : public AudioAppComponent, public ChangeListener, public Timer
 {
 public:
     // constructor and deconstructor
@@ -20,6 +20,8 @@ public:
 
     // AudioTransportSource (ChangeBroadaster) override
     void changeListenerCallback (ChangeBroadcaster* source) override;
+
+    void timerCallback() override;
 
     // GUI Component overrides
     void paint (Graphics& g) override;
@@ -39,6 +41,7 @@ private:
     TextButton openButton;
     TextButton playButton;
     TextButton stopButton;
+    Label currentTimePosition;
 
     AudioFormatManager formatManager;
     std::unique_ptr<AudioFormatReaderSource> readerSource;
