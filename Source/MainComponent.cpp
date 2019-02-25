@@ -79,19 +79,28 @@ void MainComponent::changeState (TransportState newState)
         state = newState;
         switch (state)
         {
-            case Stopped:                           // [3]
+            case Stopped:
+                playButton.setButtonText ("Play");
+                stopButton.setButtonText ("Stop");
                 stopButton.setEnabled (false);
-                playButton.setEnabled (true);
                 transportSource.setPosition (0.0);
                 break;
-            case Starting:                          // [4]
-                playButton.setEnabled (false);
+            case Starting:
                 transportSource.start();
                 break;
-            case Playing:                           // [5]
+            case Playing:
+                playButton.setButtonText ("Pause");
+                stopButton.setButtonText ("Stop");
                 stopButton.setEnabled (true);
                 break;
-            case Stopping:                          // [6]
+            case Pausing:
+                transportSource.stop();
+                break;
+            case Paused:
+                playButton.setButtonText ("Resume");
+                stopButton.setButtonText ("Return to Zero");
+                break;
+            case Stopping:
                 transportSource.stop();
                 break;
         }
@@ -105,8 +114,10 @@ void MainComponent::changeListenerCallback (ChangeBroadcaster* source)
     {
         if (transportSource.isPlaying())
             changeState (Playing);
-        else
+        else if ((state == Stopping) || (state == Playing))
             changeState (Stopped);
+        else if (Pausing == state)
+            changeState (Paused);
     }
 }
 
@@ -129,12 +140,18 @@ void MainComponent::openButtonClicked()
 
 void MainComponent::playButtonClicked()
 {
-    changeState(Starting);
+    if ((state == Stopped) || (state == Paused))
+        changeState (Starting);
+    else if (state == Playing)
+        changeState (Pausing);
 }
 
 void MainComponent::stopButtonClicked()
 {
-    changeState(Stopping);
+    if (state == Paused)
+        changeState (Stopped);
+    else
+        changeState (Stopping);
 }
 
 //==============================================================================

@@ -27,10 +27,12 @@ public:
 
 private:
     enum TransportState {
-         Stopped,
         Starting,
         Playing,
-        Stopping
+        Pausing,
+        Paused,
+        Stopping,
+        Stopped,
     };
     TransportState state;
 
