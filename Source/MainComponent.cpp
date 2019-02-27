@@ -1,7 +1,7 @@
 #include "MainComponent.h"
 
 // constructor
-MainComponent::MainComponent() : state(Stopped)
+MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache)
 {
     // Initialise display
     addAndMakeVisible(&openButton);
@@ -25,11 +25,14 @@ MainComponent::MainComponent() : state(Stopped)
     startTimer(20);
 
     // Set the size of the component after you add any child components
-    setSize (300, 200);
+    setSize (600, 400);
 
     // Initialise audio handling
     formatManager.registerBasicFormats();
     transportSource.addChangeListener(this);
+
+    // Initialising the thumbnail listener
+    thumbnail.addChangeListener(this);
 
     setAudioChannels (0, 2);
 }
@@ -112,18 +115,28 @@ void MainComponent::changeState (TransportState newState)
     }
 }
 
-// this is the callback that is used when the transportSource change listener event occurs
+// this is the callback that is used when ALL change listener events occur
 void MainComponent::changeListenerCallback (ChangeBroadcaster* source)
 {
-    if (source == &transportSource)
-    {
-        if (transportSource.isPlaying())
-            changeState (Playing);
-        else if ((state == Stopping) || (state == Playing))
-            changeState (Stopped);
-        else if (Pausing == state)
-            changeState (Paused);
-    }
+    if (source == &transportSource) transportSourceChanged();
+    if (source == &thumbnail) thumbnailChanged();
+}
+
+// this is the callback that is used when the transportSource change listener event occurs
+void MainComponent::transportSourceChanged()
+{
+    if (transportSource.isPlaying())
+        changeState (Playing);
+    else if ((state == Stopping) || (state == Playing))
+        changeState (Stopped);
+    else if (Pausing == state)
+        changeState (Paused);
+}
+
+// this is the callback that is used when the thumbnail change listener event occurs
+void MainComponent::thumbnailChanged()
+{
+    repaint();
 }
 
 void MainComponent::openButtonClicked()
@@ -138,6 +151,7 @@ void MainComponent::openButtonClicked()
             std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader, true));
             transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
             playButton.setEnabled (true);
+            thumbnail.setSource (new FileInputSource (file));
             readerSource.reset (newSource.release());
         }
     }
@@ -172,11 +186,36 @@ void MainComponent::timerCallback()
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // NB: MAY NOT NEED THIS IF ALL COMPONENTS ARE ADDED AS CHILD COMPONENTS...
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     // g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
 
     // You can add your drawing code here!
+    Rectangle<int> thumbnailBounds (10, 130, getWidth() - 20, getHeight() - 150);
+    if (thumbnail.getNumChannels() == 0)
+        paintIfNoFileLoaded (g, thumbnailBounds);
+    else
+        paintIfFileLoaded (g, thumbnailBounds);
+}
+
+void MainComponent::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+    g.setColour (Colours::darkgrey);
+    g.fillRect (thumbnailBounds);
+    g.setColour (Colours::white);
+    g.drawFittedText ("No File Loaded", thumbnailBounds, Justification::centred, 1.0f);
+}
+
+void MainComponent::paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+    g.setColour (Colours::white);
+    g.fillRect (thumbnailBounds);
+    g.setColour (Colours::red);
+    thumbnail.drawChannels (g,
+        thumbnailBounds,
+        0.0, // start time
+        thumbnail.getTotalLength(), // end time
+        1.0f  // vertical zoom
+    );
 }
 
 void MainComponent::resized()

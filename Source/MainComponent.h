@@ -47,10 +47,21 @@ private:
     std::unique_ptr<AudioFormatReaderSource> readerSource;
     AudioTransportSource transportSource;
 
+    AudioThumbnailCache thumbnailCache;
+    AudioThumbnail thumbnail;
+
     void changeState (TransportState newState);
     void openButtonClicked();
     void playButtonClicked();
     void stopButtonClicked();
+
+    // change listener callbacks
+    void transportSourceChanged();
+    void thumbnailChanged();
+
+    // waveform drawing functions
+    void paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
+    void paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
