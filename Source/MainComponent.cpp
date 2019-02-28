@@ -181,6 +181,9 @@ void MainComponent::timerCallback()
     auto millis  = ((int) position.inMilliseconds()) % 1000;
     auto positionString = String::formatted ("%02d:%02d:%03d", minutes, seconds, millis);
     currentTimePosition.setText(positionString, dontSendNotification);
+
+    // for the time position marker
+    repaint();
 }
 
 //==============================================================================
@@ -216,6 +219,12 @@ void MainComponent::paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbna
         thumbnail.getTotalLength(), // end time
         1.0f  // vertical zoom
     );
+
+    // drawing the time position marker
+    auto audioLength (thumbnail.getTotalLength());
+    auto audioPosition (transportSource.getCurrentPosition());
+    auto xaxisPosition ((audioPosition / audioLength) * thumbnailBounds.getWidth() + thumbnailBounds.getX());
+    g.drawLine(xaxisPosition, thumbnailBounds.getY(), xaxisPosition, thumbnailBounds.getBottom(), 2.0f);
 }
 
 void MainComponent::resized()
