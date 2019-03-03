@@ -1,7 +1,7 @@
 #include "MainComponent.h"
 
 // constructor
-MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), thumbnail(512, formatManager, thumbnailCache)
+MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), waveformDisplay(512, formatManager, thumbnailCache)
 {
     // Initialise display
     addAndMakeVisible(&openButton);
@@ -10,31 +10,29 @@ MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), thumbnail(51
 
     addAndMakeVisible(&playButton);
     playButton.setButtonText("Play");
-    playButton.setColour (TextButton::buttonColourId, Colours::green);
+    playButton.setColour(TextButton::buttonColourId, Colours::green);
     playButton.onClick = [this] { playButtonClicked(); };
-    playButton.setEnabled (false);
+    playButton.setEnabled(false);
 
-    addAndMakeVisible (&stopButton);
-    stopButton.setButtonText ("Stop");
-    stopButton.setColour (TextButton::buttonColourId, Colours::red);
+    addAndMakeVisible(&stopButton);
+    stopButton.setButtonText("Stop");
+    stopButton.setColour(TextButton::buttonColourId, Colours::red);
     stopButton.onClick = [this] { stopButtonClicked(); };
-    stopButton.setEnabled (false);
+    stopButton.setEnabled(false);
 
     addAndMakeVisible(&currentTimePosition);
+    addAndMakeVisible(&waveformDisplay);
 
     startTimer(20);
 
     // Set the size of the component after you add any child components
-    setSize (600, 400);
+    setSize(600, 400);
 
     // Initialise audio handling
     formatManager.registerBasicFormats();
     transportSource.addChangeListener(this);
 
-    // Initialising the thumbnail listener
-    thumbnail.addChangeListener(this);
-
-    setAudioChannels (0, 2);
+    setAudioChannels(0, 2);
 }
 
 MainComponent::~MainComponent()
@@ -45,7 +43,7 @@ MainComponent::~MainComponent()
 }
 
 //==============================================================================
-void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
+void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
     // This function will be called when the audio device is started, or when
     // its settings (i.e. sample rate, block size, etc) are changed.
@@ -54,10 +52,10 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     // but be careful - it will be called on the audio thread, not the GUI thread.
 
     // For more details, see the help for AudioProcessor::prepareToPlay()
-    transportSource.prepareToPlay (samplesPerBlockExpected, sampleRate);
+    transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
+void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill)
 {
     // Your audio-processing code goes here!
     if (readerSource.get() == nullptr)
@@ -67,7 +65,7 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
         bufferToFill.clearActiveBufferRegion();
         return;
     }
-    transportSource.getNextAudioBlock (bufferToFill);
+    transportSource.getNextAudioBlock(bufferToFill);
 }
 
 void MainComponent::releaseResources()
@@ -80,79 +78,75 @@ void MainComponent::releaseResources()
 }
 
 // state and event handlers
-void MainComponent::changeState (TransportState newState)
+void MainComponent::changeState(TransportState newState)
 {
     if (state != newState)
     {
         state = newState;
         switch (state)
         {
-            case Stopped:
-                playButton.setButtonText ("Play");
-                stopButton.setButtonText ("Stop");
-                stopButton.setEnabled (false);
-                transportSource.setPosition (0.0);
-                break;
-            case Starting:
-                transportSource.start();
-                break;
-            case Playing:
-                playButton.setButtonText ("Pause");
-                stopButton.setButtonText ("Stop");
-                stopButton.setEnabled (true);
-                break;
-            case Pausing:
-                transportSource.stop();
-                break;
-            case Paused:
-                playButton.setButtonText ("Resume");
-                stopButton.setButtonText ("Return to Zero");
-                break;
-            case Stopping:
-                transportSource.stop();
-                break;
+        case Stopped:
+            playButton.setButtonText("Play");
+            stopButton.setButtonText("Stop");
+            stopButton.setEnabled(false);
+            transportSource.setPosition(0.0);
+            break;
+        case Starting:
+            transportSource.start();
+            break;
+        case Playing:
+            playButton.setButtonText("Pause");
+            stopButton.setButtonText("Stop");
+            stopButton.setEnabled(true);
+            break;
+        case Pausing:
+            transportSource.stop();
+            break;
+        case Paused:
+            playButton.setButtonText("Resume");
+            stopButton.setButtonText("Return to Zero");
+            break;
+        case Stopping:
+            transportSource.stop();
+            break;
         }
     }
 }
 
 // this is the callback that is used when ALL change listener events occur
-void MainComponent::changeListenerCallback (ChangeBroadcaster* source)
+void MainComponent::changeListenerCallback(ChangeBroadcaster *source)
 {
-    if (source == &transportSource) transportSourceChanged();
-    if (source == &thumbnail) thumbnailChanged();
+    if (source == &transportSource)
+        transportSourceChanged();
 }
 
 // this is the callback that is used when the transportSource change listener event occurs
 void MainComponent::transportSourceChanged()
 {
     if (transportSource.isPlaying())
-        changeState (Playing);
+        changeState(Playing);
     else if ((state == Stopping) || (state == Playing))
-        changeState (Stopped);
+        changeState(Stopped);
     else if (Pausing == state)
-        changeState (Paused);
-}
-
-// this is the callback that is used when the thumbnail change listener event occurs
-void MainComponent::thumbnailChanged()
-{
-    repaint();
+        changeState(Paused);
 }
 
 void MainComponent::openButtonClicked()
 {
     FileChooser chooser("Select file to play", {}, "*.wav,*.aif, *.aiff");
 
-    if (chooser.browseForFileToOpen()) {
+    if (chooser.browseForFileToOpen())
+    {
         auto file = chooser.getResult();
-        auto* reader = formatManager.createReaderFor(file);
+        auto *reader = formatManager.createReaderFor(file);
 
-        if (reader != nullptr) {
-            std::unique_ptr<AudioFormatReaderSource> newSource (new AudioFormatReaderSource (reader, true));
-            transportSource.setSource (newSource.get(), 0, nullptr, reader->sampleRate);
-            playButton.setEnabled (true);
-            thumbnail.setSource (new FileInputSource (file));
-            readerSource.reset (newSource.release());
+        if (reader != nullptr)
+        {
+            std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true));
+            transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+            playButton.setEnabled(true);
+            waveformDisplay.setFile(file);
+            readerSource.reset(newSource.release());
         }
     }
 }
@@ -160,26 +154,26 @@ void MainComponent::openButtonClicked()
 void MainComponent::playButtonClicked()
 {
     if ((state == Stopped) || (state == Paused))
-        changeState (Starting);
+        changeState(Starting);
     else if (state == Playing)
-        changeState (Pausing);
+        changeState(Pausing);
 }
 
 void MainComponent::stopButtonClicked()
 {
     if (state == Paused)
-        changeState (Stopped);
+        changeState(Stopped);
     else
-        changeState (Stopping);
+        changeState(Stopping);
 }
 
 void MainComponent::timerCallback()
 {
-    RelativeTime position (transportSource.getCurrentPosition());
-    auto minutes = ((int) position.inMinutes()) % 60;
-    auto seconds = ((int) position.inSeconds()) % 60;
-    auto millis  = ((int) position.inMilliseconds()) % 1000;
-    auto positionString = String::formatted ("%02d:%02d:%03d", minutes, seconds, millis);
+    RelativeTime position(transportSource.getCurrentPosition());
+    auto minutes = ((int)position.inMinutes()) % 60;
+    auto seconds = ((int)position.inSeconds()) % 60;
+    auto millis = ((int)position.inMilliseconds()) % 1000;
+    auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
     currentTimePosition.setText(positionString, dontSendNotification);
 
     // for the time position marker
@@ -187,44 +181,16 @@ void MainComponent::timerCallback()
 }
 
 //==============================================================================
-void MainComponent::paint (Graphics& g)
+void MainComponent::paint(Graphics &g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    // g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-    // You can add your drawing code here!
-    Rectangle<int> thumbnailBounds (10, 130, getWidth() - 20, getHeight() - 150);
-    if (thumbnail.getNumChannels() == 0)
-        paintIfNoFileLoaded (g, thumbnailBounds);
-    else
-        paintIfFileLoaded (g, thumbnailBounds);
-}
-
-void MainComponent::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
-{
-    g.setColour (Colours::darkgrey);
-    g.fillRect (thumbnailBounds);
-    g.setColour (Colours::white);
-    g.drawFittedText ("No File Loaded", thumbnailBounds, Justification::centred, 1.0f);
-}
-
-void MainComponent::paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
-{
-    g.setColour (Colours::white);
-    g.fillRect (thumbnailBounds);
-    g.setColour (Colours::red);
-    thumbnail.drawChannels (g,
-        thumbnailBounds,
-        0.0, // start time
-        thumbnail.getTotalLength(), // end time
-        1.0f  // vertical zoom
-    );
-
     // drawing the time position marker
-    auto audioLength (thumbnail.getTotalLength());
-    auto audioPosition (transportSource.getCurrentPosition());
-    auto xaxisPosition ((audioPosition / audioLength) * thumbnailBounds.getWidth() + thumbnailBounds.getX());
-    g.drawLine(xaxisPosition, thumbnailBounds.getY(), xaxisPosition, thumbnailBounds.getBottom(), 2.0f);
+    auto audioLength = transportSource.getLengthInSeconds();
+    if (audioLength > 0.0)
+    {
+        auto audioPosition(transportSource.getCurrentPosition());
+        auto xaxisPosition((audioPosition / audioLength) * waveformDisplay.getWidth() + waveformDisplay.getX());
+        g.drawLine(xaxisPosition, waveformDisplay.getY(), xaxisPosition, waveformDisplay.getBottom(), 2.0f);
+    }
 }
 
 void MainComponent::resized()
@@ -232,8 +198,10 @@ void MainComponent::resized()
     // This is called when the MainContentComponent is resized.
     // If you add any child components, this is where you should
     // update their positions.
-    openButton.setBounds (10, 10, getWidth() - 20, 20);
-    playButton.setBounds (10, 40, getWidth() - 20, 20);
-    stopButton.setBounds (10, 70, getWidth() - 20, 20);
-    currentTimePosition.setBounds (10, 100, getWidth() - 20, 20);
+    openButton.setBounds(10, 10, getWidth() - 20, 20);
+    playButton.setBounds(10, 40, getWidth() - 20, 20);
+    stopButton.setBounds(10, 70, getWidth() - 20, 20);
+    currentTimePosition.setBounds(10, 100, getWidth() - 20, 20);
+    Rectangle<int> thumbnailBounds(10, 130, getWidth() - 20, getHeight() - 150);
+    waveformDisplay.setBounds(thumbnailBounds);
 }

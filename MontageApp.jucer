@@ -8,6 +8,10 @@
             file="Source/MainComponent.cpp"/>
       <FILE id="eFFGSC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
+    <FILE id="D4OMzs" name="WaveformDisplay.cpp" compile="1" resource="0"
+          file="Source/WaveformDisplay.cpp"/>
+    <FILE id="AyLK1S" name="WaveformDisplay.h" compile="0" resource="0"
+          file="Source/WaveformDisplay.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX">
