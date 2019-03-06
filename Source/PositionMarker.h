@@ -17,16 +17,16 @@
 */
 class PositionMarker : public Component, public Timer
 {
-  public:
-    PositionMarker(AudioTransportSource &transportSourceToUse);
-    ~PositionMarker();
+public:
+  PositionMarker(AudioTransportSource &transportSourceToUse);
+  ~PositionMarker();
 
-    void paint(Graphics &) override;
-    // void mouseDown(const MouseEvent &event) override;
+  void paint(Graphics &) override;
+  void mouseDown(const MouseEvent &event) override;
 
-  private:
-    AudioTransportSource &transportSource;
-    void timerCallback() override;
+private:
+  AudioTransportSource &transportSource;
+  void timerCallback() override;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PositionMarker)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PositionMarker)
 };
