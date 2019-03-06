@@ -2,6 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "WaveformDisplay.h"
+#include "PositionMarker.h"
 
 /*
     This component lives inside our window, and this is where you should put all
@@ -51,6 +52,7 @@ class MainComponent : public AudioAppComponent, public ChangeListener, public Ti
 
     AudioThumbnailCache thumbnailCache;
     WaveformDisplay waveformDisplay;
+    PositionMarker positionMarker;
 
     void changeState(TransportState newState);
     void openButtonClicked();

@@ -1,7 +1,10 @@
 #include "MainComponent.h"
 
 // constructor
-MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), waveformDisplay(512, formatManager, thumbnailCache)
+MainComponent::MainComponent() : state(Stopped),
+                                 thumbnailCache(5),
+                                 waveformDisplay(512, formatManager, thumbnailCache),
+                                 positionMarker(transportSource)
 {
     // Initialise display
     addAndMakeVisible(&openButton);
@@ -22,6 +25,7 @@ MainComponent::MainComponent() : state(Stopped), thumbnailCache(5), waveformDisp
 
     addAndMakeVisible(&currentTimePosition);
     addAndMakeVisible(&waveformDisplay);
+    addAndMakeVisible(&positionMarker);
 
     startTimer(20);
 
@@ -175,22 +179,11 @@ void MainComponent::timerCallback()
     auto millis = ((int)position.inMilliseconds()) % 1000;
     auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
     currentTimePosition.setText(positionString, dontSendNotification);
-
-    // for the time position marker
-    repaint();
 }
 
 //==============================================================================
 void MainComponent::paint(Graphics &g)
 {
-    // drawing the time position marker
-    auto audioLength = transportSource.getLengthInSeconds();
-    if (audioLength > 0.0)
-    {
-        auto audioPosition(transportSource.getCurrentPosition());
-        auto xaxisPosition((audioPosition / audioLength) * waveformDisplay.getWidth() + waveformDisplay.getX());
-        g.drawLine(xaxisPosition, waveformDisplay.getY(), xaxisPosition, waveformDisplay.getBottom(), 2.0f);
-    }
 }
 
 void MainComponent::resized()
@@ -204,4 +197,5 @@ void MainComponent::resized()
     currentTimePosition.setBounds(10, 100, getWidth() - 20, 20);
     Rectangle<int> thumbnailBounds(10, 130, getWidth() - 20, getHeight() - 150);
     waveformDisplay.setBounds(thumbnailBounds);
+    positionMarker.setBounds(thumbnailBounds);
 }
