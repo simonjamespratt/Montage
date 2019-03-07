@@ -22,7 +22,7 @@ public:
   ~PositionMarker();
 
   void paint(Graphics &) override;
-  void mouseDown(const MouseEvent &event) override;
+  // void mouseDown(const MouseEvent &event) override;
 
 private:
   AudioTransportSource &transportSource;

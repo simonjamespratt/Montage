@@ -3,6 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "WaveformDisplay.h"
 #include "PositionMarker.h"
+#include "SegmentSelector.h"
 
 /*
     This component lives inside our window, and this is where you should put all
@@ -10,57 +11,58 @@
 */
 class MainComponent : public AudioAppComponent, public ChangeListener, public Timer
 {
-  public:
-    // constructor and deconstructor
-    MainComponent();
-    ~MainComponent();
+public:
+  // constructor and deconstructor
+  MainComponent();
+  ~MainComponent();
 
-    // AudioSource overrides
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
-    void releaseResources() override;
+  // AudioSource overrides
+  void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+  void getNextAudioBlock(const AudioSourceChannelInfo &bufferToFill) override;
+  void releaseResources() override;
 
-    // AudioTransportSource (ChangeBroadaster) override
-    void changeListenerCallback(ChangeBroadcaster *source) override;
+  // AudioTransportSource (ChangeBroadaster) override
+  void changeListenerCallback(ChangeBroadcaster *source) override;
 
-    void timerCallback() override;
+  void timerCallback() override;
 
-    // GUI Component overrides
-    void paint(Graphics &g) override;
-    void resized() override;
+  // GUI Component overrides
+  void paint(Graphics &g) override;
+  void resized() override;
 
-  private:
-    enum TransportState
-    {
-        Starting,
-        Playing,
-        Pausing,
-        Paused,
-        Stopping,
-        Stopped,
-    };
-    TransportState state;
+private:
+  enum TransportState
+  {
+    Starting,
+    Playing,
+    Pausing,
+    Paused,
+    Stopping,
+    Stopped,
+  };
+  TransportState state;
 
-    TextButton openButton;
-    TextButton playButton;
-    TextButton stopButton;
-    Label currentTimePosition;
+  TextButton openButton;
+  TextButton playButton;
+  TextButton stopButton;
+  Label currentTimePosition;
 
-    AudioFormatManager formatManager;
-    std::unique_ptr<AudioFormatReaderSource> readerSource;
-    AudioTransportSource transportSource;
+  AudioFormatManager formatManager;
+  std::unique_ptr<AudioFormatReaderSource> readerSource;
+  AudioTransportSource transportSource;
 
-    AudioThumbnailCache thumbnailCache;
-    WaveformDisplay waveformDisplay;
-    PositionMarker positionMarker;
+  AudioThumbnailCache thumbnailCache;
+  WaveformDisplay waveformDisplay;
+  PositionMarker positionMarker;
+  SegmentSelector segmentSelector;
 
-    void changeState(TransportState newState);
-    void openButtonClicked();
-    void playButtonClicked();
-    void stopButtonClicked();
+  void changeState(TransportState newState);
+  void openButtonClicked();
+  void playButtonClicked();
+  void stopButtonClicked();
 
-    // change listener callbacks
-    void transportSourceChanged();
+  // change listener callbacks
+  void transportSourceChanged();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

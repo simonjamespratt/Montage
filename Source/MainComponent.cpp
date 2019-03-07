@@ -4,7 +4,8 @@
 MainComponent::MainComponent() : state(Stopped),
                                  thumbnailCache(5),
                                  waveformDisplay(512, formatManager, thumbnailCache),
-                                 positionMarker(transportSource)
+                                 positionMarker(transportSource),
+                                 segmentSelector(transportSource)
 {
     // Initialise display
     addAndMakeVisible(&openButton);
@@ -26,6 +27,7 @@ MainComponent::MainComponent() : state(Stopped),
     addAndMakeVisible(&currentTimePosition);
     addAndMakeVisible(&waveformDisplay);
     addAndMakeVisible(&positionMarker);
+    addAndMakeVisible(&segmentSelector);
 
     startTimer(20);
 
@@ -198,4 +200,5 @@ void MainComponent::resized()
     Rectangle<int> thumbnailBounds(10, 130, getWidth() - 20, getHeight() - 150);
     waveformDisplay.setBounds(thumbnailBounds);
     positionMarker.setBounds(thumbnailBounds);
+    segmentSelector.setBounds(thumbnailBounds);
 }

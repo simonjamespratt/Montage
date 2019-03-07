@@ -12,6 +12,10 @@
           file="Source/PositionMarker.cpp"/>
     <FILE id="oqUi2e" name="PositionMarker.h" compile="0" resource="0"
           file="Source/PositionMarker.h"/>
+    <FILE id="rXbpVw" name="SegmentSelector.cpp" compile="1" resource="0"
+          file="Source/SegmentSelector.cpp"/>
+    <FILE id="TSG21s" name="SegmentSelector.h" compile="0" resource="0"
+          file="Source/SegmentSelector.h"/>
     <FILE id="D4OMzs" name="WaveformDisplay.cpp" compile="1" resource="0"
           file="Source/WaveformDisplay.cpp"/>
     <FILE id="AyLK1S" name="WaveformDisplay.h" compile="0" resource="0"
