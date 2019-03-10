@@ -55,6 +55,7 @@ private:
   WaveformDisplay waveformDisplay;
   PositionMarker positionMarker;
   SegmentSelector segmentSelector;
+  audioSegment audioSegment;
 
   void changeState(TransportState newState);
   void openButtonClicked();
@@ -63,6 +64,7 @@ private:
 
   // change listener callbacks
   void transportSourceChanged();
+  void segmentSelectorChanged();
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

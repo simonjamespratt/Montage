@@ -14,8 +14,8 @@
 //==============================================================================
 SegmentSelector::SegmentSelector(AudioTransportSource &transportSourceToUse) : transportSource(transportSourceToUse)
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
+    selectedAudioSegment.start = 0.0;
+    selectedAudioSegment.end = 0.0;
 }
 
 SegmentSelector::~SegmentSelector()
@@ -25,29 +25,68 @@ SegmentSelector::~SegmentSelector()
 void SegmentSelector::paint(Graphics &g)
 {
     g.setColour(Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
-    g.fillRect(selectionStart, 0, (selectionEnd - selectionStart), getHeight());
+    g.fillRect(mousePositionA, 0, (mousePositionB - mousePositionA), getHeight());
 }
 
 void SegmentSelector::mouseDown(const MouseEvent &event)
 {
-    selectionStart = event.position.x;
-    // TODO: make it so that when mouse down, an initial line appears so that the user gets some visual cue that selection is in progress
-    selectionEnd = event.position.x + 10;
-    repaint();
+    auto audioLength = transportSource.getLengthInSeconds();
+    if (audioLength > 0.0)
+    {
+        auto clickPosition = event.position.x;
+        auto audioPosition = (clickPosition / getWidth()) * audioLength;
+        transportSource.setPosition(audioPosition);
+    }
+
+    mousePositionA = event.x;
 }
 
 void SegmentSelector::mouseDrag(const MouseEvent &event)
 {
-    selectionEnd = event.position.x;
-    // TODO: handle when the user drags outside of the bounds of this component - either side - set the selection end to the start OR end of the component x-axis
-    // TODO: what happens if the user drags left instead of right? Visually, this is handled, but what about transport position?
-    repaint();
+    mousePositionB = event.x;
+    handleMouseMovement();
 }
 
 void SegmentSelector::mouseUp(const MouseEvent &event)
 {
-    selectionEnd = event.position.x;
-    // TODO: handle when the user drags outside of the bounds of this component - either side - set the selection end to the start OR end of the component x-axis
-    // TODO: what happens if the user drags left instead of right? Visually, this is handled, but what about transport position?
+    mousePositionB = event.x;
+    handleMouseMovement();
+}
+
+void SegmentSelector::handleMouseMovement()
+{
+    if (mousePositionB > mousePositionA && mousePositionB > getWidth())
+    {
+        mousePositionB = getWidth();
+    }
+    else if (mousePositionB < mousePositionA && mousePositionB < 0)
+    {
+        mousePositionB = 0;
+    }
+
+    if (mousePositionB >= mousePositionA)
+    {
+        selectionStart = mousePositionA;
+        selectionEnd = mousePositionB;
+    }
+    else
+    {
+        selectionStart = mousePositionB;
+        selectionEnd = mousePositionA;
+    }
+
+    // set the audio segment params
+    auto audioLength = transportSource.getLengthInSeconds();
+    selectedAudioSegment.start = (audioLength / getWidth()) * selectionStart;
+    selectedAudioSegment.end = (audioLength / getWidth()) * selectionEnd;
+
+    // trigger the change broadcaster
+    sendChangeMessage();
+
     repaint();
+}
+
+audioSegment SegmentSelector::getAudioSegment()
+{
+    return selectedAudioSegment;
 }

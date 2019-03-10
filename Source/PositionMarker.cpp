@@ -34,17 +34,6 @@ void PositionMarker::paint(Graphics &g)
     }
 }
 
-// void PositionMarker::mouseDown(const MouseEvent &event)
-// {
-//     auto audioLength = transportSource.getLengthInSeconds();
-//     if (audioLength > 0.0)
-//     {
-//         auto clickPosition = event.position.x;
-//         auto audioPosition = (clickPosition / getWidth()) * audioLength;
-//         transportSource.setPosition(audioPosition);
-//     }
-// }
-
 void PositionMarker::timerCallback()
 {
     repaint();

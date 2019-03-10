@@ -38,6 +38,9 @@ MainComponent::MainComponent() : state(Stopped),
     formatManager.registerBasicFormats();
     transportSource.addChangeListener(this);
 
+    segmentSelector.addChangeListener(this);
+    audioSegment = segmentSelector.getAudioSegment();
+
     setAudioChannels(0, 2);
 }
 
@@ -123,7 +126,28 @@ void MainComponent::changeState(TransportState newState)
 void MainComponent::changeListenerCallback(ChangeBroadcaster *source)
 {
     if (source == &transportSource)
+    {
         transportSourceChanged();
+    }
+
+    if (source == &segmentSelector)
+    {
+        segmentSelectorChanged();
+    }
+}
+
+void MainComponent::segmentSelectorChanged()
+{
+    audioSegment = segmentSelector.getAudioSegment();
+    if (audioSegment.start != 0.0 && audioSegment.end != 0.0)
+    {
+        transportSource.setPosition(audioSegment.start);
+
+        if (state != Playing || state != Starting)
+        {
+            changeState(Starting);
+        }
+    }
 }
 
 // this is the callback that is used when the transportSource change listener event occurs
@@ -181,6 +205,14 @@ void MainComponent::timerCallback()
     auto millis = ((int)position.inMilliseconds()) % 1000;
     auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
     currentTimePosition.setText(positionString, dontSendNotification);
+
+    if (transportSource.isPlaying() && audioSegment.start != 0.0 && audioSegment.end != 0.0)
+    {
+        if (transportSource.getCurrentPosition() >= audioSegment.end)
+        {
+            changeState(Pausing);
+        }
+    }
 }
 
 //==============================================================================

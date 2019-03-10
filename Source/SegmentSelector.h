@@ -15,22 +15,34 @@
 //==============================================================================
 /*
 */
-class SegmentSelector : public Component
+struct audioSegment
 {
-  public:
-    SegmentSelector(AudioTransportSource &transportSourceToUse);
-    ~SegmentSelector();
+  double start;
+  double end;
+};
 
-    void paint(Graphics &) override;
+class SegmentSelector : public Component, public ChangeBroadcaster
+{
+public:
+  SegmentSelector(AudioTransportSource &transportSourceToUse);
+  ~SegmentSelector();
 
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
+  void paint(Graphics &) override;
 
-  private:
-    AudioTransportSource &transportSource;
-    int selectionStart;
-    int selectionEnd;
+  void mouseDown(const MouseEvent &event) override;
+  void mouseDrag(const MouseEvent &event) override;
+  void mouseUp(const MouseEvent &event) override;
+  audioSegment getAudioSegment();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SegmentSelector)
+private:
+  AudioTransportSource &transportSource;
+  int mousePositionA;
+  int mousePositionB;
+  int selectionStart;
+  int selectionEnd;
+  audioSegment selectedAudioSegment;
+
+  void handleMouseMovement();
+
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SegmentSelector)
 };
