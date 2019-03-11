@@ -55,7 +55,7 @@ private:
   WaveformDisplay waveformDisplay;
   PositionMarker positionMarker;
   SegmentSelector segmentSelector;
-  audioSegment audioSegment;
+  AudioSegment audioSegment;
 
   void changeState(TransportState newState);
   void openButtonClicked();

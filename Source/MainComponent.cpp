@@ -139,14 +139,16 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster *source)
 void MainComponent::segmentSelectorChanged()
 {
     audioSegment = segmentSelector.getAudioSegment();
-    if (audioSegment.start != 0.0 && audioSegment.end != 0.0)
+    if (audioSegment.state == SelectionStarted)
+    {
+        changeState(Pausing);
+        transportSource.setPosition(audioSegment.start);
+    }
+
+    if (audioSegment.state == SelectionComplete)
     {
         transportSource.setPosition(audioSegment.start);
-
-        if (state != Playing || state != Starting)
-        {
-            changeState(Starting);
-        }
+        changeState(Starting);
     }
 }
 
@@ -206,11 +208,12 @@ void MainComponent::timerCallback()
     auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
     currentTimePosition.setText(positionString, dontSendNotification);
 
-    if (transportSource.isPlaying() && audioSegment.start != 0.0 && audioSegment.end != 0.0)
+    if (transportSource.isPlaying() && audioSegment.state == SelectionComplete)
     {
         if (transportSource.getCurrentPosition() >= audioSegment.end)
         {
             changeState(Pausing);
+            transportSource.setPosition(audioSegment.start);
         }
     }
 }

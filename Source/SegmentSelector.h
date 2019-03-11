@@ -15,8 +15,18 @@
 //==============================================================================
 /*
 */
-struct audioSegment
+
+// NB: I don't know how to include these type definitions within the class and then make them available within the .cpp file
+enum SegmentState
 {
+  NoSelection,
+  SelectionStarted,
+  SelectionComplete,
+};
+
+struct AudioSegment
+{
+  SegmentState state;
   double start;
   double end;
 };
@@ -32,16 +42,15 @@ public:
   void mouseDown(const MouseEvent &event) override;
   void mouseDrag(const MouseEvent &event) override;
   void mouseUp(const MouseEvent &event) override;
-  audioSegment getAudioSegment();
+  AudioSegment getAudioSegment();
 
 private:
   AudioTransportSource &transportSource;
   int mousePositionA;
   int mousePositionB;
-  int selectionStart;
-  int selectionEnd;
-  audioSegment selectedAudioSegment;
+  AudioSegment selectedAudioSegment;
 
+  double calculateAudioPosition(int mousePosition);
   void handleMouseMovement();
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SegmentSelector)

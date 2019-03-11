@@ -14,6 +14,7 @@
 //==============================================================================
 SegmentSelector::SegmentSelector(AudioTransportSource &transportSourceToUse) : transportSource(transportSourceToUse)
 {
+    selectedAudioSegment.state = NoSelection;
     selectedAudioSegment.start = 0.0;
     selectedAudioSegment.end = 0.0;
 }
@@ -30,15 +31,22 @@ void SegmentSelector::paint(Graphics &g)
 
 void SegmentSelector::mouseDown(const MouseEvent &event)
 {
-    auto audioLength = transportSource.getLengthInSeconds();
-    if (audioLength > 0.0)
-    {
-        auto clickPosition = event.position.x;
-        auto audioPosition = (clickPosition / getWidth()) * audioLength;
-        transportSource.setPosition(audioPosition);
-    }
+    // TODO: reinstate this when we have a sense of state for being in selecting mode or not
+
+    // auto audioLength = transportSource.getLengthInSeconds();
+    // if (audioLength > 0.0)
+    // {
+    //     auto clickPosition = event.position.x;
+    //     auto audioPosition = (clickPosition / getWidth()) * audioLength;
+    //     transportSource.setPosition(audioPosition);
+    // }
 
     mousePositionA = event.x;
+
+    selectedAudioSegment.state = SelectionStarted;
+    selectedAudioSegment.start = calculateAudioPosition(mousePositionA);
+    // trigger the change broadcaster
+    sendChangeMessage();
 }
 
 void SegmentSelector::mouseDrag(const MouseEvent &event)
@@ -50,8 +58,15 @@ void SegmentSelector::mouseDrag(const MouseEvent &event)
 void SegmentSelector::mouseUp(const MouseEvent &event)
 {
     mousePositionB = event.x;
+    selectedAudioSegment.state = SelectionComplete;
     handleMouseMovement();
 }
+
+double SegmentSelector::calculateAudioPosition(int mousePosition)
+{
+    auto audioLength = transportSource.getLengthInSeconds();
+    return (audioLength / getWidth()) * mousePosition;
+};
 
 void SegmentSelector::handleMouseMovement()
 {
@@ -66,19 +81,16 @@ void SegmentSelector::handleMouseMovement()
 
     if (mousePositionB >= mousePositionA)
     {
-        selectionStart = mousePositionA;
-        selectionEnd = mousePositionB;
+        // set the audio segment params
+        selectedAudioSegment.start = calculateAudioPosition(mousePositionA);
+        selectedAudioSegment.end = calculateAudioPosition(mousePositionB);
     }
     else
     {
-        selectionStart = mousePositionB;
-        selectionEnd = mousePositionA;
+        // set the audio segment params
+        selectedAudioSegment.start = calculateAudioPosition(mousePositionB);
+        selectedAudioSegment.end = calculateAudioPosition(mousePositionA);
     }
-
-    // set the audio segment params
-    auto audioLength = transportSource.getLengthInSeconds();
-    selectedAudioSegment.start = (audioLength / getWidth()) * selectionStart;
-    selectedAudioSegment.end = (audioLength / getWidth()) * selectionEnd;
 
     // trigger the change broadcaster
     sendChangeMessage();
@@ -86,7 +98,7 @@ void SegmentSelector::handleMouseMovement()
     repaint();
 }
 
-audioSegment SegmentSelector::getAudioSegment()
+AudioSegment SegmentSelector::getAudioSegment()
 {
     return selectedAudioSegment;
 }
