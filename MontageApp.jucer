@@ -16,6 +16,10 @@
           file="Source/SegmentSelector.cpp"/>
     <FILE id="TSG21s" name="SegmentSelector.h" compile="0" resource="0"
           file="Source/SegmentSelector.h"/>
+    <FILE id="LPO6mh" name="Sequencer.cpp" compile="1" resource="0" file="Source/Sequencer.cpp"/>
+    <FILE id="ig0V2R" name="Sequencer.h" compile="0" resource="0" file="Source/Sequencer.h"/>
+    <FILE id="XSwXVI" name="Source.cpp" compile="1" resource="0" file="Source/Source.cpp"/>
+    <FILE id="wy3hMW" name="Source.h" compile="0" resource="0" file="Source/Source.h"/>
     <FILE id="D4OMzs" name="WaveformDisplay.cpp" compile="1" resource="0"
           file="Source/WaveformDisplay.cpp"/>
     <FILE id="AyLK1S" name="WaveformDisplay.h" compile="0" resource="0"
