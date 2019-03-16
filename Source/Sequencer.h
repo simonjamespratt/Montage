@@ -17,19 +17,22 @@
 */
 class Sequencer : public Component, public ChangeListener
 {
-public:
-  Sequencer();
-  ~Sequencer();
+  public:
+    Sequencer();
+    ~Sequencer();
 
-  void resized() override;
+    void resized() override;
 
-private:
-  tracktion_engine::Engine engine;
-  std::unique_ptr<tracktion_engine::Edit> edit;
-  TextButton settingsButton;
-  TextButton playPauseButton;
-  Label editNameLabel;
-  Label transportPosition;
-  void changeListenerCallback(ChangeBroadcaster *source) override;
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
+  private:
+    tracktion_engine::Engine engine;
+    // NB: note that the edit is set up with en empty edit rather than by referencing a file to write to
+    // when the sequencer is working seriously, probably need to change this
+    tracktion_engine::Edit edit;
+    tracktion_engine::TransportControl &transport;
+
+    TextButton settingsButton;
+    TextButton playPauseButton;
+    Label transportPosition;
+    void changeListenerCallback(ChangeBroadcaster *source) override;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };
