@@ -1,7 +1,8 @@
 #include "MainComponent.h"
 
 // constructor
-MainComponent::MainComponent() : source(), sequencer()
+MainComponent::MainComponent() : source(),
+                                 sequencer()
 {
     addAndMakeVisible(&source);
     addAndMakeVisible(&sequencer);
