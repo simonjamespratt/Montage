@@ -75,6 +75,32 @@ void Sequencer::selectAudioFile()
 
 void Sequencer::setFile(const File &file)
 {
+    // find the first track
+    auto trackOne = edit.getOrInsertAudioTrackAt(0);
+
+    if (trackOne)
+    {
+        // remove / delete all clips from it if it has any
+        auto clipsToRemove = trackOne->getClips();
+        for (int i = clipsToRemove.size(); --i >= 0;)
+        {
+            clipsToRemove.getUnchecked(i)->removeFromParentTrack();
+        }
+
+        // add a new clip to this track
+        tracktion_engine::AudioFile audioFile(file);
+
+        if (audioFile.isValid())
+        {
+            auto newClip = trackOne->insertWaveClip(
+                file.getFileNameWithoutExtension(),
+                file,
+                {{0.0, audioFile.getLength()}, 0.0}, // NB. this is a ClipPosition, where (I think): { {startClip, endClip}, offset }
+                // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
+                // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
+                false);
+        }
+    }
 }
 
 void Sequencer::timerCallback()
