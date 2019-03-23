@@ -12,8 +12,14 @@
 #include "Sequencer.h"
 
 //==============================================================================
-Sequencer::Sequencer()
+Sequencer::Sequencer() : engine(ProjectInfo::projectName),
+                         edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
+                         transport(edit.getTransport()),
+                         audioFileChooser("Load an audio file", {}, "*.wav,*.aif,*.aiff")
 {
+    addAndMakeVisible(&loadFileButton);
+    loadFileButton.onClick = [this] { selectAudioFile(); };
+
     startTimer(20);
     transport.addChangeListener(this);
 
@@ -41,6 +47,34 @@ void Sequencer::resized()
     playPauseButton.setBounds(10, 10, getWidth() - 20, 20);
     stopButton.setBounds(10, 40, getWidth() - 20, 20);
     transportPosition.setBounds(10, 70, getWidth() - 20, 20);
+}
+
+void Sequencer::selectAudioFile()
+{
+    auto fileChooser = std::make_shared<FileChooser>(
+        "Load an audio file",
+        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName), // TODO: I don't think this does anything - check if it can be removed
+        "*.wav,*.aif,*.aiff");
+
+    if (fileChooser->browseForFileToOpen())
+    {
+        auto file = fileChooser->getResult();
+
+        // NB. Again, I don't think this actually does anything!
+        // TODO:  check if this can be removed
+        if (file.existsAsFile())
+        {
+            engine.getPropertyStorage().setDefaultLoadSaveDirectory(
+                ProjectInfo::projectName,
+                file.getParentDirectory());
+        }
+
+        setFile(file);
+    }
+}
+
+void Sequencer::setFile(const File &file)
+{
 }
 
 void Sequencer::timerCallback()
