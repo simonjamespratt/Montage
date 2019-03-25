@@ -18,6 +18,7 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          audioFileChooser("Load an audio file", {}, "*.wav,*.aif,*.aiff")
 {
     addAndMakeVisible(&loadFileButton);
+    stopButton.setButtonText("Load file");
     loadFileButton.onClick = [this] { selectAudioFile(); };
 
     startTimer(20);
@@ -44,9 +45,10 @@ Sequencer::~Sequencer()
 
 void Sequencer::resized()
 {
-    playPauseButton.setBounds(10, 10, getWidth() - 20, 20);
-    stopButton.setBounds(10, 40, getWidth() - 20, 20);
-    transportPosition.setBounds(10, 70, getWidth() - 20, 20);
+    loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
+    playPauseButton.setBounds(10, 40, getWidth() - 20, 20);
+    stopButton.setBounds(10, 70, getWidth() - 20, 20);
+    transportPosition.setBounds(10, 100, getWidth() - 20, 20);
 }
 
 void Sequencer::selectAudioFile()
@@ -75,32 +77,45 @@ void Sequencer::selectAudioFile()
 
 void Sequencer::setFile(const File &file)
 {
+    // TODO: refactor this method with either try/catch and/or exepction throwing
+
     // find the first track
     auto trackOne = edit.getOrInsertAudioTrackAt(0);
 
-    if (trackOne)
+    if (!trackOne)
     {
-        // remove / delete all clips from it if it has any
-        auto clipsToRemove = trackOne->getClips();
-        for (int i = clipsToRemove.size(); --i >= 0;)
-        {
-            clipsToRemove.getUnchecked(i)->removeFromParentTrack();
-        }
-
-        // add a new clip to this track
-        tracktion_engine::AudioFile audioFile(file);
-
-        if (audioFile.isValid())
-        {
-            auto newClip = trackOne->insertWaveClip(
-                file.getFileNameWithoutExtension(),
-                file,
-                {{0.0, audioFile.getLength()}, 0.0}, // NB. this is a ClipPosition, where (I think): { {startClip, endClip}, offset }
-                // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
-                // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
-                false);
-        }
+        return;
     }
+
+    // remove / delete all clips from it if it has any
+    auto clipsToRemove = trackOne->getClips();
+    for (int i = clipsToRemove.size(); --i >= 0;)
+    {
+        clipsToRemove.getUnchecked(i)->removeFromParentTrack();
+    }
+
+    // add a new clip to this track
+    tracktion_engine::AudioFile audioFile(file);
+
+    if (!audioFile.isValid())
+    {
+        return;
+    }
+
+    auto newClip = trackOne->insertWaveClip(
+        file.getFileNameWithoutExtension(),
+        file,
+        {{0.0, audioFile.getLength()}, 0.0}, // NB. this is a ClipPosition, where (I think): { {startClip, endClip}, offset }
+        // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
+        // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
+        false);
+
+    if (!newClip)
+    {
+        return;
+    }
+
+    // thumbnail using the clip
 }
 
 void Sequencer::timerCallback()
