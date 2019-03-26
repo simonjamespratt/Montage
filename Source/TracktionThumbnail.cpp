@@ -83,6 +83,7 @@ void TracktionThumbnail::mouseUp(const MouseEvent &)
 
 void TracktionThumbnail::updateCursorPosition()
 {
+    // NB: setting this using looping may not work for similar reasons to the above
     const double loopLength = transport.getLoopRange().getLength();
     const double proportion = loopLength == 0.0 ? 0.0 : transport.getCurrentPosition() / loopLength;
 

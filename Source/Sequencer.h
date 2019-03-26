@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "./TracktionThumbnail.h"
 
 //==============================================================================
 /*
@@ -33,13 +34,18 @@ private:
 
   TextButton playPauseButton;
   TextButton stopButton;
+  TextButton settingsButton;
   Label transportPosition;
   TextButton loadFileButton;
+
+  TracktionThumbnail thumbnail;
+
+  void showAudioDeviceSettings(tracktion_engine::Engine &engine);
 
   // TODO: Find out if audioFileChoose is needed. I think it may be redundant
   FileChooser audioFileChooser;
   void selectAudioFile();
-  void setFile(const File& file);
+  void setFile(const File &file);
 
   void changeListenerCallback(ChangeBroadcaster *) override;
   void togglePlayPause();

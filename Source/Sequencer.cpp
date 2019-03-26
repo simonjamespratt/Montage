@@ -15,11 +15,16 @@
 Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
                          transport(edit.getTransport()),
-                         audioFileChooser("Load an audio file", {}, "*.wav,*.aif,*.aiff")
+                         audioFileChooser("Load an audio file", {}, "*.wav,*.aif,*.aiff"),
+                         thumbnail(transport)
 {
     addAndMakeVisible(&loadFileButton);
-    stopButton.setButtonText("Load file");
+    loadFileButton.setButtonText("Load file");
     loadFileButton.onClick = [this] { selectAudioFile(); };
+
+    addAndMakeVisible(&settingsButton);
+    settingsButton.setButtonText("Settings");
+    settingsButton.onClick = [this] { showAudioDeviceSettings(engine); };
 
     startTimer(20);
     transport.addChangeListener(this);
@@ -33,6 +38,7 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
     stopButton.onClick = [this] { stop(); };
 
     addAndMakeVisible(&transportPosition);
+    addAndMakeVisible(&thumbnail);
 
     setSize(600, 400);
 }
@@ -46,9 +52,22 @@ Sequencer::~Sequencer()
 void Sequencer::resized()
 {
     loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
-    playPauseButton.setBounds(10, 40, getWidth() - 20, 20);
-    stopButton.setBounds(10, 70, getWidth() - 20, 20);
-    transportPosition.setBounds(10, 100, getWidth() - 20, 20);
+    settingsButton.setBounds(10, 40, getWidth() - 20, 20);
+    playPauseButton.setBounds(10, 70, getWidth() - 20, 20);
+    stopButton.setBounds(10, 100, getWidth() - 20, 20);
+    transportPosition.setBounds(10, 130, getWidth() - 20, 20);
+    thumbnail.setBounds(10, 170, getWidth() - 20, 200);
+}
+
+void Sequencer::showAudioDeviceSettings(tracktion_engine::Engine &engine)
+{
+    DialogWindow::LaunchOptions o;
+    o.dialogTitle = TRANS("Audio Settings");
+    o.dialogBackgroundColour = LookAndFeel::getDefaultLookAndFeel().findColour(ResizableWindow::backgroundColourId);
+    o.content.setOwned(new AudioDeviceSelectorComponent(engine.getDeviceManager().deviceManager,
+                                                        0, 512, 1, 512, false, false, true, true));
+    o.content->setSize(400, 600);
+    o.launchAsync();
 }
 
 void Sequencer::selectAudioFile()
@@ -77,8 +96,6 @@ void Sequencer::selectAudioFile()
 
 void Sequencer::setFile(const File &file)
 {
-    // TODO: refactor this method with either try/catch and/or exepction throwing
-
     // find the first track
     auto trackOne = edit.getOrInsertAudioTrackAt(0);
 
@@ -116,6 +133,11 @@ void Sequencer::setFile(const File &file)
     }
 
     // thumbnail using the clip
+    transport.setLoopRange(newClip->getEditTimeRange());
+    transport.looping = true;
+    transport.position = 0.0;
+    transport.play(false);
+    thumbnail.setFile(newClip->getPlaybackFile());
 }
 
 void Sequencer::timerCallback()
