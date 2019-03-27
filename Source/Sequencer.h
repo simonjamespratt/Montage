@@ -42,8 +42,6 @@ private:
 
   void showAudioDeviceSettings(tracktion_engine::Engine &engine);
 
-  // TODO: Find out if audioFileChoose is needed. I think it may be redundant
-  FileChooser audioFileChooser;
   void selectAudioFile();
   void setFile(const File &file);
 

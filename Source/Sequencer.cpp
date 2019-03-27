@@ -15,7 +15,6 @@
 Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
                          transport(edit.getTransport()),
-                         audioFileChooser("Load an audio file", {}, "*.wav,*.aif,*.aiff"),
                          thumbnail(transport)
 {
     addAndMakeVisible(&loadFileButton);
@@ -142,14 +141,12 @@ void Sequencer::setFile(const File &file)
 
 void Sequencer::timerCallback()
 {
-    // RelativeTime position(transport.getCurrentPosition());
-    // auto minutes = ((int)position.inMinutes()) % 60;
-    // auto seconds = ((int)position.inSeconds()) % 60;
-    // auto millis = ((int)position.inMilliseconds()) % 1000;
-    // auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
-    // transportPosition.setText(positionString, dontSendNotification);
-    transportPosition.setText(String(transport.getCurrentPosition()), dontSendNotification);
-    // DBG(transport.getCurrentPosition());
+    RelativeTime position(transport.getCurrentPosition());
+    auto minutes = ((int)position.inMinutes()) % 60;
+    auto seconds = ((int)position.inSeconds()) % 60;
+    auto millis = ((int)position.inMilliseconds()) % 1000;
+    auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
+    transportPosition.setText(positionString, dontSendNotification);
 }
 
 void Sequencer::changeListenerCallback(ChangeBroadcaster *)

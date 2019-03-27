@@ -17,7 +17,7 @@ public:
   void resized() override;
 
 private:
-  Source source;
+  // Source source;
   Sequencer sequencer;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
