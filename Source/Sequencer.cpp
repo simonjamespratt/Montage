@@ -15,7 +15,8 @@
 Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
                          transport(edit.getTransport()),
-                         thumbnail(transport)
+                         thumbnail(transport),
+                         timeline(edit)
 {
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
@@ -37,6 +38,7 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
     stopButton.onClick = [this] { stop(); };
 
     addAndMakeVisible(&transportPosition);
+    addAndMakeVisible(&timeline);
     addAndMakeVisible(&thumbnail);
 
     setSize(600, 400);
@@ -55,7 +57,8 @@ void Sequencer::resized()
     playPauseButton.setBounds(10, 70, getWidth() - 20, 20);
     stopButton.setBounds(10, 100, getWidth() - 20, 20);
     transportPosition.setBounds(10, 130, getWidth() - 20, 20);
-    thumbnail.setBounds(10, 170, getWidth() - 20, 200);
+    timeline.setBounds(10, 160, getWidth() - 20, 20);
+    thumbnail.setBounds(10, 190, getWidth() - 20, 200);
 }
 
 void Sequencer::showAudioDeviceSettings(tracktion_engine::Engine &engine)
@@ -130,6 +133,8 @@ void Sequencer::setFile(const File &file)
     {
         return;
     }
+
+    timeline.recalculate();
 
     // thumbnail using the clip
     transport.setLoopRange(newClip->getEditTimeRange());

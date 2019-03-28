@@ -12,6 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./TracktionThumbnail.h"
+#include "./Timeline.h"
 
 //==============================================================================
 /*
@@ -32,11 +33,12 @@ private:
   tracktion_engine::Edit edit;
   tracktion_engine::TransportControl &transport;
 
+  TextButton loadFileButton;
+  TextButton settingsButton;
   TextButton playPauseButton;
   TextButton stopButton;
-  TextButton settingsButton;
   Label transportPosition;
-  TextButton loadFileButton;
+  Timeline timeline;
 
   TracktionThumbnail thumbnail;
 
