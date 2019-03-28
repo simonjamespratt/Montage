@@ -28,19 +28,15 @@ void Timeline::paint(Graphics &g)
     g.setColour(Colours::grey);
     g.fillRect(getLocalBounds());
 
-    // TODO: draw a marker every 500ms
-    // TODO: draw text for each marker
-
-    g.setColour(Colours::white);
-    g.setFont(14.0f);
-    g.drawText(String(editLength), getLocalBounds(),
-               Justification::centred, true); // draw some placeholder text
-}
-
-void Timeline::resized()
-{
-    // This method is where you should set the bounds of any child
-    // components that your component contains..
+    double timePoint = 0.0;
+    while (timePoint < editLength)
+    {
+        auto x = getWidth() / editLength * timePoint;
+        g.setColour(Colours::white);
+        g.drawLine(x, 0.0, x, getHeight(), 2);
+        g.drawText(String(timePoint), (x + 2), 0, 200, 30, Justification::centredLeft);
+        timePoint = timePoint + 0.5;
+    }
 }
 
 void Timeline::recalculate()
