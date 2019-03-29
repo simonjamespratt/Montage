@@ -140,8 +140,6 @@ void Sequencer::setFile(const File &file)
     timeline.recalculate();
 
     // thumbnail using the clip
-    transport.setLoopRange(newClip->getEditTimeRange());
-    transport.looping = true;
     transport.position = 0.0;
     transport.play(false);
     thumbnail.setFile(newClip->getPlaybackFile());
