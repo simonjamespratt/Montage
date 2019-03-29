@@ -13,6 +13,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./TracktionThumbnail.h"
 #include "./Timeline.h"
+#include "./Cursor.h"
 
 //==============================================================================
 /*
@@ -39,6 +40,7 @@ private:
   TextButton stopButton;
   Label transportPosition;
   Timeline timeline;
+  Cursor cursor;
 
   TracktionThumbnail thumbnail;
 

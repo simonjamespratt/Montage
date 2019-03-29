@@ -16,7 +16,8 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
                          transport(edit.getTransport()),
                          thumbnail(transport),
-                         timeline(edit)
+                         timeline(edit),
+                         cursor(transport, edit)
 {
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
@@ -40,6 +41,7 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
     addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&timeline);
     addAndMakeVisible(&thumbnail);
+    addAndMakeVisible(&cursor);
 
     setSize(600, 400);
 }
@@ -59,6 +61,7 @@ void Sequencer::resized()
     transportPosition.setBounds(10, 130, getWidth() - 20, 20);
     timeline.setBounds(10, 160, getWidth() - 20, 20);
     thumbnail.setBounds(10, 190, getWidth() - 20, 200);
+    cursor.setBounds(10, 190, getWidth() - 20, 200);
 }
 
 void Sequencer::showAudioDeviceSettings(tracktion_engine::Engine &engine)

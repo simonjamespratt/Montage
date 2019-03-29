@@ -8,6 +8,8 @@
             file="Source/MainComponent.cpp"/>
       <FILE id="eFFGSC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
+    <FILE id="BPu7wr" name="Cursor.cpp" compile="1" resource="0" file="Source/Cursor.cpp"/>
+    <FILE id="molGEf" name="Cursor.h" compile="0" resource="0" file="Source/Cursor.h"/>
     <FILE id="RpNrwQ" name="PositionMarker.cpp" compile="1" resource="0"
           file="Source/PositionMarker.cpp"/>
     <FILE id="oqUi2e" name="PositionMarker.h" compile="0" resource="0"
