@@ -14,6 +14,7 @@
 #include "./TracktionThumbnail.h"
 #include "./Timeline.h"
 #include "./Cursor.h"
+#include "./Arrangement.h"
 
 //==============================================================================
 /*
@@ -40,6 +41,7 @@ private:
   TextButton stopButton;
   Label transportPosition;
   Timeline timeline;
+  Arrangement arrangement;
   Cursor cursor;
 
   TracktionThumbnail thumbnail;

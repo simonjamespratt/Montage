@@ -17,7 +17,8 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          transport(edit.getTransport()),
                          thumbnail(transport),
                          timeline(edit),
-                         cursor(transport, edit)
+                         cursor(transport, edit),
+                         arrangement(edit)
 {
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
@@ -42,6 +43,7 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
     addAndMakeVisible(&timeline);
     addAndMakeVisible(&thumbnail);
     addAndMakeVisible(&cursor);
+    addAndMakeVisible(&arrangement);
 
     setSize(600, 400);
 }
@@ -60,7 +62,8 @@ void Sequencer::resized()
     stopButton.setBounds(10, 100, getWidth() - 20, 20);
     transportPosition.setBounds(10, 130, getWidth() - 20, 20);
     timeline.setBounds(10, 160, getWidth() - 20, 20);
-    thumbnail.setBounds(10, 190, getWidth() - 20, 200);
+    // thumbnail.setBounds(10, 190, getWidth() - 20, 200);
+    arrangement.setBounds(10, 190, getWidth() - 20, 200);
     cursor.setBounds(10, 190, getWidth() - 20, 200);
 }
 
