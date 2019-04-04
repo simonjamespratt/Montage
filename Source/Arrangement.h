@@ -17,11 +17,23 @@ namespace te = tracktion_engine;
 //==============================================================================
 /*
 */
-struct Track
+
+struct TrackHeightCoOrds
 {
-  int id;
-  int yTop;
-  int yBottom;
+  float top;
+  float bottom;
+};
+
+struct ClipWidthCoOrds
+{
+  float start;
+  float end;
+};
+
+struct ClipCoOrds
+{
+  TrackHeightCoOrds yAxis;
+  ClipWidthCoOrds xAxis;
 };
 
 class Arrangement : public Component
@@ -31,13 +43,17 @@ public:
   ~Arrangement();
 
   void paint(Graphics &) override;
+  void addClipToTrack(const int trackIndex, const File &file);
 
 private:
   te::Edit &edit;
-  // NB: This may need reworking - consider using std:vector
-  Track *tracks;
   int noOfTracks;
   void createTracks();
   void drawTrackDividers(Graphics &g);
+  TrackHeightCoOrds getTrackHeightCoOrds(const int trackIndex);
+  ClipWidthCoOrds getClipWidthCoOrds(const double offset, const double clipLength);
+  ClipCoOrds getClipCoOrds(const int trackIndex, const double offset, const double clipLength);
+  void drawClip(Graphics &g, ClipCoOrds clip);
+
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Arrangement)
 };
