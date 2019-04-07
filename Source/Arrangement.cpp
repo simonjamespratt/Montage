@@ -12,7 +12,7 @@
 #include "Arrangement.h"
 
 //==============================================================================
-Arrangement::Arrangement(te::Edit &e) : edit(e)
+Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc) : edit(e), transport(tc), thumbnail(transport)
 {
     createTracks();
 }
@@ -26,7 +26,12 @@ void Arrangement::paint(Graphics &g)
     drawTrackDividers(g);
 }
 
-void Arrangement::addClipToTrack(const int trackIndex, const File &file)
+void Arrangement::resized()
+{
+    // thumbnail.setBounds(0.0, 0.0, getWidth(), getHeight());
+}
+
+void Arrangement::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
 {
     auto track = edit.getOrInsertAudioTrackAt(trackIndex);
 
@@ -42,9 +47,22 @@ void Arrangement::addClipToTrack(const int trackIndex, const File &file)
         clipsToRemove.getUnchecked(i)->removeFromParentTrack();
     }
 
+    // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
+    // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
     auto newClip = track->insertWaveClip(
         file.getFileNameWithoutExtension(),
-        file, );
+        file,
+        {{clipStart, clipEnd}, offset}, // NB. this is a ClipPosition, where: { {startClip, endClip}, offset }
+        false);
+
+    if (!newClip)
+    {
+        return;
+    }
+
+    ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, offset, (clipEnd - clipStart));
+
+    addThumbnail(newClip, clipCoOrds);
 }
 
 void Arrangement::createTracks()
@@ -99,8 +117,15 @@ ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex, const double offset,
     return ClipCoOrds{yAxis, xAxis};
 }
 
-void Arrangement::drawClip(Graphics &g, ClipCoOrds clip)
+void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds)
 {
-    g.setColour(Colours::lavenderblush);
-    g.fillRect(clip.xAxis.start, clip.yAxis.top, clip.xAxis.end, clip.yAxis.bottom);
+    addAndMakeVisible(&thumbnail);
+    thumbnail.setBounds(
+        clipCoOrds.xAxis.start,
+        clipCoOrds.yAxis.top,
+        (clipCoOrds.xAxis.end - clipCoOrds.xAxis.start),
+        (clipCoOrds.yAxis.bottom - clipCoOrds.yAxis.top));
+    // thumbnail.setBounds(0.0, 0.0, getWidth(), getHeight());
+    thumbnail.setFile(newClip->getPlaybackFile());
+
 }

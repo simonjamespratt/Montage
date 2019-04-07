@@ -11,6 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "./TracktionThumbnail.h"
 
 namespace te = tracktion_engine;
 
@@ -39,21 +40,25 @@ struct ClipCoOrds
 class Arrangement : public Component
 {
 public:
-  Arrangement(te::Edit &e);
+  Arrangement(te::Edit &e, te::TransportControl &tc);
   ~Arrangement();
 
   void paint(Graphics &) override;
-  void addClipToTrack(const int trackIndex, const File &file);
+  void resized() override;
+  void addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset);
 
 private:
   te::Edit &edit;
+  te::TransportControl &transport;
+  TracktionThumbnail thumbnail;
+
   int noOfTracks;
   void createTracks();
   void drawTrackDividers(Graphics &g);
   TrackHeightCoOrds getTrackHeightCoOrds(const int trackIndex);
   ClipWidthCoOrds getClipWidthCoOrds(const double offset, const double clipLength);
   ClipCoOrds getClipCoOrds(const int trackIndex, const double offset, const double clipLength);
-  void drawClip(Graphics &g, ClipCoOrds clip);
+  void addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newCllip, ClipCoOrds clipCoOrds);
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Arrangement)
 };

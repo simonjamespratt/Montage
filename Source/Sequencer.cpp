@@ -15,10 +15,9 @@
 Sequencer::Sequencer() : engine(ProjectInfo::projectName),
                          edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
                          transport(edit.getTransport()),
-                         thumbnail(transport),
                          timeline(edit),
                          cursor(transport, edit),
-                         arrangement(edit)
+                         arrangement(edit, transport)
 {
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
@@ -41,7 +40,6 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
 
     addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&timeline);
-    addAndMakeVisible(&thumbnail);
     addAndMakeVisible(&cursor);
     addAndMakeVisible(&arrangement);
 
@@ -62,7 +60,6 @@ void Sequencer::resized()
     stopButton.setBounds(10, 100, getWidth() - 20, 20);
     transportPosition.setBounds(10, 130, getWidth() - 20, 20);
     timeline.setBounds(10, 160, getWidth() - 20, 20);
-    // thumbnail.setBounds(10, 190, getWidth() - 20, 200);
     arrangement.setBounds(10, 190, getWidth() - 20, 200);
     cursor.setBounds(10, 190, getWidth() - 20, 200);
 }
@@ -98,54 +95,19 @@ void Sequencer::selectAudioFile()
                 file.getParentDirectory());
         }
 
-        setFile(file);
+        tracktion_engine::AudioFile audioFile(file);
+
+        if (!audioFile.isValid())
+        {
+            return;
+        }
+
+        arrangement.addClipToTrack(file, 0, 0.0, audioFile.getLength(), 0.0);
+
+        timeline.recalculate();
+        transport.position = 0.0;
+        transport.play(false);
     }
-}
-
-void Sequencer::setFile(const File &file)
-{
-    // find the first track
-    auto trackOne = edit.getOrInsertAudioTrackAt(0);
-
-    if (!trackOne)
-    {
-        return;
-    }
-
-    // remove / delete all clips from it if it has any
-    auto clipsToRemove = trackOne->getClips();
-    for (int i = clipsToRemove.size(); --i >= 0;)
-    {
-        clipsToRemove.getUnchecked(i)->removeFromParentTrack();
-    }
-
-    // add a new clip to this track
-    tracktion_engine::AudioFile audioFile(file);
-
-    if (!audioFile.isValid())
-    {
-        return;
-    }
-
-    auto newClip = trackOne->insertWaveClip(
-        file.getFileNameWithoutExtension(),
-        file,
-        {{0.0, audioFile.getLength()}, 0.0}, // NB. this is a ClipPosition, where (I think): { {startClip, endClip}, offset }
-        // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
-        // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
-        false);
-
-    if (!newClip)
-    {
-        return;
-    }
-
-    timeline.recalculate();
-
-    // thumbnail using the clip
-    transport.position = 0.0;
-    transport.play(false);
-    thumbnail.setFile(newClip->getPlaybackFile());
 }
 
 void Sequencer::timerCallback()

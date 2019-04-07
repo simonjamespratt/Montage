@@ -11,7 +11,6 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./TracktionThumbnail.h"
 #include "./Timeline.h"
 #include "./Cursor.h"
 #include "./Arrangement.h"
@@ -44,12 +43,9 @@ private:
   Arrangement arrangement;
   Cursor cursor;
 
-  TracktionThumbnail thumbnail;
-
   void showAudioDeviceSettings(tracktion_engine::Engine &engine);
 
   void selectAudioFile();
-  void setFile(const File &file);
 
   void changeListenerCallback(ChangeBroadcaster *) override;
   void togglePlayPause();
