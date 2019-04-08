@@ -44,13 +44,12 @@ public:
   ~Arrangement();
 
   void paint(Graphics &) override;
-  void resized() override;
   void addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset);
 
 private:
   te::Edit &edit;
   te::TransportControl &transport;
-  TracktionThumbnail thumbnail;
+  // std::vector<std::unique_ptr<TracktionThumbnail>> thumbnails;
 
   int noOfTracks;
   void createTracks();

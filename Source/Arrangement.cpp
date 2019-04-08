@@ -12,7 +12,7 @@
 #include "Arrangement.h"
 
 //==============================================================================
-Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc) : edit(e), transport(tc), thumbnail(transport)
+Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc) : edit(e), transport(tc)
 {
     createTracks();
 }
@@ -24,11 +24,6 @@ Arrangement::~Arrangement()
 void Arrangement::paint(Graphics &g)
 {
     drawTrackDividers(g);
-}
-
-void Arrangement::resized()
-{
-    // thumbnail.setBounds(0.0, 0.0, getWidth(), getHeight());
 }
 
 void Arrangement::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
@@ -119,13 +114,13 @@ ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex, const double offset,
 
 void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds)
 {
-    addAndMakeVisible(&thumbnail);
-    thumbnail.setBounds(
+    // thumbnails.push_back(std::make_unique<TracktionThumbnail>(transport));
+    TracktionThumbnail *thumbnail = new TracktionThumbnail(transport);
+    addAndMakeVisible(thumbnail);
+    thumbnail->setBounds(
         clipCoOrds.xAxis.start,
         clipCoOrds.yAxis.top,
         (clipCoOrds.xAxis.end - clipCoOrds.xAxis.start),
         (clipCoOrds.yAxis.bottom - clipCoOrds.yAxis.top));
-    // thumbnail.setBounds(0.0, 0.0, getWidth(), getHeight());
-    thumbnail.setFile(newClip->getPlaybackFile());
-
+    thumbnail->setFile(newClip->getPlaybackFile());
 }
