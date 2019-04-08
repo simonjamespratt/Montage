@@ -102,7 +102,7 @@ void Sequencer::selectAudioFile()
             return;
         }
 
-        arrangement.addClipToTrack(file, 0, 0.0, audioFile.getLength(), 0.0);
+        arrangement.addClipToTrack(file, 1, 1.0, 3.5, 0.25);
 
         timeline.recalculate();
         transport.position = 0.0;

@@ -55,9 +55,9 @@ private:
   void createTracks();
   void drawTrackDividers(Graphics &g);
   TrackHeightCoOrds getTrackHeightCoOrds(const int trackIndex);
-  ClipWidthCoOrds getClipWidthCoOrds(const double offset, const double clipLength);
-  ClipCoOrds getClipCoOrds(const int trackIndex, const double offset, const double clipLength);
-  void addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newCllip, ClipCoOrds clipCoOrds);
+  ClipWidthCoOrds getClipWidthCoOrds(const double clipStart, const double clipEnd);
+  ClipCoOrds getClipCoOrds(const int trackIndex, const double clipStart, const double clipEnd);
+  void addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds, double offset, double clipLength);
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Arrangement)
 };

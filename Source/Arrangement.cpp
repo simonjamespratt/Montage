@@ -26,40 +26,6 @@ void Arrangement::paint(Graphics &g)
     drawTrackDividers(g);
 }
 
-void Arrangement::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
-{
-    auto track = edit.getOrInsertAudioTrackAt(trackIndex);
-
-    if (!track)
-    {
-        return;
-    }
-
-    // Remove clips - NB: this will need revisiting as you won't always want to remove all clips!
-    auto clipsToRemove = track->getClips();
-    for (int i = clipsToRemove.size(); --i >= 0;)
-    {
-        clipsToRemove.getUnchecked(i)->removeFromParentTrack();
-    }
-
-    // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
-    // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
-    auto newClip = track->insertWaveClip(
-        file.getFileNameWithoutExtension(),
-        file,
-        {{clipStart, clipEnd}, offset}, // NB. this is a ClipPosition, where: { {startClip, endClip}, offset }
-        false);
-
-    if (!newClip)
-    {
-        return;
-    }
-
-    ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, offset, (clipEnd - clipStart));
-
-    addThumbnail(newClip, clipCoOrds);
-}
-
 void Arrangement::createTracks()
 {
     noOfTracks = 3;
@@ -85,6 +51,47 @@ void Arrangement::drawTrackDividers(Graphics &g)
     }
 }
 
+void Arrangement::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
+{
+    auto track = edit.getOrInsertAudioTrackAt(trackIndex);
+
+    if (!track)
+    {
+        return;
+    }
+
+    // Remove clips - NB: this will need revisiting as you won't always want to remove all clips!
+    auto clipsToRemove = track->getClips();
+    for (int i = clipsToRemove.size(); --i >= 0;)
+    {
+        clipsToRemove.getUnchecked(i)->removeFromParentTrack();
+    }
+
+    // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
+    // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
+    /*
+        NB: ClipPosition has the following structure: { {startClip, endClip}, offset }
+        Where the above mean:
+        - startClip: the start position of the clip as placed on the track, e.g. 1.0 would mean the clip starts at 1 second from the beginning of the transport start
+        - endClip: the end of the clip; the difference between clipEnd and clipStart gives you the length of the clip
+        - offset: the start of the clip in relation to the start of the audio file, e.g. 1.0 would mean the clip start is 1 second from the beginning of the audio file
+    */
+    auto newClip = track->insertWaveClip(
+        file.getFileNameWithoutExtension(),
+        file,
+        {{clipStart, clipEnd}, offset},
+        false);
+
+    if (!newClip)
+    {
+        return;
+    }
+
+    ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, clipStart, clipEnd);
+
+    addThumbnail(newClip, clipCoOrds, offset, (clipEnd - clipStart));
+}
+
 TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
 {
     auto containerHeight = getHeight();
@@ -96,25 +103,27 @@ TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
     return TrackHeightCoOrds{trackTop, trackBottom};
 }
 
-ClipWidthCoOrds Arrangement::getClipWidthCoOrds(const double offset, const double clipLength)
+ClipWidthCoOrds Arrangement::getClipWidthCoOrds(const double clipStart, const double clipEnd)
 {
     double editLength = edit.getLength();
     auto containerWidth = getWidth();
-    float start = (offset / editLength) * containerWidth;
-    float end = ((offset + clipLength) / editLength) * containerWidth;
+    float start = (clipStart / editLength) * containerWidth;
+    float end = (clipEnd / editLength) * containerWidth;
     return ClipWidthCoOrds{start, end};
 }
 
-ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex, const double offset, const double clipLength)
+ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex, const double clipStart, const double clipEnd)
 {
     auto yAxis = getTrackHeightCoOrds(trackIndex);
-    auto xAxis = getClipWidthCoOrds(offset, clipLength);
+    auto xAxis = getClipWidthCoOrds(clipStart, clipEnd);
     return ClipCoOrds{yAxis, xAxis};
 }
 
-void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds)
+void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds, double offset, double clipLength)
 {
     // thumbnails.push_back(std::make_unique<TracktionThumbnail>(transport));
+
+    // NB: This may not be the best way to do this, but it works for now!
     TracktionThumbnail *thumbnail = new TracktionThumbnail(transport);
     addAndMakeVisible(thumbnail);
     thumbnail->setBounds(
@@ -122,5 +131,5 @@ void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine:
         clipCoOrds.yAxis.top,
         (clipCoOrds.xAxis.end - clipCoOrds.xAxis.start),
         (clipCoOrds.yAxis.bottom - clipCoOrds.yAxis.top));
-    thumbnail->setFile(newClip->getPlaybackFile());
+    thumbnail->setFile(newClip->getPlaybackFile(), offset, clipLength);
 }
