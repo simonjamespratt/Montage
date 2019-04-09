@@ -67,8 +67,6 @@ void Arrangement::addClipToTrack(const File &file, const int trackIndex, const d
         clipsToRemove.getUnchecked(i)->removeFromParentTrack();
     }
 
-    // TODO: ClipPosition: work out how to select a portion of an audio file as the clip instead of using all of it (i.e. a particle)
-    // TODO: ClipPosition: work out how to position a clip on a track at a certain offset from the tranport start
     /*
         NB: ClipPosition has the following structure: { {startClip, endClip}, offset }
         Where the above mean:
