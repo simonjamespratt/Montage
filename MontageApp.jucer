@@ -8,6 +8,10 @@
             file="Source/MainComponent.cpp"/>
       <FILE id="eFFGSC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
     </GROUP>
+    <FILE id="D7W7Q9" name="Arrangement.cpp" compile="1" resource="0" file="Source/Arrangement.cpp"/>
+    <FILE id="u18b7e" name="Arrangement.h" compile="0" resource="0" file="Source/Arrangement.h"/>
+    <FILE id="BPu7wr" name="Cursor.cpp" compile="1" resource="0" file="Source/Cursor.cpp"/>
+    <FILE id="molGEf" name="Cursor.h" compile="0" resource="0" file="Source/Cursor.h"/>
     <FILE id="RpNrwQ" name="PositionMarker.cpp" compile="1" resource="0"
           file="Source/PositionMarker.cpp"/>
     <FILE id="oqUi2e" name="PositionMarker.h" compile="0" resource="0"
@@ -20,6 +24,12 @@
     <FILE id="ig0V2R" name="Sequencer.h" compile="0" resource="0" file="Source/Sequencer.h"/>
     <FILE id="XSwXVI" name="Source.cpp" compile="1" resource="0" file="Source/Source.cpp"/>
     <FILE id="wy3hMW" name="Source.h" compile="0" resource="0" file="Source/Source.h"/>
+    <FILE id="DwsdW0" name="Timeline.cpp" compile="1" resource="0" file="Source/Timeline.cpp"/>
+    <FILE id="efHDfr" name="Timeline.h" compile="0" resource="0" file="Source/Timeline.h"/>
+    <FILE id="YnhiOd" name="TracktionThumbnail.cpp" compile="1" resource="0"
+          file="Source/TracktionThumbnail.cpp"/>
+    <FILE id="DsKP5c" name="TracktionThumbnail.h" compile="0" resource="0"
+          file="Source/TracktionThumbnail.h"/>
     <FILE id="D4OMzs" name="WaveformDisplay.cpp" compile="1" resource="0"
           file="Source/WaveformDisplay.cpp"/>
     <FILE id="AyLK1S" name="WaveformDisplay.h" compile="0" resource="0"

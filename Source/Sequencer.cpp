@@ -1,0 +1,149 @@
+/*
+  ==============================================================================
+
+    Sequencer.cpp
+    Created: 13 Mar 2019 7:34:49pm
+    Author:  Simon Pratt
+
+  ==============================================================================
+*/
+
+#include "../JuceLibraryCode/JuceHeader.h"
+#include "Sequencer.h"
+
+//==============================================================================
+Sequencer::Sequencer() : engine(ProjectInfo::projectName),
+                         edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
+                         transport(edit.getTransport()),
+                         timeline(edit),
+                         cursor(transport, edit),
+                         arrangement(edit, transport)
+{
+    addAndMakeVisible(&loadFileButton);
+    loadFileButton.setButtonText("Load file");
+    loadFileButton.onClick = [this] { selectAudioFile(); };
+
+    addAndMakeVisible(&settingsButton);
+    settingsButton.setButtonText("Settings");
+    settingsButton.onClick = [this] { showAudioDeviceSettings(engine); };
+
+    startTimer(20);
+    transport.addChangeListener(this);
+
+    addAndMakeVisible(&playPauseButton);
+    updatePlayPauseButtonText();
+    playPauseButton.onClick = [this] { togglePlayPause(); };
+
+    addAndMakeVisible(&stopButton);
+    stopButton.setButtonText("Stop");
+    stopButton.onClick = [this] { stop(); };
+
+    addAndMakeVisible(&transportPosition);
+    addAndMakeVisible(&timeline);
+    addAndMakeVisible(&cursor);
+    addAndMakeVisible(&arrangement);
+
+    setSize(600, 400);
+}
+
+Sequencer::~Sequencer()
+{
+    stopTimer();
+    edit.getTempDirectory(false).deleteRecursively();
+}
+
+void Sequencer::resized()
+{
+    loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
+    settingsButton.setBounds(10, 40, getWidth() - 20, 20);
+    playPauseButton.setBounds(10, 70, getWidth() - 20, 20);
+    stopButton.setBounds(10, 100, getWidth() - 20, 20);
+    transportPosition.setBounds(10, 130, getWidth() - 20, 20);
+    timeline.setBounds(10, 160, getWidth() - 20, 20);
+    arrangement.setBounds(10, 190, getWidth() - 20, 200);
+    cursor.setBounds(10, 190, getWidth() - 20, 200);
+}
+
+void Sequencer::showAudioDeviceSettings(tracktion_engine::Engine &engine)
+{
+    DialogWindow::LaunchOptions o;
+    o.dialogTitle = TRANS("Audio Settings");
+    o.dialogBackgroundColour = LookAndFeel::getDefaultLookAndFeel().findColour(ResizableWindow::backgroundColourId);
+    o.content.setOwned(new AudioDeviceSelectorComponent(engine.getDeviceManager().deviceManager,
+                                                        0, 512, 1, 512, false, false, true, true));
+    o.content->setSize(400, 600);
+    o.launchAsync();
+}
+
+void Sequencer::selectAudioFile()
+{
+    auto fileChooser = std::make_shared<FileChooser>(
+        "Load an audio file",
+        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName), // TODO: I don't think this does anything - check if it can be removed
+        "*.wav,*.aif,*.aiff");
+
+    if (fileChooser->browseForFileToOpen())
+    {
+        auto file = fileChooser->getResult();
+
+        // NB. Again, I don't think this actually does anything!
+        // TODO:  check if this can be removed
+        if (file.existsAsFile())
+        {
+            engine.getPropertyStorage().setDefaultLoadSaveDirectory(
+                ProjectInfo::projectName,
+                file.getParentDirectory());
+        }
+
+        tracktion_engine::AudioFile audioFile(file);
+
+        if (!audioFile.isValid())
+        {
+            return;
+        }
+
+        arrangement.addClipToTrack(file, 1, 1.0, 3.5, 0.25);
+
+        timeline.recalculate();
+        transport.position = 0.0;
+        transport.play(false);
+    }
+}
+
+void Sequencer::timerCallback()
+{
+    RelativeTime position(transport.getCurrentPosition());
+    auto minutes = ((int)position.inMinutes()) % 60;
+    auto seconds = ((int)position.inSeconds()) % 60;
+    auto millis = ((int)position.inMilliseconds()) % 1000;
+    auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
+    transportPosition.setText(positionString, dontSendNotification);
+}
+
+void Sequencer::changeListenerCallback(ChangeBroadcaster *)
+{
+    updatePlayPauseButtonText();
+}
+
+void Sequencer::togglePlayPause()
+{
+    if (transport.isPlaying())
+    {
+        transport.stop(false, false);
+    }
+    else
+    {
+        transport.play(false);
+    }
+}
+
+void Sequencer::stop()
+{
+    transport.stop(false, false);
+    transport.setCurrentPosition(0.0);
+}
+
+void Sequencer::updatePlayPauseButtonText()
+{
+    playPauseButton.setButtonText(transport.isPlaying() ? "Pause" : "Play");
+}
