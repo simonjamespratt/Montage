@@ -27,24 +27,6 @@ Cursor::~Cursor()
     cursorUpdater.stopTimer();
 }
 
-void Cursor::mouseDown(const MouseEvent &e)
-{
-    transport.setUserDragging(true);
-    mouseDrag(e);
-}
-
-void Cursor::mouseDrag(const MouseEvent &e)
-{
-    jassert(getWidth() > 0);
-    const float proportion = e.position.x / getWidth();
-    transport.position = proportion * edit.getLength();
-}
-
-void Cursor::mouseUp(const MouseEvent &)
-{
-    transport.setUserDragging(false);
-}
-
 void Cursor::updateCursorPosition()
 {
     // NB: setting this using looping may not work for similar reasons to the above
