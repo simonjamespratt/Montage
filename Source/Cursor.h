@@ -22,10 +22,6 @@ public:
   Cursor(te::TransportControl &tc, te::Edit &e);
   ~Cursor();
 
-  void mouseDown(const MouseEvent &e) override;
-  void mouseDrag(const MouseEvent &e) override;
-  void mouseUp(const MouseEvent &) override;
-
 private:
   DrawableRectangle cursor;
   te::LambdaTimer cursorUpdater;

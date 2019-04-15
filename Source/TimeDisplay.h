@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    PositionMarker.h
-    Created: 4 Mar 2019 5:55:03pm
+    TimeDisplay.h
+    Created: 12 Apr 2019 7:13:35pm
     Author:  Simon Pratt
 
   ==============================================================================
@@ -12,20 +12,23 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+namespace te = tracktion_engine;
+
 //==============================================================================
 /*
 */
-class PositionMarker : public Component, public Timer
+class TimeDisplay : public Component, public Timer
 {
 public:
-  PositionMarker(AudioTransportSource &transportSourceToUse);
-  ~PositionMarker();
+  TimeDisplay(te::TransportControl &tc);
+  ~TimeDisplay();
 
-  void paint(Graphics &) override;
+  void resized() override;
 
-private:
-  AudioTransportSource &transportSource;
   void timerCallback() override;
 
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PositionMarker)
+private:
+  te::TransportControl &transport;
+  Label transportPosition;
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeDisplay)
 };

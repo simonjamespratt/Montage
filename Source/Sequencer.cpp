@@ -12,22 +12,19 @@
 #include "Sequencer.h"
 
 //==============================================================================
-Sequencer::Sequencer() : engine(ProjectInfo::projectName),
-                         edit(engine, tracktion_engine::createEmptyEdit(), tracktion_engine::Edit::forEditing, nullptr, 0),
-                         transport(edit.getTransport()),
-                         timeline(edit),
-                         cursor(transport, edit),
-                         arrangement(edit, transport)
+Sequencer::Sequencer(te::Engine &eng) : engine(eng),
+                                        edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
+                                        transport(edit.getTransport()),
+                                        timeline(edit),
+                                        cursor(transport, edit),
+                                        arrangement(edit, transport),
+                                        transportPosition(transport),
+                                        transportInteractor(transport, edit)
 {
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
     loadFileButton.onClick = [this] { selectAudioFile(); };
 
-    addAndMakeVisible(&settingsButton);
-    settingsButton.setButtonText("Settings");
-    settingsButton.onClick = [this] { showAudioDeviceSettings(engine); };
-
-    startTimer(20);
     transport.addChangeListener(this);
 
     addAndMakeVisible(&playPauseButton);
@@ -40,39 +37,28 @@ Sequencer::Sequencer() : engine(ProjectInfo::projectName),
 
     addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&timeline);
-    addAndMakeVisible(&cursor);
     addAndMakeVisible(&arrangement);
+    addAndMakeVisible(&cursor);
+    addAndMakeVisible(&transportInteractor);
 
     setSize(600, 400);
 }
 
 Sequencer::~Sequencer()
 {
-    stopTimer();
     edit.getTempDirectory(false).deleteRecursively();
 }
 
 void Sequencer::resized()
 {
     loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
-    settingsButton.setBounds(10, 40, getWidth() - 20, 20);
     playPauseButton.setBounds(10, 70, getWidth() - 20, 20);
     stopButton.setBounds(10, 100, getWidth() - 20, 20);
     transportPosition.setBounds(10, 130, getWidth() - 20, 20);
     timeline.setBounds(10, 160, getWidth() - 20, 20);
     arrangement.setBounds(10, 190, getWidth() - 20, 200);
     cursor.setBounds(10, 190, getWidth() - 20, 200);
-}
-
-void Sequencer::showAudioDeviceSettings(tracktion_engine::Engine &engine)
-{
-    DialogWindow::LaunchOptions o;
-    o.dialogTitle = TRANS("Audio Settings");
-    o.dialogBackgroundColour = LookAndFeel::getDefaultLookAndFeel().findColour(ResizableWindow::backgroundColourId);
-    o.content.setOwned(new AudioDeviceSelectorComponent(engine.getDeviceManager().deviceManager,
-                                                        0, 512, 1, 512, false, false, true, true));
-    o.content->setSize(400, 600);
-    o.launchAsync();
+    transportInteractor.setBounds(10, 190, getWidth() - 20, 200);
 }
 
 void Sequencer::selectAudioFile()
@@ -95,7 +81,7 @@ void Sequencer::selectAudioFile()
                 file.getParentDirectory());
         }
 
-        tracktion_engine::AudioFile audioFile(file);
+        te::AudioFile audioFile(file);
 
         if (!audioFile.isValid())
         {
@@ -108,16 +94,6 @@ void Sequencer::selectAudioFile()
         transport.position = 0.0;
         transport.play(false);
     }
-}
-
-void Sequencer::timerCallback()
-{
-    RelativeTime position(transport.getCurrentPosition());
-    auto minutes = ((int)position.inMinutes()) % 60;
-    auto seconds = ((int)position.inSeconds()) % 60;
-    auto millis = ((int)position.inMilliseconds()) % 1000;
-    auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
-    transportPosition.setText(positionString, dontSendNotification);
 }
 
 void Sequencer::changeListenerCallback(ChangeBroadcaster *)
