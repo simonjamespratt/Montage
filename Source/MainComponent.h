@@ -1,10 +1,30 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "ParticleSelector.h"
-#include "Sequencer.h"
+#include "./Indentifiers.h"
+#include "./ParticleSelector.h"
+#include "./Sequencer.h"
+#include "./Particles.h"
+#include "./SourceManager.h"
+#include "./ParticlesManifest.h"
 
 namespace te = tracktion_engine;
+
+/*
+ValueTree type Identifier: AppState
+    child ValueTree type Identifier: Sources
+        child ValueTree type Identifier:Source
+            id: int
+            filePath: string
+            fileName: string
+
+    child ValueTree type Identifier: Particles
+        child ValueTree type Identifier: Particle
+            id: int
+            sourceId: int
+            rangeStart:double
+            rangeEnd: double
+*/
 
 /*
     This component lives inside our window, and this is where you should put all
@@ -19,10 +39,15 @@ public:
 
   void resized() override;
 
+  ValueTree appState;
+
 private:
   te::Engine engine;
-  ParticleSelector particleSelector;
-  Sequencer sequencer;
+  SourceManager sourceManager;
+  ParticlesManifest particlesManifest;
+  Particles particlesContainer;
+  // ParticleSelector particleSelector;
+  // Sequencer sequencer;
 
   TextButton settingsButton;
 

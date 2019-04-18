@@ -12,19 +12,23 @@
 #include "ParticleSelector.h"
 
 //==============================================================================
-ParticleSelector::ParticleSelector(te::Engine &eng) : engine(eng),
-                                                      edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
-                                                      transport(edit.getTransport()),
-                                                      transportPosition(transport),
-                                                      thumbnail(transport),
-                                                      cursor(transport, edit),
-                                                      transportInteractor(transport, edit)
+ParticleSelector::ParticleSelector(te::Engine &eng, ValueTree &as) : engine(eng),
+                                                                     edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
+                                                                     transport(edit.getTransport()),
+                                                                     appState(as),
+                                                                     sources(),
+                                                                     transportPosition(transport),
+                                                                     thumbnail(transport),
+                                                                     cursor(transport, edit),
+                                                                     transportInteractor(transport, edit)
 {
+    sources = (appState.getChildWithName(sourcesIdentifier));
+    particles = (appState.getChildWithName(particlesIdentifier));
     transport.addChangeListener(this);
 
-    addAndMakeVisible(&loadFileButton);
-    loadFileButton.setButtonText("Load file");
-    loadFileButton.onClick = [this] { selectAudioFile(); };
+    addAndMakeVisible(&sourceSelector);
+    initialiseSourceSelector();
+    sourceSelector.onChange = [this] { sourceSelectorChanged(); };
 
     addAndMakeVisible(&playPauseButton);
     updatePlayPauseButtonText();
@@ -34,58 +38,173 @@ ParticleSelector::ParticleSelector(te::Engine &eng) : engine(eng),
     stopButton.setButtonText("Stop");
     stopButton.onClick = [this] { stop(); };
 
+    addAndMakeVisible(&saveParticleButton);
+    saveParticleButton.setButtonText("Save particle");
+    saveParticleButton.onClick = [this] { saveParticle(); };
+
+    addAndMakeVisible(&deleteParticleButton);
+    deleteParticleButton.setButtonText("Delete particle");
+    deleteParticleButton.onClick = [this] { deleteParticleSelector(); };
+
     addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&thumbnail);
     addAndMakeVisible(&cursor);
     addAndMakeVisible(&transportInteractor);
-
 }
 
 ParticleSelector::~ParticleSelector()
 {
     edit.getTempDirectory(false).deleteRecursively();
+    particles.removeChild(particle, nullptr);
 }
 
 void ParticleSelector::resized()
 {
-    loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
+    sourceSelector.setBounds(10, 10, getWidth() - 20, 20);
     playPauseButton.setBounds(10, 40, getWidth() - 20, 20);
     stopButton.setBounds(10, 70, getWidth() - 20, 20);
     transportPosition.setBounds(10, 100, getWidth() - 20, 20);
-    thumbnail.setBounds(10, 130, getWidth() - 20, getHeight() - 130);
-    cursor.setBounds(10, 130, getWidth() - 20, getHeight() - 130);
-    transportInteractor.setBounds(10, 130, getWidth() - 20, getHeight() - 130);
+
+    thumbnail.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
+    cursor.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
+    transportInteractor.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
+
+    saveParticleButton.setBounds(10, getHeight() - 20, 100, 20);
+    deleteParticleButton.setBounds(110, getHeight() - 20, 100, 20);
 }
 
-void ParticleSelector::selectAudioFile()
+void ParticleSelector::initialiseSourceSelector()
 {
-    auto fileChooser = std::make_shared<FileChooser>(
-        "Load an audio file",
-        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName), // TODO: I don't think this does anything - check if it can be removed
-        "*.wav,*.aif,*.aiff");
+    sourceSelector.setTextWhenNothingSelected("No source file currently chosen");
+    sourceSelector.addItem("Add new source", 999);
 
-    if (fileChooser->browseForFileToOpen())
+    for (int i = 0; i < sources.getNumChildren(); i++)
     {
-        auto file = fileChooser->getResult();
+        auto source = sources.getChild(i);
+        sourceSelector.addItem(source[sourcePropFileNameIdentifier], source[sourcePropIdIdentifier]);
+    }
+}
 
-        // NB. Again, I don't think this actually does anything!
-        // TODO:  check if this can be removed
-        if (file.existsAsFile())
+void ParticleSelector::sourceSelectorChanged()
+{
+    auto selectedId = sourceSelector.getSelectedId();
+
+    if (selectedId == 999)
+    {
+        selectNewSourceFile();
+    }
+    else
+    {
+        loadExistingSourceFile(selectedId);
+    }
+}
+
+void ParticleSelector::selectNewSourceFile()
+{
+    FileManager fileManager;
+    fileManager.chooseFile();
+
+    if (!fileManager.fileIsValid())
+    {
+        showErrorMessaging(FileInvalid);
+        sourceSelector.setSelectedId(0);
+        return;
+    }
+
+    // if the fileapth already exists, error and return
+    const auto filePath = fileManager.getFile().getFullPathName();
+    const auto existingEntry = sources.getChildWithProperty(sourcePropFilePathIdentifier, filePath);
+    if (existingEntry.isValid())
+    {
+        showErrorMessaging(FileAlreadyExists);
+        return;
+    }
+
+    source = fileManager.addSourceToState(sources);
+    sourceSelector.addItem(source[sourcePropFileNameIdentifier], source[sourcePropIdIdentifier]);
+    sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
+
+    File file = fileManager.getFile();
+    te::AudioFile audioFile = fileManager.getAudioFile();
+    addFileToEditAndLoop(file, audioFile);
+}
+
+void ParticleSelector::loadExistingSourceFile(int &id)
+{
+    auto requestedSource = sources.getChildWithProperty(sourcePropIdIdentifier, id);
+
+    if (requestedSource.isValid())
+    {
+        FileManager fileManager;
+        fileManager.loadExistingSourceFile(requestedSource);
+
+        if (!fileManager.fileIsValid())
         {
-            engine.getPropertyStorage().setDefaultLoadSaveDirectory(
-                ProjectInfo::projectName,
-                file.getParentDirectory());
-        }
-
-        te::AudioFile audioFile(file);
-
-        if (!audioFile.isValid())
-        {
+            showErrorMessaging(FileInvalid);
+            sourceSelector.setSelectedId(0);
             return;
         }
 
+        source = requestedSource;
+        sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
+
+        File file = fileManager.getFile();
+        te::AudioFile audioFile = fileManager.getAudioFile();
         addFileToEditAndLoop(file, audioFile);
     }
+}
+
+int ParticleSelector::getNewParticleId()
+{
+    int highestNumberId = 0;
+
+    for (int i = 0; i < particles.getNumChildren(); i++)
+    {
+        int currentId = particles.getChild(i).getProperty(particlePropIdIdentifier);
+        if (currentId > highestNumberId)
+        {
+            highestNumberId = currentId;
+        }
+    }
+
+    return highestNumberId + 1;
+}
+
+void ParticleSelector::saveParticle()
+{
+    // check there is a valid source
+    if (!source.isValid())
+    {
+        showErrorMessaging(SourceInvalid);
+        return;
+    }
+    // check selection range to ensure is valid
+    auto particleRange = transportInteractor.getSelectionRange();
+    if (!(particleRange.rangeEnd > 0.0))
+    {
+        showErrorMessaging(ParticleRangeInvalid);
+        return;
+    }
+
+    if (!particle.isValid())
+    {
+        // if doesn't exist, add new entry to the particles vt
+        auto newId = getNewParticleId();
+        particle = ValueTree(particleIdentifier);
+        particle.setProperty(particlePropIdIdentifier, newId, nullptr);
+        particles.addChild(particle, -1, nullptr);
+    }
+
+    particle.setProperty(particlePropSourceIdIdentifier, source[sourcePropIdIdentifier], nullptr);
+    particle.setProperty(particlePropRangeStartIdentifier, particleRange.rangeStart, nullptr);
+    particle.setProperty(particlePropRangeEndIdentifier, particleRange.rangeEnd, nullptr);
+
+    // TODO: on success, display the details of the particle entry somewhere within this object
+}
+
+void ParticleSelector::showErrorMessaging(const ErrorType &errorType)
+{
+    std::make_shared<ErrorManager>(errorType);
 }
 
 void ParticleSelector::addFileToEditAndLoop(File &file, te::AudioFile &audioFile)
@@ -108,7 +227,7 @@ void ParticleSelector::addFileToEditAndLoop(File &file, te::AudioFile &audioFile
     auto newClip = track->insertWaveClip(
         file.getFileNameWithoutExtension(),
         file,
-        { { 0.0, audioFile.getLength() }, 0.0 },
+        {{0.0, audioFile.getLength()}, 0.0},
         false);
 
     if (!newClip)
@@ -124,7 +243,6 @@ void ParticleSelector::addFileToEditAndLoop(File &file, te::AudioFile &audioFile
     transport.looping = true;
     transport.position = 0.0;
     transport.play(false);
-
 }
 
 void ParticleSelector::updatePlayPauseButtonText()
@@ -153,4 +271,15 @@ void ParticleSelector::stop()
 {
     transport.stop(false, false);
     transport.setCurrentPosition(0.0);
+}
+
+void ParticleSelector::deleteParticleSelector()
+{
+    toBeDeleted = true;
+    sendChangeMessage();
+}
+
+bool ParticleSelector::readyToBeDeleted()
+{
+    return toBeDeleted;
 }

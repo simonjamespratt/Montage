@@ -23,9 +23,15 @@ TransportInteractor::~TransportInteractor()
 {
 }
 
-void TransportInteractor::paint (Graphics& g)
+SelectionRange TransportInteractor::getSelectionRange()
 {
-    if (interactionState == ControlRangeSelection) {
+    return {rangeStart, rangeEnd};
+}
+
+void TransportInteractor::paint(Graphics &g)
+{
+    if (interactionState == ControlRangeSelection)
+    {
         g.setColour(Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
         g.fillRect(mousePositionA, 0.0f, (mousePositionB - mousePositionA), float(getHeight()));
     }
@@ -36,25 +42,30 @@ void TransportInteractor::mouseDown(const MouseEvent &event)
     if (event.mods.isShiftDown())
     {
         interactionState = ControlRangeSelection;
-    } else {
+    }
+    else
+    {
         interactionState = ControlCursor;
     }
 
     transport.setUserDragging(true);
 
-    if (interactionState == ControlCursor) {
+    if (interactionState == ControlCursor)
+    {
         repaint();
+        rangeStart = 0.0;
+        rangeEnd = 0.0;
         transport.setLoopRange(te::EditTimeRange(0.0, edit.getLength()));
         mouseDrag(event);
     }
 
-    if (interactionState == ControlRangeSelection ) {
+    if (interactionState == ControlRangeSelection)
+    {
         transport.stop(false, false);
         mousePositionA = event.position.x;
         rangeStart = calculateAudioPosition(mousePositionA);
         transport.position = rangeStart;
     }
-
 }
 
 void TransportInteractor::mouseDrag(const MouseEvent &event)
@@ -64,25 +75,25 @@ void TransportInteractor::mouseDrag(const MouseEvent &event)
         transport.position = calculateAudioPosition(event.position.x);
     }
 
-    if (interactionState == ControlRangeSelection) {
+    if (interactionState == ControlRangeSelection)
+    {
         mousePositionB = event.position.x;
         handleMouseMovement();
     }
-
 }
 
 void TransportInteractor::mouseUp(const MouseEvent &event)
 {
     transport.setUserDragging(false);
 
-    if (interactionState == ControlRangeSelection) {
+    if (interactionState == ControlRangeSelection)
+    {
         handleMouseMovement();
         transport.position = rangeStart;
         transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
         transport.looping = true;
         transport.play(false);
     }
-
 }
 
 double TransportInteractor::calculateAudioPosition(float mousePosition)

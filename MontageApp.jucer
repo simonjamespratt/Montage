@@ -12,12 +12,30 @@
     <FILE id="u18b7e" name="Arrangement.h" compile="0" resource="0" file="Source/Arrangement.h"/>
     <FILE id="BPu7wr" name="Cursor.cpp" compile="1" resource="0" file="Source/Cursor.cpp"/>
     <FILE id="molGEf" name="Cursor.h" compile="0" resource="0" file="Source/Cursor.h"/>
+    <FILE id="jAVtYk" name="ErrorManager.cpp" compile="1" resource="0"
+          file="Source/ErrorManager.cpp"/>
+    <FILE id="ARmF0x" name="ErrorManager.h" compile="0" resource="0" file="Source/ErrorManager.h"/>
+    <FILE id="ONBsKW" name="ErrorMessage.cpp" compile="1" resource="0"
+          file="Source/ErrorMessage.cpp"/>
+    <FILE id="p23E09" name="ErrorMessage.h" compile="0" resource="0" file="Source/ErrorMessage.h"/>
+    <FILE id="urV7QI" name="FileManager.cpp" compile="1" resource="0" file="Source/FileManager.cpp"/>
+    <FILE id="Ul7dt9" name="FileManager.h" compile="0" resource="0" file="Source/FileManager.h"/>
+    <FILE id="dbuwIM" name="Indentifiers.h" compile="0" resource="0" file="Source/Indentifiers.h"/>
+    <FILE id="nKse1l" name="Particles.cpp" compile="1" resource="0" file="Source/Particles.cpp"/>
+    <FILE id="N6U7QH" name="Particles.h" compile="0" resource="0" file="Source/Particles.h"/>
     <FILE id="CmEdp1" name="ParticleSelector.cpp" compile="1" resource="0"
           file="Source/ParticleSelector.cpp"/>
     <FILE id="b8fCzv" name="ParticleSelector.h" compile="0" resource="0"
           file="Source/ParticleSelector.h"/>
+    <FILE id="pQzBE8" name="ParticlesManifest.cpp" compile="1" resource="0"
+          file="Source/ParticlesManifest.cpp"/>
+    <FILE id="YBNFOk" name="ParticlesManifest.h" compile="0" resource="0"
+          file="Source/ParticlesManifest.h"/>
     <FILE id="LPO6mh" name="Sequencer.cpp" compile="1" resource="0" file="Source/Sequencer.cpp"/>
     <FILE id="ig0V2R" name="Sequencer.h" compile="0" resource="0" file="Source/Sequencer.h"/>
+    <FILE id="enjVrc" name="SourceManager.cpp" compile="1" resource="0"
+          file="Source/SourceManager.cpp"/>
+    <FILE id="VE3YWN" name="SourceManager.h" compile="0" resource="0" file="Source/SourceManager.h"/>
     <FILE id="sQAnQB" name="TimeDisplay.cpp" compile="1" resource="0" file="Source/TimeDisplay.cpp"/>
     <FILE id="ygFv5J" name="TimeDisplay.h" compile="0" resource="0" file="Source/TimeDisplay.h"/>
     <FILE id="DwsdW0" name="Timeline.cpp" compile="1" resource="0" file="Source/Timeline.cpp"/>
