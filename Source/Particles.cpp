@@ -12,11 +12,20 @@
 #include "Particles.h"
 
 //==============================================================================
-Particles::Particles(te::Engine &eng, ValueTree &as) : engine(eng), appState(as)
+Particles::Particles(te::Engine &eng, ValueTree &as) :  engine(eng),
+                                                        appState(as),
+                                                        crossIcon(icons.getIcon(Icons::IconType::Cross)),
+                                                        addParticleButton("Add particle button", DrawableButton::ButtonStyle::ImageOnButtonBackground)
 {
+    heading.setText("Particles", dontSendNotification);
+    heading.setFont(Font(24.0f, Font::bold));
+    addAndMakeVisible(&heading);
+    
+    addParticleButton.setImages(&crossIcon);
     addAndMakeVisible(&addParticleButton);
-    addParticleButton.setButtonText("Add Particle");
     addParticleButton.onClick = [this] { addParticle(); };
+    
+    recalculateSize();
 }
 
 Particles::~Particles()
@@ -29,18 +38,22 @@ void Particles::paint(Graphics &g)
 
 void Particles::resized()
 {
-    addParticleButton.setBounds(0, 0, getWidth(), 20);
-
-    int count = 30; //starting height to start laying out dynamically created ParticleSelectors
+    auto area = getLocalBounds();
+    auto headerArea = area.removeFromTop(headerHeight);
+    FlexBox headerContainer;
+    headerContainer.justifyContent = FlexBox::JustifyContent::flexStart;
+    headerContainer.alignContent = FlexBox::AlignContent::center;
+    headerContainer.items.add(FlexItem(heading).withHeight(24.0f).withWidth(100.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.items.add(FlexItem(addParticleButton).withHeight(24.0f).withWidth(24.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.performLayout(headerArea);
 
     for (int i = 0; i < particles.size(); i++)
     {
-        particles[i]->setBounds(0, count, getWidth(), 360);
-        count += 370;
+        particles[i]->setBounds(area.removeFromTop(300));
     }
 }
 
-void Particles::changeListenerCallback(ChangeBroadcaster* source)
+void Particles::changeListenerCallback(ChangeBroadcaster *source)
 {
     // find out which particle did this
     for (auto it = particles.begin(); it != particles.end(); it++)
@@ -51,6 +64,8 @@ void Particles::changeListenerCallback(ChangeBroadcaster* source)
             particles.erase(it--);
         }
     }
+
+    refreshView();
 }
 
 void Particles::addParticle()
@@ -60,6 +75,19 @@ void Particles::addParticle()
     refreshView();
 }
 
+void Particles::recalculateSize()
+{
+    headerHeight = 50;
+    auto totalHeight = headerHeight;
+    
+    for (int i = 0; i < particles.size(); i++)
+    {
+        totalHeight += 300;
+    }
+    
+    setSize(getWidth(), totalHeight);
+}
+
 void Particles::refreshView()
 {
     for (int i = 0; i < particles.size(); i++)
@@ -67,7 +95,7 @@ void Particles::refreshView()
         addAndMakeVisible(*particles[i]);
     }
 
-    resized();
+    recalculateSize();
 }
 
 void Particles::addListeners()
@@ -76,5 +104,4 @@ void Particles::addListeners()
     {
         particles[i]->addChangeListener(this);
     }
-
 }

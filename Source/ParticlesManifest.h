@@ -37,6 +37,7 @@ public:
     void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
 
 private:
+    Label heading;
     ValueTree &appState;
     ValueTree particles;
     TableListBox table;

@@ -14,44 +14,39 @@
 #include "./Timeline.h"
 #include "./Cursor.h"
 #include "./Arrangement.h"
-#include "./TimeDisplay.h"
 #include "./TransportInteractor.h"
+#include "./TransportController.h"
 
-namespace te = te;
+namespace te = tracktion_engine;
 
 //==============================================================================
 /*
 */
-class Sequencer : public Component, public ChangeListener
+class Sequencer : public Component
 {
 public:
-  Sequencer(te::Engine &eng);
-  ~Sequencer();
+    Sequencer(te::Engine &eng);
+    ~Sequencer();
 
-  void resized() override;
+    void paint(Graphics &g) override;
+    void resized() override;
 
 private:
-  te::Engine &engine;
-  // NB: note that the edit is set up with en empty edit rather than by referencing a file to write to
-  // when the sequencer is working seriously, probably need to change this
-  te::Edit edit;
-  te::TransportControl &transport;
+    te::Engine &engine;
+    // NB: note that the edit is set up with en empty edit rather than by referencing a file to write to
+    // when the sequencer is working seriously, probably need to change this
+    te::Edit edit;
+    te::TransportControl &transport;
 
-  TextButton loadFileButton;
-  TextButton playPauseButton;
-  TextButton stopButton;
-  TimeDisplay transportPosition;
-  Timeline timeline;
-  Arrangement arrangement;
-  Cursor cursor;
-  TransportInteractor transportInteractor;
+    Timeline timeline;
+    Arrangement arrangement;
+    Cursor cursor;
+    TransportInteractor transportInteractor;
+    TransportController transportController;
 
-  void selectAudioFile();
+    TextButton loadFileButton; // TODO: to be deleted
 
-  void changeListenerCallback(ChangeBroadcaster *) override;
-  void togglePlayPause();
-  void stop();
-  void updatePlayPauseButtonText();
+    void selectAudioFile();
 
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };

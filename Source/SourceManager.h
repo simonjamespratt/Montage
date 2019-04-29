@@ -14,6 +14,7 @@
 #include "./Indentifiers.h"
 #include "./FileManager.h"
 #include "./ErrorManager.h"
+#include "Icons.h"
 
 //==============================================================================
 /*
@@ -40,12 +41,16 @@ public:
   void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
 
 private:
+  Label heading;
   ValueTree &appState;
   ValueTree sources;
   ValueTree particles;
   TableListBox table;
-  TextButton addSourceFileButton;
-  TextButton deleteSourceFilesButton;
+  Icons icons;
+  DrawablePath crossIcon;
+  DrawableButton addSourceFileButton;
+  DrawablePath dashIcon;
+  DrawableButton deleteSourceFilesButton;
   std::array<Identifier, 3> dataTypes = {sourcePropIdIdentifier, sourcePropFileNameIdentifier, sourcePropFilePathIdentifier};
   int numRows = 0;
 

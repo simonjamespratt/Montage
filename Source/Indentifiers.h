@@ -25,6 +25,7 @@ static Identifier sourcePropFileNameIdentifier("fileName");
 static Identifier particlesIdentifier("Particles");
 static Identifier particleIdentifier("Particle");
 static Identifier particlePropIdIdentifier("id");
+static Identifier particlePropNameIdentifier("name");
 static Identifier particlePropSourceIdIdentifier("sourceId");
 static Identifier particlePropRangeStartIdentifier("rangeStart");
 static Identifier particlePropRangeEndIdentifier("rangeEnd");
