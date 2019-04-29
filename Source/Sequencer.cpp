@@ -63,17 +63,18 @@ void Sequencer::resized()
 
 void Sequencer::selectAudioFile()
 {
+    // ======================================================================================
+    // TODO: selectAudioFile(): remove this file selection logic
+    // Replace it with logic for loading and validating an existing source file from appState as it is done in ParticleSelector
     auto fileChooser = std::make_shared<FileChooser>(
         "Load an audio file",
-        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName), // TODO: I don't think this does anything - check if it can be removed
+        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName),
         "*.wav,*.aif,*.aiff");
 
     if (fileChooser->browseForFileToOpen())
     {
         auto file = fileChooser->getResult();
 
-        // NB. Again, I don't think this actually does anything!
-        // TODO:  check if this can be removed
         if (file.existsAsFile())
         {
             engine.getPropertyStorage().setDefaultLoadSaveDirectory(
@@ -87,7 +88,8 @@ void Sequencer::selectAudioFile()
         {
             return;
         }
-
+    // =======================================================================================
+    // TODO: Move adding clip to track and transport reset to other methods that handle creating a figure
         arrangement.addClipToTrack(file, 1, 1.0, 3.5, 0.25);
 
         timeline.recalculate();

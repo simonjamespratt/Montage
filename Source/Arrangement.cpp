@@ -73,6 +73,11 @@ void Arrangement::addClipToTrack(const File &file, const int trackIndex, const d
         - startClip: the start position of the clip as placed on the track, e.g. 1.0 would mean the clip starts at 1 second from the beginning of the transport start
         - endClip: the end of the clip; the difference between clipEnd and clipStart gives you the length of the clip
         - offset: the start of the clip in relation to the start of the audio file, e.g. 1.0 would mean the clip start is 1 second from the beginning of the audio file
+
+        Mapping figure and particle value trees to a ClipPosition:
+        - particle.rangeStart -> ClipPosition.offset
+        - figure.particleEntry.onset -> ClipPosition.startClip
+        - (particle.rangeEnd - particle.rangeStart) + ClipPosition.startClip -> ClipPosition.endClip
     */
     auto newClip = track->insertWaveClip(
         file.getFileNameWithoutExtension(),

@@ -22,36 +22,44 @@ namespace te = tracktion_engine;
 /*
 */
 
-class TransportInteractor    : public Component
+struct SelectionRange
+{
+  double rangeStart;
+  double rangeEnd;
+};
+
+class TransportInteractor : public Component
 {
 public:
-    TransportInteractor(te::TransportControl &tc, te::Edit &e);
-    ~TransportInteractor();
+  TransportInteractor(te::TransportControl &tc, te::Edit &e);
+  ~TransportInteractor();
 
-    enum InteractionState
-    {
-        ControlCursor,
-        ControlRangeSelection
-    };
+  enum InteractionState
+  {
+    ControlCursor,
+    ControlRangeSelection
+  };
 
-    void changeMode(InteractionState newState);
+  void changeMode(InteractionState newState);
 
-    void paint (Graphics&) override;
-    void mouseDown(const MouseEvent &event) override;
-    void mouseDrag(const MouseEvent &event) override;
-    void mouseUp(const MouseEvent &event) override;
+  void paint(Graphics &) override;
+  void mouseDown(const MouseEvent &event) override;
+  void mouseDrag(const MouseEvent &event) override;
+  void mouseUp(const MouseEvent &event) override;
+
+  SelectionRange getSelectionRange();
 
 private:
-    te::TransportControl &transport;
-    te::Edit &edit;
-    InteractionState interactionState;
-    float mousePositionA;
-    float mousePositionB;
-    double rangeStart;
-    double rangeEnd;
+  te::TransportControl &transport;
+  te::Edit &edit;
+  InteractionState interactionState;
+  float mousePositionA;
+  float mousePositionB;
+  double rangeStart;
+  double rangeEnd;
 
-    double calculateAudioPosition(float mousePosition);
-    void handleMouseMovement();
+  double calculateAudioPosition(float mousePosition);
+  void handleMouseMovement();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransportInteractor)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportInteractor)
 };

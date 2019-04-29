@@ -11,24 +11,28 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "./Indentifiers.h"
 #include "./TimeDisplay.h"
 #include "./TracktionThumbnail.h"
 #include "./Cursor.h"
 #include "./TransportInteractor.h"
+#include "./FileManager.h"
+#include "./ErrorManager.h"
 
 namespace te = tracktion_engine;
 
 //==============================================================================
 /*
 */
-// TODO: delete (using Projucer) any components that are now unused
-class ParticleSelector : public Component, public ChangeListener
+class ParticleSelector : public Component, public ChangeListener, public ChangeBroadcaster
 {
 public:
-  ParticleSelector(te::Engine &eng);
+  ParticleSelector(te::Engine &eng, ValueTree &as);
   ~ParticleSelector();
 
   void resized() override;
+
+  bool readyToBeDeleted();
 
 private:
   te::Engine &engine;
@@ -36,21 +40,39 @@ private:
   // when this is working seriously, probably need to change this
   te::Edit edit;
   te::TransportControl &transport;
+
+  ValueTree &appState;
+  ValueTree sources;
+  ValueTree particles;
+  ValueTree source;
+  ValueTree particle;
+
+  bool toBeDeleted = false;
+
   TracktionThumbnail thumbnail;
   Cursor cursor;
   TimeDisplay transportPosition;
   TransportInteractor transportInteractor;
 
-  TextButton loadFileButton;
+  ComboBox sourceSelector;
   TextButton playPauseButton;
   TextButton stopButton;
+  TextButton saveParticleButton;
+  TextButton deleteParticleButton;
 
-  void selectAudioFile();
+  void initialiseSourceSelector();
+  void sourceSelectorChanged();
+  void selectNewSourceFile();
+  void loadExistingSourceFile(int &id);
+  int getNewParticleId();
+  void saveParticle();
+  void showErrorMessaging(const ErrorType &errorType);
   void addFileToEditAndLoop(File &file, te::AudioFile &audioFile);
   void updatePlayPauseButtonText();
   void changeListenerCallback(ChangeBroadcaster *) override;
   void togglePlayPause();
   void stop();
+  void deleteParticleSelector();
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticleSelector)
 };

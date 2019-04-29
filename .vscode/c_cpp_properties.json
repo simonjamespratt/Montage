@@ -5,7 +5,8 @@
       "includePath": [
         "${workspaceFolder}/**",
         "${workspaceFolder:JUCE}/**",
-        "${workspaceFolder:tracktion}/**"
+        "${workspaceFolder:tracktion}/**",
+        "${workspaceFolder:JUCE}/modules"
       ],
       "defines": [],
       "macFrameworkPath": ["/System/Library/Frameworks", "/Library/Frameworks"],
