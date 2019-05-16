@@ -17,26 +17,21 @@ ParticleSelector::ParticleSelector(te::Engine &eng, ValueTree &as) : engine(eng)
                                                                      transport(edit.getTransport()),
                                                                      appState(as),
                                                                      sources(),
-                                                                     transportPosition(transport),
                                                                      thumbnail(transport),
                                                                      cursor(transport, edit),
-                                                                     transportInteractor(transport, edit)
+                                                                     transportInteractor(transport, edit),
+                                                                     transportController(transport)
 {
     sources = (appState.getChildWithName(sourcesIdentifier));
     particles = (appState.getChildWithName(particlesIdentifier));
-    transport.addChangeListener(this);
+    
+    addAndMakeVisible(&particleNameDisplay);
+    particleNameDisplay.setFont(Font(20.0f, Font::bold));
+    updateViewableData();
 
     addAndMakeVisible(&sourceSelector);
     initialiseSourceSelector();
     sourceSelector.onChange = [this] { sourceSelectorChanged(); };
-
-    addAndMakeVisible(&playPauseButton);
-    updatePlayPauseButtonText();
-    playPauseButton.onClick = [this] { togglePlayPause(); };
-
-    addAndMakeVisible(&stopButton);
-    stopButton.setButtonText("Stop");
-    stopButton.onClick = [this] { stop(); };
 
     addAndMakeVisible(&saveParticleButton);
     saveParticleButton.setButtonText("Save particle");
@@ -46,10 +41,10 @@ ParticleSelector::ParticleSelector(te::Engine &eng, ValueTree &as) : engine(eng)
     deleteParticleButton.setButtonText("Delete particle");
     deleteParticleButton.onClick = [this] { deleteParticleSelector(); };
 
-    addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&thumbnail);
     addAndMakeVisible(&cursor);
     addAndMakeVisible(&transportInteractor);
+    addAndMakeVisible(&transportController);
 }
 
 ParticleSelector::~ParticleSelector()
@@ -58,24 +53,51 @@ ParticleSelector::~ParticleSelector()
     particles.removeChild(particle, nullptr);
 }
 
+void ParticleSelector::paint(Graphics &g)
+{
+    auto area = getLocalBounds();
+    area.removeFromRight(5);
+    area.removeFromLeft(5);
+    area.removeFromBottom(10);
+    g.setColour(Colours::darkgrey);
+    g.fillRect(area);
+}
+
 void ParticleSelector::resized()
 {
-    sourceSelector.setBounds(10, 10, getWidth() - 20, 20);
-    playPauseButton.setBounds(10, 40, getWidth() - 20, 20);
-    stopButton.setBounds(10, 70, getWidth() - 20, 20);
-    transportPosition.setBounds(10, 100, getWidth() - 20, 20);
+    //    total height of particle: 290
+    auto area = getLocalBounds();
+    auto dataDisplayArea = area.removeFromTop(40);
+    auto waveformArea = area.removeFromTop(160);
+    waveformArea.removeFromRight(10);
+    waveformArea.removeFromLeft(10);
+    auto transportArea = area.removeFromTop(50);
+    transportArea.removeFromLeft(10);
+    transportArea.removeFromRight(10);
+    auto persistanceArea = area;
+    
+    FlexBox dataDisplayFb;
+    dataDisplayFb.justifyContent = FlexBox::JustifyContent::spaceBetween;
+    dataDisplayFb.alignItems = FlexBox::AlignItems::center;
+    dataDisplayFb.items.add(FlexItem(particleNameDisplay).withHeight(20.0f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
+    dataDisplayFb.items.add(FlexItem(sourceSelector).withHeight(20.0f).withWidth(200.0f).withMargin(FlexItem::Margin(10.0f)));
+    dataDisplayFb.performLayout(dataDisplayArea.toFloat());
 
-    thumbnail.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
-    cursor.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
-    transportInteractor.setBounds(10, 130, getWidth() - 20, getHeight() - 160);
-
-    saveParticleButton.setBounds(10, getHeight() - 20, 100, 20);
-    deleteParticleButton.setBounds(110, getHeight() - 20, 100, 20);
+    thumbnail.setBounds(waveformArea);
+    cursor.setBounds(waveformArea);
+    transportInteractor.setBounds(waveformArea);
+    transportController.setBounds(transportArea);
+    
+    FlexBox persistanceActionsFb;
+    persistanceActionsFb.justifyContent = FlexBox::JustifyContent::flexStart;
+    persistanceActionsFb.items.add(FlexItem(saveParticleButton).withHeight(20.f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
+    persistanceActionsFb.items.add(FlexItem(deleteParticleButton).withHeight(20.f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
+    persistanceActionsFb.performLayout(persistanceArea.toFloat());
 }
 
 void ParticleSelector::initialiseSourceSelector()
 {
-    sourceSelector.setTextWhenNothingSelected("No source file currently chosen");
+    sourceSelector.setTextWhenNothingSelected("--");
     sourceSelector.addItem("Add new source", 999);
 
     for (int i = 0; i < sources.getNumChildren(); i++)
@@ -200,6 +222,7 @@ void ParticleSelector::saveParticle()
     particle.setProperty(particlePropRangeEndIdentifier, particleRange.rangeEnd, nullptr);
 
     // TODO: on success, display the details of the particle entry somewhere within this object
+    updateViewableData();
 }
 
 void ParticleSelector::showErrorMessaging(const ErrorType &errorType)
@@ -245,34 +268,6 @@ void ParticleSelector::addFileToEditAndLoop(File &file, te::AudioFile &audioFile
     transport.play(false);
 }
 
-void ParticleSelector::updatePlayPauseButtonText()
-{
-    playPauseButton.setButtonText(transport.isPlaying() ? "Pause" : "Play");
-}
-
-void ParticleSelector::changeListenerCallback(ChangeBroadcaster *)
-{
-    updatePlayPauseButtonText();
-}
-
-void ParticleSelector::togglePlayPause()
-{
-    if (transport.isPlaying())
-    {
-        transport.stop(false, false);
-    }
-    else
-    {
-        transport.play(false);
-    }
-}
-
-void ParticleSelector::stop()
-{
-    transport.stop(false, false);
-    transport.setCurrentPosition(0.0);
-}
-
 void ParticleSelector::deleteParticleSelector()
 {
     toBeDeleted = true;
@@ -282,4 +277,15 @@ void ParticleSelector::deleteParticleSelector()
 bool ParticleSelector::readyToBeDeleted()
 {
     return toBeDeleted;
+}
+
+void ParticleSelector::updateViewableData()
+{
+    if (particle.isValid()) {
+        particleNameDisplay.setText(particle.getProperty(particlePropIdIdentifier).toString(), dontSendNotification);
+    }
+    else {
+        particleNameDisplay.setText("Untitled", dontSendNotification);
+    }
+    
 }

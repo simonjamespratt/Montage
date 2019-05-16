@@ -2,13 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./Indentifiers.h"
-#include "./ParticleSelector.h"
-#include "./Sequencer.h"
-#include "./Particles.h"
-#include "./SourceManager.h"
-#include "./ParticlesManifest.h"
-
-namespace te = tracktion_engine;
+#include "./ContentContainer.h"
 
 /*
 ValueTree type Identifier: AppState
@@ -21,6 +15,7 @@ ValueTree type Identifier: AppState
     child ValueTree type Identifier: Particles
         child ValueTree type Identifier: Particle
             id: int
+            name: String (optional)
             sourceId: int
             rangeStart:double
             rangeEnd: double
@@ -33,25 +28,15 @@ ValueTree type Identifier: AppState
 class MainComponent : public Component
 {
 public:
-  // constructor and deconstructor
-  MainComponent();
-  ~MainComponent();
+    // constructor and deconstructor
+    MainComponent();
+    ~MainComponent();
 
-  void resized() override;
+    void resized() override;
 
-  ValueTree appState;
+    ValueTree appState;
 
 private:
-  te::Engine engine;
-  SourceManager sourceManager;
-  ParticlesManifest particlesManifest;
-  Particles particlesContainer;
-  // ParticleSelector particleSelector;
-  // Sequencer sequencer;
-
-  TextButton settingsButton;
-
-  void showAudioDeviceSettings(te::Engine &engine);
-
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
+    ContentContainer contentContainer;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

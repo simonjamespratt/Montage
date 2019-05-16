@@ -10,6 +10,10 @@
     </GROUP>
     <FILE id="D7W7Q9" name="Arrangement.cpp" compile="1" resource="0" file="Source/Arrangement.cpp"/>
     <FILE id="u18b7e" name="Arrangement.h" compile="0" resource="0" file="Source/Arrangement.h"/>
+    <FILE id="xiLiFK" name="ContentContainer.cpp" compile="1" resource="0"
+          file="Source/ContentContainer.cpp"/>
+    <FILE id="iONJVl" name="ContentContainer.h" compile="0" resource="0"
+          file="Source/ContentContainer.h"/>
     <FILE id="BPu7wr" name="Cursor.cpp" compile="1" resource="0" file="Source/Cursor.cpp"/>
     <FILE id="molGEf" name="Cursor.h" compile="0" resource="0" file="Source/Cursor.h"/>
     <FILE id="jAVtYk" name="ErrorManager.cpp" compile="1" resource="0"
@@ -18,9 +22,15 @@
     <FILE id="ONBsKW" name="ErrorMessage.cpp" compile="1" resource="0"
           file="Source/ErrorMessage.cpp"/>
     <FILE id="p23E09" name="ErrorMessage.h" compile="0" resource="0" file="Source/ErrorMessage.h"/>
+    <FILE id="D8OoJu" name="Figures.cpp" compile="1" resource="0" file="Source/Figures.cpp"/>
+    <FILE id="kFbLnA" name="Figures.h" compile="0" resource="0" file="Source/Figures.h"/>
     <FILE id="urV7QI" name="FileManager.cpp" compile="1" resource="0" file="Source/FileManager.cpp"/>
     <FILE id="Ul7dt9" name="FileManager.h" compile="0" resource="0" file="Source/FileManager.h"/>
+    <FILE id="HO2Q8W" name="Icons.cpp" compile="1" resource="0" file="Source/Icons.cpp"/>
+    <FILE id="E84qYl" name="Icons.h" compile="0" resource="0" file="Source/Icons.h"/>
     <FILE id="dbuwIM" name="Indentifiers.h" compile="0" resource="0" file="Source/Indentifiers.h"/>
+    <FILE id="qnbFk9" name="MainHeader.cpp" compile="1" resource="0" file="Source/MainHeader.cpp"/>
+    <FILE id="K06LvM" name="MainHeader.h" compile="0" resource="0" file="Source/MainHeader.h"/>
     <FILE id="nKse1l" name="Particles.cpp" compile="1" resource="0" file="Source/Particles.cpp"/>
     <FILE id="N6U7QH" name="Particles.h" compile="0" resource="0" file="Source/Particles.h"/>
     <FILE id="CmEdp1" name="ParticleSelector.cpp" compile="1" resource="0"
@@ -31,6 +41,9 @@
           file="Source/ParticlesManifest.cpp"/>
     <FILE id="YBNFOk" name="ParticlesManifest.h" compile="0" resource="0"
           file="Source/ParticlesManifest.h"/>
+    <FILE id="NnOQ7I" name="ParticlesPage.cpp" compile="1" resource="0"
+          file="Source/ParticlesPage.cpp"/>
+    <FILE id="sB6heo" name="ParticlesPage.h" compile="0" resource="0" file="Source/ParticlesPage.h"/>
     <FILE id="LPO6mh" name="Sequencer.cpp" compile="1" resource="0" file="Source/Sequencer.cpp"/>
     <FILE id="ig0V2R" name="Sequencer.h" compile="0" resource="0" file="Source/Sequencer.h"/>
     <FILE id="enjVrc" name="SourceManager.cpp" compile="1" resource="0"
@@ -44,6 +57,10 @@
           file="Source/TracktionThumbnail.cpp"/>
     <FILE id="DsKP5c" name="TracktionThumbnail.h" compile="0" resource="0"
           file="Source/TracktionThumbnail.h"/>
+    <FILE id="oXG8yk" name="TransportController.cpp" compile="1" resource="0"
+          file="Source/TransportController.cpp"/>
+    <FILE id="N5L756" name="TransportController.h" compile="0" resource="0"
+          file="Source/TransportController.h"/>
     <FILE id="SQg4ay" name="TransportInteractor.cpp" compile="1" resource="0"
           file="Source/TransportInteractor.cpp"/>
     <FILE id="kimFES" name="TransportInteractor.h" compile="0" resource="0"

@@ -16,32 +16,21 @@ Sequencer::Sequencer(te::Engine &eng) : engine(eng),
                                         edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
                                         transport(edit.getTransport()),
                                         timeline(edit),
-                                        cursor(transport, edit),
                                         arrangement(edit, transport),
-                                        transportPosition(transport),
-                                        transportInteractor(transport, edit)
+                                        cursor(transport, edit),
+                                        transportInteractor(transport, edit),
+                                        transportController(transport)
 {
+    // TODO: remove this
     addAndMakeVisible(&loadFileButton);
     loadFileButton.setButtonText("Load file");
     loadFileButton.onClick = [this] { selectAudioFile(); };
 
-    transport.addChangeListener(this);
-
-    addAndMakeVisible(&playPauseButton);
-    updatePlayPauseButtonText();
-    playPauseButton.onClick = [this] { togglePlayPause(); };
-
-    addAndMakeVisible(&stopButton);
-    stopButton.setButtonText("Stop");
-    stopButton.onClick = [this] { stop(); };
-
-    addAndMakeVisible(&transportPosition);
     addAndMakeVisible(&timeline);
     addAndMakeVisible(&arrangement);
     addAndMakeVisible(&cursor);
     addAndMakeVisible(&transportInteractor);
-
-    setSize(600, 400);
+    addAndMakeVisible(&transportController);
 }
 
 Sequencer::~Sequencer()
@@ -49,16 +38,29 @@ Sequencer::~Sequencer()
     edit.getTempDirectory(false).deleteRecursively();
 }
 
+void Sequencer::paint(Graphics &g)
+{
+}
+
 void Sequencer::resized()
 {
-    loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
-    playPauseButton.setBounds(10, 70, getWidth() - 20, 20);
-    stopButton.setBounds(10, 100, getWidth() - 20, 20);
-    transportPosition.setBounds(10, 130, getWidth() - 20, 20);
-    timeline.setBounds(10, 160, getWidth() - 20, 20);
-    arrangement.setBounds(10, 190, getWidth() - 20, 200);
-    cursor.setBounds(10, 190, getWidth() - 20, 200);
-    transportInteractor.setBounds(10, 190, getWidth() - 20, 200);
+    // TODO: remove the loadFileButton
+    // loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
+
+    auto area = getLocalBounds();
+    area.removeFromTop(10);
+    area.removeFromRight(10);
+    area.removeFromBottom(10);
+    area.removeFromLeft(10);
+    auto transportArea = area.removeFromBottom(50);
+    auto timelineArea = area.removeFromTop(20);
+    auto arrangementArea = area;
+
+    timeline.setBounds(timelineArea);
+    arrangement.setBounds(arrangementArea);
+    cursor.setBounds(arrangementArea);
+    transportInteractor.setBounds(arrangementArea);
+    transportController.setBounds(transportArea);
 }
 
 void Sequencer::selectAudioFile()
@@ -88,40 +90,12 @@ void Sequencer::selectAudioFile()
         {
             return;
         }
-    // =======================================================================================
-    // TODO: Move adding clip to track and transport reset to other methods that handle creating a figure
+        // =======================================================================================
+        // TODO: Move adding clip to track and transport reset to other methods that handle creating a figure
         arrangement.addClipToTrack(file, 1, 1.0, 3.5, 0.25);
 
         timeline.recalculate();
         transport.position = 0.0;
         transport.play(false);
     }
-}
-
-void Sequencer::changeListenerCallback(ChangeBroadcaster *)
-{
-    updatePlayPauseButtonText();
-}
-
-void Sequencer::togglePlayPause()
-{
-    if (transport.isPlaying())
-    {
-        transport.stop(false, false);
-    }
-    else
-    {
-        transport.play(false);
-    }
-}
-
-void Sequencer::stop()
-{
-    transport.stop(false, false);
-    transport.setCurrentPosition(0.0);
-}
-
-void Sequencer::updatePlayPauseButtonText()
-{
-    playPauseButton.setButtonText(transport.isPlaying() ? "Pause" : "Play");
 }

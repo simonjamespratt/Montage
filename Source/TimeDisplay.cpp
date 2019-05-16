@@ -35,5 +35,6 @@ void TimeDisplay::timerCallback()
     auto seconds = ((int)position.inSeconds()) % 60;
     auto millis = ((int)position.inMilliseconds()) % 1000;
     auto positionString = String::formatted("%02d:%02d:%03d", minutes, seconds, millis);
+    transportPosition.setFont(Font(24.0f));
     transportPosition.setText(positionString, dontSendNotification);
 }

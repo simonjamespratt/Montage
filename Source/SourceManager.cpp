@@ -12,8 +12,19 @@
 #include "SourceManager.h"
 
 //==============================================================================
-SourceManager::SourceManager(ValueTree &as) : appState(as), sources(), particles(), table({}, this)
+SourceManager::SourceManager(ValueTree &as) :   appState(as),
+                                                sources(),
+                                                particles(),
+                                                table({}, this),
+                                                crossIcon(icons.getIcon(Icons::IconType::Cross)),
+                                                addSourceFileButton("Add source file", DrawableButton::ButtonStyle::ImageOnButtonBackground),
+                                                dashIcon(icons.getIcon(Icons::IconType::Dash)),
+                                                deleteSourceFilesButton("Delete source files", DrawableButton::ButtonStyle::ImageOnButtonBackground)
 {
+    heading.setText("Source Manager", dontSendNotification);
+    heading.setFont(Font(24.0f, Font::bold));
+    addAndMakeVisible(&heading);
+    
     appState.addListener(this);
     sources = (appState.getChildWithName(sourcesIdentifier));
     particles = (appState.getChildWithName(particlesIdentifier));
@@ -22,13 +33,13 @@ SourceManager::SourceManager(ValueTree &as) : appState(as), sources(), particles
     table.setColour(ListBox::outlineColourId, Colours::grey);
     table.setOutlineThickness(1);
     table.setMultipleSelectionEnabled(false);
-
+    
+    addSourceFileButton.setImages(&crossIcon);
     addAndMakeVisible(&addSourceFileButton);
-    addSourceFileButton.setButtonText("Add source");
     addSourceFileButton.onClick = [this] { selectNewSourceFile(); };
-
+    
+    deleteSourceFilesButton.setImages(&dashIcon);
     addAndMakeVisible(&deleteSourceFilesButton);
-    deleteSourceFilesButton.setButtonText("Delete sources");
     deleteSourceFilesButton.onClick = [this] { deleteSources(); };
 
     // Add table columns to the header
@@ -48,9 +59,21 @@ SourceManager::~SourceManager()
 
 void SourceManager::resized()
 {
-    table.setBounds(0, 0, getWidth(), getHeight() - 80);
-    addSourceFileButton.setBounds(0, getHeight() - 30, getWidth(), 20);
-    deleteSourceFilesButton.setBounds(0, getHeight() - 70, getWidth(), 20);
+    auto area = getLocalBounds();
+    auto headerArea = area.removeFromTop(50);
+    area.removeFromRight(5);
+    area.removeFromBottom(10);
+    area.removeFromLeft(5);
+    
+    FlexBox headerContainer;
+    headerContainer.justifyContent = FlexBox::JustifyContent::flexStart;
+    headerContainer.alignContent = FlexBox::AlignContent::center;
+    headerContainer.items.add(FlexItem(heading).withHeight(24.0f).withWidth(200.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.items.add(FlexItem(addSourceFileButton).withHeight(24.0f).withWidth(24.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.items.add(FlexItem(deleteSourceFilesButton).withHeight(24.0f).withWidth(24.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.performLayout(headerArea);
+    
+    table.setBounds(area);
 }
 
 int SourceManager::getNumRows()

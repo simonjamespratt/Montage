@@ -14,6 +14,10 @@
 //==============================================================================
 ParticlesManifest::ParticlesManifest(ValueTree &as) : appState(as), particles(), table({}, this)
 {
+    heading.setText("Particles Manifest", dontSendNotification);
+    heading.setFont(Font(24.0f, Font::bold));
+    addAndMakeVisible(&heading);
+    
     appState.addListener(this);
     particles = (appState.getChildWithName(particlesIdentifier));
 
@@ -38,7 +42,19 @@ ParticlesManifest::~ParticlesManifest()
 
 void ParticlesManifest::resized()
 {
-    table.setBounds(0, 0, getWidth(), getHeight());
+    auto area = getLocalBounds();
+    auto headerArea = area.removeFromTop(50);
+    area.removeFromRight(5);
+    area.removeFromBottom(10);
+    area.removeFromLeft(5);
+    
+    FlexBox headerContainer;
+    headerContainer.justifyContent = FlexBox::JustifyContent::flexStart;
+    headerContainer.alignContent = FlexBox::AlignContent::center;
+    headerContainer.items.add(FlexItem(heading).withHeight(24.0f).withWidth(200.0f).withMargin(FlexItem::Margin(5.0f)));
+    headerContainer.performLayout(headerArea);
+    
+    table.setBounds(area);
 }
 
 int ParticlesManifest::getNumRows()
