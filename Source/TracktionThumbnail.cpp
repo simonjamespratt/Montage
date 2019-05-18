@@ -19,6 +19,8 @@ TracktionThumbnail::TracktionThumbnail(tracktion_engine::TransportControl &tc) :
                                                                                      *this,
                                                                                      nullptr)
 {
+    timeRangeStart = 0.0;
+    timeRangeEnd = 0.0;
 }
 
 TracktionThumbnail::~TracktionThumbnail()
@@ -27,20 +29,23 @@ TracktionThumbnail::~TracktionThumbnail()
 
 void TracktionThumbnail::paint(Graphics &g)
 {
-    auto r = getLocalBounds();
-    const auto colour = findColour(Label::textColourId);
+    if (timeRangeStart < timeRangeEnd)
+    {
+        auto r = getLocalBounds();
+        const auto colour = findColour(Label::textColourId);
 
-    if (smartThumbnail.isGeneratingProxy())
-    {
-        g.setColour(colour.withMultipliedBrightness(0.9f));
-        g.drawText("Creating proxy: " + String(roundToInt(smartThumbnail.getProxyProgress() * 100.0f)) + "%",
-                   r, Justification::centred);
-    }
-    else
-    {
-        const float brightness = smartThumbnail.isOutOfDate() ? 0.4f : 0.66f;
-        g.setColour(colour.withMultipliedBrightness(brightness));
-        smartThumbnail.drawChannels(g, r, true, {timeRangeStart, timeRangeEnd}, 1.0f);
+        if (smartThumbnail.isGeneratingProxy())
+        {
+            g.setColour(colour.withMultipliedBrightness(0.9f));
+            g.drawText("Creating proxy: " + String(roundToInt(smartThumbnail.getProxyProgress() * 100.0f)) + "%",
+                    r, Justification::centred);
+        }
+        else
+        {
+            const float brightness = smartThumbnail.isOutOfDate() ? 0.4f : 0.66f;
+            g.setColour(colour.withMultipliedBrightness(brightness));
+            smartThumbnail.drawChannels(g, r, true, {timeRangeStart, timeRangeEnd}, 1.0f);
+        }
     }
 }
 

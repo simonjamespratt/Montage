@@ -29,3 +29,12 @@ static Identifier particlePropNameIdentifier("name");
 static Identifier particlePropSourceIdIdentifier("sourceId");
 static Identifier particlePropRangeStartIdentifier("rangeStart");
 static Identifier particlePropRangeEndIdentifier("rangeEnd");
+
+// Figures
+static Identifier figuresIdentifier("Figures");
+static Identifier figureIdentifier("Figure");
+static Identifier figurePropIdIdentifier("figureId");
+static Identifier figureEventIdentifier("FigureEvent");
+static Identifier figureEventPropIdIdentifier("figureEventId");
+static Identifier figureEventPropOnsetIdentifier("onset");
+static Identifier figureEventPropParticleIdIdentifier("particleId");

@@ -22,6 +22,13 @@
     <FILE id="ONBsKW" name="ErrorMessage.cpp" compile="1" resource="0"
           file="Source/ErrorMessage.cpp"/>
     <FILE id="p23E09" name="ErrorMessage.h" compile="0" resource="0" file="Source/ErrorMessage.h"/>
+    <FILE id="nBo9fx" name="FigureGenerator.cpp" compile="1" resource="0"
+          file="Source/FigureGenerator.cpp"/>
+    <FILE id="qRzEz8" name="FigureGenerator.h" compile="0" resource="0"
+          file="Source/FigureGenerator.h"/>
+    <FILE id="wCpj08" name="FigureManager.cpp" compile="1" resource="0"
+          file="Source/FigureManager.cpp"/>
+    <FILE id="oPvTzZ" name="FigureManager.h" compile="0" resource="0" file="Source/FigureManager.h"/>
     <FILE id="D8OoJu" name="Figures.cpp" compile="1" resource="0" file="Source/Figures.cpp"/>
     <FILE id="kFbLnA" name="Figures.h" compile="0" resource="0" file="Source/Figures.h"/>
     <FILE id="urV7QI" name="FileManager.cpp" compile="1" resource="0" file="Source/FileManager.cpp"/>

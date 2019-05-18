@@ -16,8 +16,20 @@
 #include "./Arrangement.h"
 #include "./TransportInteractor.h"
 #include "./TransportController.h"
+#include "./Indentifiers.h"
+#include "./FileManager.h"
+#include "./ErrorManager.h"
 
 namespace te = tracktion_engine;
+
+struct ClipData
+{
+    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> clip;
+    int trackIndex;
+    double clipStart;
+    double clipEnd;
+    double offset;
+};
 
 //==============================================================================
 /*
@@ -25,11 +37,13 @@ namespace te = tracktion_engine;
 class Sequencer : public Component
 {
 public:
-    Sequencer(te::Engine &eng);
+    Sequencer(te::Engine &eng, ValueTree &as);
     ~Sequencer();
 
     void paint(Graphics &g) override;
     void resized() override;
+
+    void readFigure(ValueTree &figure);
 
 private:
     te::Engine &engine;
@@ -38,15 +52,18 @@ private:
     te::Edit edit;
     te::TransportControl &transport;
 
+    ValueTree &appState;
+
     Timeline timeline;
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
     TransportController transportController;
-
-    TextButton loadFileButton; // TODO: to be deleted
-
-    void selectAudioFile();
+    int noOfTracks;
+    void showErrorMessaging(const ErrorType &errorType);
+    void prepareForNewFigure(int noOfParticles);
+    void prepareTracks();
+    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };

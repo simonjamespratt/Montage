@@ -20,7 +20,7 @@ FileManager::~FileManager()
 
 void FileManager::chooseFile()
 {
-    // TODO: does this need to be a shared pointer?
+    // NB: does this need to be a shared pointer?
     auto fileChooser = std::make_shared<FileChooser>(
         "Load an audio file to use as a source",
         File::getSpecialLocation(File::userHomeDirectory),

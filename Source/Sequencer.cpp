@@ -12,19 +12,17 @@
 #include "Sequencer.h"
 
 //==============================================================================
-Sequencer::Sequencer(te::Engine &eng) : engine(eng),
-                                        edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
-                                        transport(edit.getTransport()),
-                                        timeline(edit),
-                                        arrangement(edit, transport),
-                                        cursor(transport, edit),
-                                        transportInteractor(transport, edit),
-                                        transportController(transport)
+Sequencer::Sequencer(te::Engine &eng, ValueTree &as) : engine(eng),
+                                                       edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
+                                                       transport(edit.getTransport()),
+                                                       appState(as),
+                                                       timeline(edit),
+                                                       arrangement(edit, transport),
+                                                       cursor(transport, edit),
+                                                       transportInteractor(transport, edit),
+                                                       transportController(transport)
 {
-    // TODO: remove this
-    addAndMakeVisible(&loadFileButton);
-    loadFileButton.setButtonText("Load file");
-    loadFileButton.onClick = [this] { selectAudioFile(); };
+    noOfTracks = 0;
 
     addAndMakeVisible(&timeline);
     addAndMakeVisible(&arrangement);
@@ -44,9 +42,6 @@ void Sequencer::paint(Graphics &g)
 
 void Sequencer::resized()
 {
-    // TODO: remove the loadFileButton
-    // loadFileButton.setBounds(10, 10, getWidth() - 20, 20);
-
     auto area = getLocalBounds();
     area.removeFromTop(10);
     area.removeFromRight(10);
@@ -63,39 +58,122 @@ void Sequencer::resized()
     transportController.setBounds(transportArea);
 }
 
-void Sequencer::selectAudioFile()
+void Sequencer::readFigure(ValueTree &figure)
 {
-    // ======================================================================================
-    // TODO: selectAudioFile(): remove this file selection logic
-    // Replace it with logic for loading and validating an existing source file from appState as it is done in ParticleSelector
-    auto fileChooser = std::make_shared<FileChooser>(
-        "Load an audio file",
-        engine.getPropertyStorage().getDefaultLoadSaveDirectory(ProjectInfo::projectName),
-        "*.wav,*.aif,*.aiff");
+    std::vector<ClipData> clips;
+    int noOfFigureEvents = figure.getNumChildren();
+    auto sources = appState.getChildWithName(sourcesIdentifier);
+    auto particles = appState.getChildWithName(particlesIdentifier);
+    int noOfParticles = particles.getNumChildren();
+    prepareForNewFigure(noOfParticles);
 
-    if (fileChooser->browseForFileToOpen())
+    for (int i = 0; i < noOfFigureEvents; i++)
     {
-        auto file = fileChooser->getResult();
+        // unpack each figure event value tree:- particleId, onset
+        auto currentFigure = figure.getChild(i);
 
-        if (file.existsAsFile())
+        int particleId = int(currentFigure[figureEventPropParticleIdIdentifier]);
+        auto particle = particles.getChildWithProperty(particlePropIdIdentifier, particleId);
+        double particleRangeStart = double(particle[particlePropRangeStartIdentifier]);
+        double particleRangeEnd = double(particle[particlePropRangeEndIdentifier]);
+
+        int trackIndex = particleId - 1;
+        double clipStart = double(currentFigure[figureEventPropOnsetIdentifier]);
+        double clipEnd = (particleRangeEnd - particleRangeStart) + clipStart;
+        double offset = particleRangeStart;
+        int sourceId = int(particle[particlePropIdIdentifier]);
+        auto requestedSource = sources.getChildWithProperty(sourcePropIdIdentifier, sourceId);
+
+        if (requestedSource.isValid())
         {
-            engine.getPropertyStorage().setDefaultLoadSaveDirectory(
-                ProjectInfo::projectName,
-                file.getParentDirectory());
+            FileManager fileManager;
+            fileManager.loadExistingSourceFile(requestedSource);
+
+            if (!fileManager.fileIsValid())
+            {
+                showErrorMessaging(FileInvalid);
+                return;
+            }
+
+            auto file = fileManager.getFile();
+            auto clip = addClipToTrack(file, trackIndex, clipStart, clipEnd, offset);
+            clips.push_back({clip,
+                             trackIndex,
+                             clipStart,
+                             clipEnd,
+                             offset});
         }
-
-        te::AudioFile audioFile(file);
-
-        if (!audioFile.isValid())
-        {
-            return;
-        }
-        // =======================================================================================
-        // TODO: Move adding clip to track and transport reset to other methods that handle creating a figure
-        arrangement.addClipToTrack(file, 1, 1.0, 3.5, 0.25);
-
-        timeline.recalculate();
-        transport.position = 0.0;
-        transport.play(false);
     }
+
+    for (auto &&entry : clips)
+    {
+        arrangement.addClipToArrangement(entry.clip, entry.trackIndex, entry.clipStart, entry.clipEnd, entry.offset);
+    }
+
+    timeline.recalculate();
+    transport.position = 0.0;
+    transport.play(false);
+}
+
+void Sequencer::showErrorMessaging(const ErrorType &errorType)
+{
+    std::make_shared<ErrorManager>(errorType);
+}
+
+void Sequencer::prepareForNewFigure(int noOfParticles)
+{
+    // for each track in use from the last figure, remove all clips
+    for (int i = 0; i < noOfTracks; i++)
+    {
+        auto track = edit.getOrInsertAudioTrackAt(i);
+        auto clipsToRemove = track->getClips();
+        for (int i = clipsToRemove.size(); --i >= 0;)
+        {
+            clipsToRemove.getUnchecked(i)->removeFromParentTrack();
+        }
+    }
+
+    // set the no of tracks required for the incoming figure
+    noOfTracks = noOfParticles;
+    // prepare the new tracks
+    prepareTracks();
+    arrangement.prepareArrangement(noOfTracks);
+
+    // NB: find a way to delete audio tracks from edit: cannot see a good way to this at the moment, which means there will be empty unused tracks in the ether
+    // these unused tracks will not have clips on them because clips will be cleared from all previously used tracks in this method
+    // they will also not be displayed as display is the result of the noOfTracks member of this class
+    // but they will still just be hanging around
+}
+
+void Sequencer::prepareTracks()
+{
+    for (int i = 0; i < noOfTracks; i++)
+    {
+        edit.getOrInsertAudioTrackAt(i);
+    }
+    repaint();
+}
+
+juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> Sequencer::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
+{
+    /*
+        NB: ClipPosition has the following structure: { {startClip, endClip}, offset }
+        Where the above mean:
+        - startClip: the start position of the clip as placed on the track, e.g. 1.0 would mean the clip starts at 1 second from the beginning of the transport start
+        - endClip: the end of the clip; the difference between clipEnd and clipStart gives you the length of the clip
+        - offset: the start of the clip in relation to the start of the audio file, e.g. 1.0 would mean the clip start is 1 second from the beginning of the audio file
+
+        Mapping figure and particle value trees to a ClipPosition:
+        - particle.rangeStart -> ClipPosition.offset
+        - figure.figureEvent.onset -> ClipPosition.clipStart
+        - (particle.rangeEnd - particle.rangeStart) + ClipPosition.clipStart -> ClipPosition.clipEnd
+    */
+    auto track = edit.getOrInsertAudioTrackAt(trackIndex);
+    auto newClip = track->insertWaveClip(
+        file.getFileNameWithoutExtension(),
+        file,
+        {{clipStart, clipEnd}, offset},
+        false);
+
+    return newClip;
 }
