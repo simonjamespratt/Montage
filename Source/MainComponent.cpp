@@ -5,8 +5,10 @@ MainComponent::MainComponent() : appState(appStateIdentifier), contentContainer(
 {
     ValueTree sources(sourcesIdentifier);
     ValueTree particles(particlesIdentifier);
+    ValueTree figures(figuresIdentifier);
     appState.addChild(sources, -1, nullptr);
     appState.addChild(particles, -1, nullptr);
+    appState.addChild(figures, -1, nullptr);
 
     auto screenSize = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
     addAndMakeVisible(&contentContainer);

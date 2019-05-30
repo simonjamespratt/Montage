@@ -14,7 +14,7 @@
 //==============================================================================
 Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc) : edit(e), transport(tc)
 {
-    createTracks();
+    noOfTracks = 0;
 }
 
 Arrangement::~Arrangement()
@@ -23,16 +23,20 @@ Arrangement::~Arrangement()
 
 void Arrangement::paint(Graphics &g)
 {
-    drawTrackDividers(g);
+    if (noOfTracks == 0)
+    {
+        g.setColour(Colours::white);
+        g.drawText("No figure selected at present", getBounds(), Justification(36));
+    }
+    else
+    {
+        drawTrackDividers(g);
+    }
 }
 
-void Arrangement::createTracks()
+void Arrangement::prepareArrangement(int noOfTracksToMake)
 {
-    noOfTracks = 3;
-    for (int i = 0; i < noOfTracks; i++)
-    {
-        edit.getOrInsertAudioTrackAt(i);
-    }
+    noOfTracks = noOfTracksToMake;
     repaint();
 }
 
@@ -51,45 +55,13 @@ void Arrangement::drawTrackDividers(Graphics &g)
     }
 }
 
-void Arrangement::addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset)
+void Arrangement::addClipToArrangement(
+    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
+    const int trackIndex,
+    const double &clipStart,
+    const double &clipEnd,
+    const double &offset)
 {
-    auto track = edit.getOrInsertAudioTrackAt(trackIndex);
-
-    if (!track)
-    {
-        return;
-    }
-
-    // Remove clips - NB: this will need revisiting as you won't always want to remove all clips!
-    auto clipsToRemove = track->getClips();
-    for (int i = clipsToRemove.size(); --i >= 0;)
-    {
-        clipsToRemove.getUnchecked(i)->removeFromParentTrack();
-    }
-
-    /*
-        NB: ClipPosition has the following structure: { {startClip, endClip}, offset }
-        Where the above mean:
-        - startClip: the start position of the clip as placed on the track, e.g. 1.0 would mean the clip starts at 1 second from the beginning of the transport start
-        - endClip: the end of the clip; the difference between clipEnd and clipStart gives you the length of the clip
-        - offset: the start of the clip in relation to the start of the audio file, e.g. 1.0 would mean the clip start is 1 second from the beginning of the audio file
-
-        Mapping figure and particle value trees to a ClipPosition:
-        - particle.rangeStart -> ClipPosition.offset
-        - figure.particleEntry.onset -> ClipPosition.startClip
-        - (particle.rangeEnd - particle.rangeStart) + ClipPosition.startClip -> ClipPosition.endClip
-    */
-    auto newClip = track->insertWaveClip(
-        file.getFileNameWithoutExtension(),
-        file,
-        {{clipStart, clipEnd}, offset},
-        false);
-
-    if (!newClip)
-    {
-        return;
-    }
-
     ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, clipStart, clipEnd);
 
     addThumbnail(newClip, clipCoOrds, offset, (clipEnd - clipStart));
@@ -124,11 +96,10 @@ ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex, const double clipSta
 
 void Arrangement::addThumbnail(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip, ClipCoOrds clipCoOrds, double offset, double clipLength)
 {
-    // thumbnails.push_back(std::make_unique<TracktionThumbnail>(transport));
-
-    // NB: This may not be the best way to do this, but it works for now!
-    TracktionThumbnail *thumbnail = new TracktionThumbnail(transport);
-    addAndMakeVisible(thumbnail);
+    std::shared_ptr<TracktionThumbnail> thumbnail = std::make_shared<TracktionThumbnail>(transport);
+    // NB: not sure it's worth putting these in a vector as the items in the array are never accessed
+    thumbnails.emplace_back(thumbnail);
+    addAndMakeVisible(*thumbnail);
     thumbnail->setBounds(
         clipCoOrds.xAxis.start,
         clipCoOrds.yAxis.top,

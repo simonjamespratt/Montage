@@ -4,7 +4,7 @@
 #include "./Indentifiers.h"
 #include "./ContentContainer.h"
 
-/*
+/*==============================================================
 ValueTree type Identifier: AppState
     child ValueTree type Identifier: Sources
         child ValueTree type Identifier:Source
@@ -19,7 +19,14 @@ ValueTree type Identifier: AppState
             sourceId: int
             rangeStart:double
             rangeEnd: double
-*/
+    child ValueTree type Identifier: Figures
+        child ValueTree type Identifier: Figure
+            id: int ???
+            child ValueTree type Identifier: FigureEvent
+                id: int
+                onset: double (absolute, not relative)
+                particleId: int
+==============================================================*/
 
 /*
     This component lives inside our window, and this is where you should put all

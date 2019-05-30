@@ -24,7 +24,7 @@ ParticleSelector::ParticleSelector(te::Engine &eng, ValueTree &as) : engine(eng)
 {
     sources = (appState.getChildWithName(sourcesIdentifier));
     particles = (appState.getChildWithName(particlesIdentifier));
-    
+
     addAndMakeVisible(&particleNameDisplay);
     particleNameDisplay.setFont(Font(20.0f, Font::bold));
     updateViewableData();
@@ -75,7 +75,7 @@ void ParticleSelector::resized()
     transportArea.removeFromLeft(10);
     transportArea.removeFromRight(10);
     auto persistanceArea = area;
-    
+
     FlexBox dataDisplayFb;
     dataDisplayFb.justifyContent = FlexBox::JustifyContent::spaceBetween;
     dataDisplayFb.alignItems = FlexBox::AlignItems::center;
@@ -87,7 +87,7 @@ void ParticleSelector::resized()
     cursor.setBounds(waveformArea);
     transportInteractor.setBounds(waveformArea);
     transportController.setBounds(transportArea);
-    
+
     FlexBox persistanceActionsFb;
     persistanceActionsFb.justifyContent = FlexBox::JustifyContent::flexStart;
     persistanceActionsFb.items.add(FlexItem(saveParticleButton).withHeight(20.f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
@@ -221,7 +221,7 @@ void ParticleSelector::saveParticle()
     particle.setProperty(particlePropRangeStartIdentifier, particleRange.rangeStart, nullptr);
     particle.setProperty(particlePropRangeEndIdentifier, particleRange.rangeEnd, nullptr);
 
-    // TODO: on success, display the details of the particle entry somewhere within this object
+    // NB: on success, display the details of the particle entry somewhere within this object
     updateViewableData();
 }
 
@@ -281,11 +281,12 @@ bool ParticleSelector::readyToBeDeleted()
 
 void ParticleSelector::updateViewableData()
 {
-    if (particle.isValid()) {
+    if (particle.isValid())
+    {
         particleNameDisplay.setText(particle.getProperty(particlePropIdIdentifier).toString(), dontSendNotification);
     }
-    else {
+    else
+    {
         particleNameDisplay.setText("Untitled", dontSendNotification);
     }
-    
 }

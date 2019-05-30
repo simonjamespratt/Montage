@@ -16,7 +16,7 @@ ContentContainer::ContentContainer(ValueTree &as) : appState(as),
                                                     engine(ProjectInfo::projectName),
                                                     mainHeader(engine),
                                                     pages(TabbedButtonBar::Orientation::TabsAtTop),
-                                                    figures(engine),
+                                                    figures(engine, appState),
                                                     particlesPage(appState, engine)
 
 {

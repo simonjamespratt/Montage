@@ -43,6 +43,8 @@ private:
     te::Edit edit;
     te::TransportControl &transport;
 
+    // NB: need a ValueTree listener in this class for capturing changes to sources
+    // then refresh the view for the combobox to display the updated version of sources
     ValueTree &appState;
     ValueTree sources;
     ValueTree particles;
