@@ -38,6 +38,10 @@
     <FILE id="dbuwIM" name="Indentifiers.h" compile="0" resource="0" file="Source/Indentifiers.h"/>
     <FILE id="qnbFk9" name="MainHeader.cpp" compile="1" resource="0" file="Source/MainHeader.cpp"/>
     <FILE id="K06LvM" name="MainHeader.h" compile="0" resource="0" file="Source/MainHeader.h"/>
+    <FILE id="ZK1zx6" name="NumberGenerators.cpp" compile="1" resource="0"
+          file="Source/NumberGenerators.cpp"/>
+    <FILE id="kAUvrE" name="NumberGenerators.h" compile="0" resource="0"
+          file="Source/NumberGenerators.h"/>
     <FILE id="nKse1l" name="Particles.cpp" compile="1" resource="0" file="Source/Particles.cpp"/>
     <FILE id="N6U7QH" name="Particles.h" compile="0" resource="0" file="Source/Particles.h"/>
     <FILE id="CmEdp1" name="ParticleSelector.cpp" compile="1" resource="0"
