@@ -25,7 +25,6 @@ Figures::Figures(te::Engine &e, ValueTree &as) : engine(e), appState(as), sequen
     generateButton.setButtonText("Generate figure");
     addAndMakeVisible(&generateButton);
     generateButton.onClick = [this] { generateAndArrangeFigure(); };
-
 }
 
 Figures::~Figures()
@@ -48,7 +47,7 @@ void Figures::resized()
 
     auto heightUnit = area.getHeight() / 3;
     auto figureControlArea = area.removeFromTop(heightUnit);
-    figureGenerator.setBounds(figureControlArea.removeFromLeft(100));
+    figureGenerator.setBounds(figureControlArea.removeFromLeft(400));
     figureManager.setBounds(figureControlArea);
 
     sequencer.setBounds(area);

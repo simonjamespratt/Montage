@@ -16,6 +16,11 @@ FigureGenerator::FigureGenerator(ValueTree &as) : appState(as)
 {
     holdingMessage.setText("holding area for figure generation options.", dontSendNotification);
     addAndMakeVisible(&holdingMessage);
+    randomNumberDisplay.setText("", dontSendNotification);
+    addAndMakeVisible(&randomNumberDisplay);
+    addAndMakeVisible(&getRandomNumberButton);
+    getRandomNumberButton.setButtonText("Get random number");
+    getRandomNumberButton.onClick = [this] { getRandomNumber(); };
 }
 
 FigureGenerator::~FigureGenerator()
@@ -29,7 +34,9 @@ void FigureGenerator::paint(Graphics &g)
 void FigureGenerator::resized()
 {
     auto area = getLocalBounds();
-    holdingMessage.setBounds(area);
+    holdingMessage.setBounds(area.removeFromTop(50));
+    getRandomNumberButton.setBounds(area.removeFromTop(50));
+    randomNumberDisplay.setBounds(area.removeFromTop(50));
 }
 
 int FigureGenerator::getNewFigureId()
@@ -87,4 +94,122 @@ ValueTree FigureGenerator::generateFigure()
     }
 
     return ValueTree();
+}
+
+void FigureGenerator::getRandomNumber()
+{
+    // RandomNumber rn(1, 10);
+    // int number = rn.getNumber();
+
+    // SeriesRandomNumber sn(1, 10);
+    // auto text = randomNumberDisplay.getText();
+    // text += String("first set: ");
+    // randomNumberDisplay.setText(text, dontSendNotification);
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     int number = sn.getNumber();
+    //     text = randomNumberDisplay.getText();
+    //     text += String(number);
+    //     text += String(", ");
+    //     randomNumberDisplay.setText(text, dontSendNotification);
+    // }
+    // text = randomNumberDisplay.getText();
+    // text += String("second set: ");
+    // randomNumberDisplay.setText(text, dontSendNotification);
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     int number = sn.getNumber();
+    //     text = randomNumberDisplay.getText();
+    //     text += String(number);
+    //     text += String(", ");
+    //     randomNumberDisplay.setText(text, dontSendNotification);
+    // }
+
+    // RandomNumberWithoutDirectRepetition rwoutdp(1, 3);
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     int number = rwoutdp.getNumber();
+    //     auto text = randomNumberDisplay.getText();
+    //     text += String(number);
+    //     text += String(", ");
+    //     randomNumberDisplay.setText(text, dontSendNotification);
+    // }
+
+    // RandomNumberAdjacentSteps ras(1, 3, 1);
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     int number = ras.getNumber();
+    //     auto text = randomNumberDisplay.getText();
+    //     text += String(number);
+    //     text += String(", ");
+    //     randomNumberDisplay.setText(text, dontSendNotification);
+    // }
+
+    // PeriodicRandomNumber pr(1, 3, 0.75, 1);
+    // for (int i = 0; i < 20; i++)
+    // {
+    //     int number = pr.getNumber();
+    //     auto text = randomNumberDisplay.getText();
+    //     text += String(number);
+    //     text += String(", ");
+    //     randomNumberDisplay.setText(text, dontSendNotification);
+    // }
+
+    // RandomNumberWalk rw(50, 100, 5, 75);
+
+    // File csvFile("~/Desktop/test_random_walk.csv");
+
+    // if (csvFile.exists())
+    // {
+    //     String resultString;
+    //     for (int i = 0; i < 10; i++)
+    //     {
+    //         int number = rw.getNumber();
+    //         DBG(String(number));
+    //         resultString += String(i + 1);
+    //         resultString += String(", ");
+    //         resultString += String(number);
+    //         resultString += String("\n");
+    //     }
+    //     csvFile.replaceWithText(resultString);
+    // }
+    // else
+    // {
+    //     DBG("csv file not found");
+    // }
+
+    // RandomNumberWalkGranular rwg(1, 100, 0.5);
+    // RandomNumberWalkGranular rwg(1, 100, 0.1, 50);
+
+    // File csvFile("~/Desktop/test_random_walk.csv");
+
+    // if (csvFile.exists())
+    // {
+    //     String resultString;
+    //     for (int i = 0; i < 1000; i++)
+    //     {
+    //         auto number = rwg.getNumber();
+    //         DBG(String(number));
+    //         resultString += String(i + 1);
+    //         resultString += String(", ");
+    //         resultString += String(number);
+    //         resultString += String("\n");
+    //     }
+    //     csvFile.replaceWithText(resultString);
+    // }
+    // else
+    // {
+    //     DBG("csv file not found");
+    // }
+
+    RandomNumberWithinRange rwr(1, 10);
+    auto text = randomNumberDisplay.getText();
+    for (int i = 0; i < 50; i++)
+    {
+        int number = rwr.getNumber();
+        auto text = randomNumberDisplay.getText();
+        text += String(number);
+        text += String(", ");
+        randomNumberDisplay.setText(text, dontSendNotification);
+    }
 }

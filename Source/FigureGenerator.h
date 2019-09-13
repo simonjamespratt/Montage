@@ -12,6 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./Indentifiers.h"
+#include "./NumberGenerators.h"
 
 //==============================================================================
 /*
@@ -32,6 +33,9 @@ private:
     ValueTree generatedFigure;
     Label holdingMessage;
     TextButton generateButton;
+    Label randomNumberDisplay;
+    TextButton getRandomNumberButton;
+    void getRandomNumber();
 
     int getNewFigureId();
 
