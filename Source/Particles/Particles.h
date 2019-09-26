@@ -12,7 +12,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./ParticleSelector.h"
-#include "Icons.h"
+#include "../Utilities/Icons.h"
 
 namespace te = tracktion_engine;
 
@@ -28,7 +28,7 @@ public:
     void paint(Graphics &g) override;
     void resized() override;
 
-    void changeListenerCallback(ChangeBroadcaster* source) override;
+    void changeListenerCallback(ChangeBroadcaster *source) override;
 
 private:
     te::Engine &engine;

@@ -9,7 +9,7 @@
 */
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "Icons.h"
+#include "./Icons.h"
 
 //==============================================================================
 Icons::Icons()

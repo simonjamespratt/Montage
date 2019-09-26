@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
-#include "./ContentContainer.h"
+#include "./Utilities/Identifiers.h"
+#include "./PageLayout/ContentContainer.h"
 
 /*==============================================================
 ValueTree type Identifier: AppState

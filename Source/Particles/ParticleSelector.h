@@ -11,14 +11,13 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
-#include "./TimeDisplay.h"
-#include "./TracktionThumbnail.h"
-#include "./Cursor.h"
-#include "./TransportInteractor.h"
-#include "./FileManager.h"
-#include "./ErrorManager.h"
-#include "./TransportController.h"
+#include "../Utilities/Identifiers.h"
+#include "../AudioComponents/TracktionThumbnail.h"
+#include "../AudioComponents/Cursor.h"
+#include "../AudioComponents/TransportInteractor.h"
+#include "../DataManagement/FileManager.h"
+#include "../Errors/ErrorManager.h"
+#include "../AudioComponents/TransportController.h"
 
 namespace te = tracktion_engine;
 

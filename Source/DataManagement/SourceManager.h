@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    ParticlesManifest.h
-    Created: 27 Apr 2019 3:41:45pm
+    SourceManager.h
+    Created: 22 Apr 2019 7:30:41pm
     Author:  Simon Pratt
 
   ==============================================================================
@@ -11,16 +11,19 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
+#include "../Utilities/Identifiers.h"
+#include "./FileManager.h"
+#include "../Errors/ErrorManager.h"
+#include "../Utilities/Icons.h"
 
 //==============================================================================
 /*
 */
-class ParticlesManifest    : public Component, public TableListBoxModel, public ValueTree::Listener
+class SourceManager : public Component, public TableListBoxModel, public ValueTree::Listener
 {
 public:
-    ParticlesManifest(ValueTree &as);
-    ~ParticlesManifest();
+    SourceManager(ValueTree &as);
+    ~SourceManager();
 
     void resized() override;
 
@@ -28,6 +31,7 @@ public:
     int getNumRows() override;
     void paintRowBackground(Graphics &g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected) override;
     void paintCell(Graphics &g, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
+    void backgroundClicked(const MouseEvent &) override;
 
     // ValueTree change listeners
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
@@ -39,15 +43,21 @@ public:
 private:
     Label heading;
     ValueTree &appState;
+    ValueTree sources;
     ValueTree particles;
     TableListBox table;
-    std::array<Identifier, 4> dataTypes = {
-        particlePropIdIdentifier,
-        particlePropSourceIdIdentifier,
-        particlePropRangeStartIdentifier,
-        particlePropRangeEndIdentifier
-    };
+    Icons icons;
+    DrawablePath crossIcon;
+    DrawableButton addSourceFileButton;
+    DrawablePath dashIcon;
+    DrawableButton deleteSourceFilesButton;
+    std::array<Identifier, 3> dataTypes = {sourcePropIdIdentifier, sourcePropFileNameIdentifier, sourcePropFilePathIdentifier};
     int numRows = 0;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ParticlesManifest)
+    void selectNewSourceFile();
+    void showErrorMessaging(const ErrorType &errorType);
+    void deleteSources();
+    bool sourceIsInUse(int index);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SourceManager)
 };

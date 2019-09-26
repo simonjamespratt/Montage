@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./TracktionThumbnail.h"
+#include "../AudioComponents/TracktionThumbnail.h"
 
 namespace te = tracktion_engine;
 

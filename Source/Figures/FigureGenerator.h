@@ -11,8 +11,8 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
-#include "./NumberGenerators.h"
+#include "../Utilities/Identifiers.h"
+#include "../Utilities/NumberGenerators.h"
 
 //==============================================================================
 /*
