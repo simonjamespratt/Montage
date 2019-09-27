@@ -1,8 +1,8 @@
 /*
   ==============================================================================
 
-    FigureManager.h
-    Created: 20 May 2019 8:57:13am
+    ParticlesManifest.h
+    Created: 27 Apr 2019 3:41:45pm
     Author:  Simon Pratt
 
   ==============================================================================
@@ -11,25 +11,23 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
+#include "../Utilities/Identifiers.h"
 
 //==============================================================================
 /*
 */
-class FigureManager : public Component, public TableListBoxModel, public ValueTree::Listener
+class ParticlesManifest : public Component, public TableListBoxModel, public ValueTree::Listener
 {
 public:
-    FigureManager(ValueTree &as);
-    ~FigureManager();
+    ParticlesManifest(ValueTree &as);
+    ~ParticlesManifest();
 
-    void paint(Graphics &) override;
     void resized() override;
 
     // TableListBoxModel overrides
     int getNumRows() override;
     void paintRowBackground(Graphics &g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected) override;
     void paintCell(Graphics &g, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
-    void backgroundClicked(const MouseEvent &) override;
 
     // ValueTree change listeners
     void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
@@ -41,16 +39,14 @@ public:
 private:
     Label heading;
     ValueTree &appState;
-    ValueTree figures;
-    ValueTree figure;
+    ValueTree particles;
     TableListBox table;
-    std::array<Identifier, 3> dataTypes = {
-        figureEventPropIdIdentifier,
-        figureEventPropOnsetIdentifier,
-        figureEventPropParticleIdIdentifier};
+    std::array<Identifier, 4> dataTypes = {
+        particlePropIdIdentifier,
+        particlePropSourceIdIdentifier,
+        particlePropRangeStartIdentifier,
+        particlePropRangeEndIdentifier};
     int numRows = 0;
 
-    void setData();
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FigureManager)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticlesManifest)
 };

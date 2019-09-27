@@ -11,9 +11,9 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Particles.h"
-#include "./SourceManager.h"
-#include "./ParticlesManifest.h"
+#include "../Particles/Particles.h"
+#include "../DataManagement/SourceManager.h"
+#include "../DataManagement/ParticlesManifest.h"
 
 namespace te = tracktion_engine;
 

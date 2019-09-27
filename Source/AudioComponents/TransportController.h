@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Icons.h"
+#include "../Utilities/Icons.h"
 #include "./TimeDisplay.h"
 
 namespace te = tracktion_engine;

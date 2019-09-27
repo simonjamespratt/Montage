@@ -11,7 +11,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./Indentifiers.h"
+#include "../Utilities/Identifiers.h"
 
 namespace te = tracktion_engine;
 
@@ -32,5 +32,5 @@ private:
     File file;
     te::AudioFile audioFile;
     int getNewSourceId(ValueTree &sources);
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FileManager)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FileManager)
 };

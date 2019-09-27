@@ -12,13 +12,13 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "./Timeline.h"
-#include "./Cursor.h"
+#include "../AudioComponents/Cursor.h"
 #include "./Arrangement.h"
-#include "./TransportInteractor.h"
-#include "./TransportController.h"
-#include "./Indentifiers.h"
-#include "./FileManager.h"
-#include "./ErrorManager.h"
+#include "../AudioComponents/TransportInteractor.h"
+#include "../AudioComponents/TransportController.h"
+#include "../Utilities/Identifiers.h"
+#include "../DataManagement/FileManager.h"
+#include "../Errors/ErrorManager.h"
 
 namespace te = tracktion_engine;
 

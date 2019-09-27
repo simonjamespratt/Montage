@@ -11,9 +11,9 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "./FigureGenerator.h"
-#include "./Sequencer.h"
-#include "./FigureManager.h"
+#include "../Figures/FigureGenerator.h"
+#include "../Sequencer/Sequencer.h"
+#include "../DataManagement/FigureManager.h"
 
 namespace te = tracktion_engine;
 
