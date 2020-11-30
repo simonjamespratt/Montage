@@ -1,50 +1,57 @@
-/*
-  ==============================================================================
-
-    FigureManager.h
-    Created: 20 May 2019 8:57:13am
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
+#include "Identifiers.h"
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Utilities/Identifiers.h"
+#include <array>
+#include <juce_data_structures/juce_data_structures.h>
+#include <juce_gui_basics/juce_gui_basics.h>
 
-//==============================================================================
-/*
-*/
-class FigureManager : public Component, public TableListBoxModel, public ValueTree::Listener
-{
-public:
-    FigureManager(ValueTree &as);
+class FigureManager : public juce::Component,
+                      public juce::TableListBoxModel,
+                      public juce::ValueTree::Listener {
+  public:
+    FigureManager(juce::ValueTree &as);
     ~FigureManager();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
     // TableListBoxModel overrides
     int getNumRows() override;
-    void paintRowBackground(Graphics &g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected) override;
-    void paintCell(Graphics &g, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
-    void backgroundClicked(const MouseEvent &) override;
+    void paintRowBackground(juce::Graphics &g,
+                            int rowNumber,
+                            int /*width*/,
+                            int /*height*/,
+                            bool rowIsSelected) override;
+    void paintCell(juce::Graphics &g,
+                   int rowNumber,
+                   int columnId,
+                   int width,
+                   int height,
+                   bool rowIsSelected) override;
+    void backgroundClicked(const juce::MouseEvent &) override;
 
     // ValueTree change listeners
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-    void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) override;
-    void valueTreeChildOrderChanged(ValueTree &parentTreeWhoseChildrenHaveMoved, int oldInex, int newIndex) override;
-    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
+    void valueTreePropertyChanged(juce::ValueTree &treeWhosePropertyHasChanged,
+                                  const juce::Identifier &property) override;
+    void valueTreeChildAdded(juce::ValueTree &parentTree,
+                             juce::ValueTree &childWhichHasBeenAdded) override;
+    void valueTreeChildRemoved(juce::ValueTree &parentTree,
+                               juce::ValueTree &childWhichHasBeenRemoved,
+                               int indexFromWhichChildWasRemoved) override;
+    void valueTreeChildOrderChanged(
+        juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
+        int oldInex,
+        int newIndex) override;
+    void
+    valueTreeParentChanged(juce::ValueTree &treeWhoseParentHasChanged) override;
 
-private:
-    Label heading;
-    ValueTree &appState;
-    ValueTree figures;
-    ValueTree figure;
-    TableListBox table;
-    std::array<Identifier, 3> dataTypes = {
+  private:
+    juce::Label heading;
+    juce::ValueTree &appState;
+    juce::ValueTree figures;
+    juce::ValueTree figure;
+    juce::TableListBox table;
+    std::array<juce::Identifier, 3> dataTypes {
         figureEventPropIdIdentifier,
         figureEventPropOnsetIdentifier,
         figureEventPropParticleIdIdentifier};

@@ -1,19 +1,9 @@
-/*
-  ==============================================================================
-
-    ErrorManager.cpp
-    Created: 24 Apr 2019 5:06:10pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #include "ErrorManager.h"
 
 ErrorManager::ErrorManager(ErrorType et)
 {
     message = getMessage(et);
-    DialogWindow::LaunchOptions options;
+    juce::DialogWindow::LaunchOptions options;
     options.content.setOwned(new ErrorMessage(message));
     options.content->setSize(400, 200);
     options.dialogTitle = "Error message";
@@ -23,13 +13,11 @@ ErrorManager::ErrorManager(ErrorType et)
 }
 
 ErrorManager::~ErrorManager()
-{
-}
+{}
 
-String ErrorManager::getMessage(ErrorType errorType)
+juce::String ErrorManager::getMessage(ErrorType errorType)
 {
-    switch (errorType)
-    {
+    switch(errorType) {
     case FileInvalid:
         return "The file selected is invalid.";
     case FileAlreadyExists:
@@ -39,7 +27,8 @@ String ErrorManager::getMessage(ErrorType errorType)
     case ParticleRangeInvalid:
         return "The range for this particle is invalid";
     case DeleteSourceInvalidSourceInUse:
-        return "Cannot delete source as it is currently being used by a particle";
+        return "Cannot delete source as it is currently being used by a "
+               "particle";
     default:
         break;
     }

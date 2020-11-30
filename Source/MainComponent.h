@@ -1,8 +1,7 @@
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "./Utilities/Identifiers.h"
-#include "./PageLayout/ContentContainer.h"
+#include "ContentContainer.h"
+#include "Identifiers.h"
 
 /*==============================================================
 ValueTree type Identifier: AppState
@@ -32,18 +31,17 @@ ValueTree type Identifier: AppState
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class MainComponent : public Component
-{
-public:
+class MainComponent : public juce::Component {
+  public:
     // constructor and deconstructor
     MainComponent();
     ~MainComponent();
 
     void resized() override;
 
-    ValueTree appState;
+    juce::ValueTree appState;
 
-private:
+  private:
     ContentContainer contentContainer;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

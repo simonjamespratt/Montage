@@ -1,36 +1,31 @@
-/*
-  ==============================================================================
-
-    ContentContainer.cpp
-    Created: 29 Apr 2019 8:01:36pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "ContentContainer.h"
 
-//==============================================================================
-ContentContainer::ContentContainer(ValueTree &as) : appState(as),
-                                                    engine(ProjectInfo::projectName),
-                                                    mainHeader(engine),
-                                                    pages(TabbedButtonBar::Orientation::TabsAtTop),
-                                                    figures(engine, appState),
-                                                    particlesPage(appState, engine)
+ContentContainer::ContentContainer(juce::ValueTree &as)
+: appState(as),
+  engine(JUCE_APPLICATION_NAME_STRING),
+  mainHeader(engine),
+  pages(juce::TabbedButtonBar::Orientation::TabsAtTop),
+  figures(engine, appState),
+  particlesPage(appState, engine)
 
 {
     addAndMakeVisible(&mainHeader);
     addAndMakeVisible(&pages);
-    pages.addTab("Figures", findColour(ResizableWindow::backgroundColourId), &figures, true);
-    pages.addTab("Particles", findColour(ResizableWindow::backgroundColourId), &particlesPage, true);
+    pages.addTab("Figures",
+                 findColour(juce::ResizableWindow::backgroundColourId),
+                 &figures,
+                 true);
+    pages.addTab("Particles",
+                 findColour(juce::ResizableWindow::backgroundColourId),
+                 &particlesPage,
+                 true);
 }
 
 ContentContainer::~ContentContainer()
-{
-}
+{}
 
-void ContentContainer::paint(Graphics &g) {}
+void ContentContainer::paint(juce::Graphics &g)
+{}
 
 void ContentContainer::resized()
 {

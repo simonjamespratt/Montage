@@ -1,45 +1,47 @@
-/*
-  ==============================================================================
-
-    ParticleSelector.cpp
-    Created: 11 Apr 2019 8:08:44pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "ParticleSelector.h"
 
-//==============================================================================
-ParticleSelector::ParticleSelector(te::Engine &eng, ValueTree &as) : engine(eng),
-                                                                     edit(engine, te::createEmptyEdit(), te::Edit::forEditing, nullptr, 0),
-                                                                     transport(edit.getTransport()),
-                                                                     appState(as),
-                                                                     sources(),
-                                                                     thumbnail(transport),
-                                                                     cursor(transport, edit),
-                                                                     transportInteractor(transport, edit),
-                                                                     transportController(transport)
+ParticleSelector::ParticleSelector(te::Engine &eng, juce::ValueTree &as)
+: engine(eng),
+  edit(
+      engine,
+      /* TODO: method signature for te::createEmptyEdit() is a legacy signature.
+         Update to newer version. See tracktion_EditFileOperations.h */
+      te::createEmptyEdit(engine),
+      te::Edit::forEditing,
+      nullptr,
+      0),
+  transport(edit.getTransport()),
+  appState(as),
+  sources(),
+  thumbnail(transport),
+  cursor(transport, edit),
+  transportInteractor(transport, edit),
+  transportController(transport)
 {
     sources = (appState.getChildWithName(sourcesIdentifier));
     particles = (appState.getChildWithName(particlesIdentifier));
 
     addAndMakeVisible(&particleNameDisplay);
-    particleNameDisplay.setFont(Font(20.0f, Font::bold));
+    particleNameDisplay.setFont(juce::Font(20.0f, juce::Font::bold));
     updateViewableData();
 
     addAndMakeVisible(&sourceSelector);
     initialiseSourceSelector();
-    sourceSelector.onChange = [this] { sourceSelectorChanged(); };
+    sourceSelector.onChange = [this] {
+        sourceSelectorChanged();
+    };
 
     addAndMakeVisible(&saveParticleButton);
     saveParticleButton.setButtonText("Save particle");
-    saveParticleButton.onClick = [this] { saveParticle(); };
+    saveParticleButton.onClick = [this] {
+        saveParticle();
+    };
 
     addAndMakeVisible(&deleteParticleButton);
     deleteParticleButton.setButtonText("Delete particle");
-    deleteParticleButton.onClick = [this] { deleteParticleSelector(); };
+    deleteParticleButton.onClick = [this] {
+        deleteParticleSelector();
+    };
 
     addAndMakeVisible(&thumbnail);
     addAndMakeVisible(&cursor);
@@ -53,13 +55,13 @@ ParticleSelector::~ParticleSelector()
     particles.removeChild(particle, nullptr);
 }
 
-void ParticleSelector::paint(Graphics &g)
+void ParticleSelector::paint(juce::Graphics &g)
 {
     auto area = getLocalBounds();
     area.removeFromRight(5);
     area.removeFromLeft(5);
     area.removeFromBottom(10);
-    g.setColour(Colours::darkgrey);
+    g.setColour(juce::Colours::darkgrey);
     g.fillRect(area);
 }
 
@@ -76,11 +78,17 @@ void ParticleSelector::resized()
     transportArea.removeFromRight(10);
     auto persistanceArea = area;
 
-    FlexBox dataDisplayFb;
-    dataDisplayFb.justifyContent = FlexBox::JustifyContent::spaceBetween;
-    dataDisplayFb.alignItems = FlexBox::AlignItems::center;
-    dataDisplayFb.items.add(FlexItem(particleNameDisplay).withHeight(20.0f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
-    dataDisplayFb.items.add(FlexItem(sourceSelector).withHeight(20.0f).withWidth(200.0f).withMargin(FlexItem::Margin(10.0f)));
+    juce::FlexBox dataDisplayFb;
+    dataDisplayFb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+    dataDisplayFb.alignItems = juce::FlexBox::AlignItems::center;
+    dataDisplayFb.items.add(juce::FlexItem(particleNameDisplay)
+                                .withHeight(20.0f)
+                                .withWidth(100.0f)
+                                .withMargin(juce::FlexItem::Margin(10.0f)));
+    dataDisplayFb.items.add(juce::FlexItem(sourceSelector)
+                                .withHeight(20.0f)
+                                .withWidth(200.0f)
+                                .withMargin(juce::FlexItem::Margin(10.0f)));
     dataDisplayFb.performLayout(dataDisplayArea.toFloat());
 
     thumbnail.setBounds(waveformArea);
@@ -88,10 +96,19 @@ void ParticleSelector::resized()
     transportInteractor.setBounds(waveformArea);
     transportController.setBounds(transportArea);
 
-    FlexBox persistanceActionsFb;
-    persistanceActionsFb.justifyContent = FlexBox::JustifyContent::flexStart;
-    persistanceActionsFb.items.add(FlexItem(saveParticleButton).withHeight(20.f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
-    persistanceActionsFb.items.add(FlexItem(deleteParticleButton).withHeight(20.f).withWidth(100.0f).withMargin(FlexItem::Margin(10.0f)));
+    juce::FlexBox persistanceActionsFb;
+    persistanceActionsFb.justifyContent =
+        juce::FlexBox::JustifyContent::flexStart;
+    persistanceActionsFb.items.add(
+        juce::FlexItem(saveParticleButton)
+            .withHeight(20.f)
+            .withWidth(100.0f)
+            .withMargin(juce::FlexItem::Margin(10.0f)));
+    persistanceActionsFb.items.add(
+        juce::FlexItem(deleteParticleButton)
+            .withHeight(20.f)
+            .withWidth(100.0f)
+            .withMargin(juce::FlexItem::Margin(10.0f)));
     persistanceActionsFb.performLayout(persistanceArea.toFloat());
 }
 
@@ -100,10 +117,10 @@ void ParticleSelector::initialiseSourceSelector()
     sourceSelector.setTextWhenNothingSelected("--");
     sourceSelector.addItem("Add new source", 999);
 
-    for (int i = 0; i < sources.getNumChildren(); i++)
-    {
+    for(int i = 0; i < sources.getNumChildren(); i++) {
         auto source = sources.getChild(i);
-        sourceSelector.addItem(source[sourcePropFileNameIdentifier], source[sourcePropIdIdentifier]);
+        sourceSelector.addItem(source[sourcePropFileNameIdentifier],
+                               source[sourcePropIdIdentifier]);
     }
 }
 
@@ -111,12 +128,9 @@ void ParticleSelector::sourceSelectorChanged()
 {
     auto selectedId = sourceSelector.getSelectedId();
 
-    if (selectedId == 999)
-    {
+    if(selectedId == 999) {
         selectNewSourceFile();
-    }
-    else
-    {
+    } else {
         loadExistingSourceFile(selectedId);
     }
 }
@@ -126,8 +140,7 @@ void ParticleSelector::selectNewSourceFile()
     FileManager fileManager;
     fileManager.chooseFile();
 
-    if (!fileManager.fileIsValid())
-    {
+    if(!fileManager.fileIsValid(engine)) {
         showErrorMessaging(FileInvalid);
         sourceSelector.setSelectedId(0);
         return;
@@ -135,33 +148,33 @@ void ParticleSelector::selectNewSourceFile()
 
     // if the fileapth already exists, error and return
     const auto filePath = fileManager.getFile().getFullPathName();
-    const auto existingEntry = sources.getChildWithProperty(sourcePropFilePathIdentifier, filePath);
-    if (existingEntry.isValid())
-    {
+    const auto existingEntry =
+        sources.getChildWithProperty(sourcePropFilePathIdentifier, filePath);
+    if(existingEntry.isValid()) {
         showErrorMessaging(FileAlreadyExists);
         return;
     }
 
     source = fileManager.addSourceToState(sources);
-    sourceSelector.addItem(source[sourcePropFileNameIdentifier], source[sourcePropIdIdentifier]);
+    sourceSelector.addItem(source[sourcePropFileNameIdentifier],
+                           source[sourcePropIdIdentifier]);
     sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
 
-    File file = fileManager.getFile();
-    te::AudioFile audioFile = fileManager.getAudioFile();
+    juce::File file = fileManager.getFile();
+    te::AudioFile audioFile = fileManager.getAudioFile(engine);
     addFileToEditAndLoop(file, audioFile);
 }
 
 void ParticleSelector::loadExistingSourceFile(int &id)
 {
-    auto requestedSource = sources.getChildWithProperty(sourcePropIdIdentifier, id);
+    auto requestedSource =
+        sources.getChildWithProperty(sourcePropIdIdentifier, id);
 
-    if (requestedSource.isValid())
-    {
+    if(requestedSource.isValid()) {
         FileManager fileManager;
         fileManager.loadExistingSourceFile(requestedSource);
 
-        if (!fileManager.fileIsValid())
-        {
+        if(!fileManager.fileIsValid(engine)) {
             showErrorMessaging(FileInvalid);
             sourceSelector.setSelectedId(0);
             return;
@@ -170,8 +183,8 @@ void ParticleSelector::loadExistingSourceFile(int &id)
         source = requestedSource;
         sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
 
-        File file = fileManager.getFile();
-        te::AudioFile audioFile = fileManager.getAudioFile();
+        juce::File file = fileManager.getFile();
+        te::AudioFile audioFile = fileManager.getAudioFile(engine);
         addFileToEditAndLoop(file, audioFile);
     }
 }
@@ -180,11 +193,10 @@ int ParticleSelector::getNewParticleId()
 {
     int highestNumberId = 0;
 
-    for (int i = 0; i < particles.getNumChildren(); i++)
-    {
-        int currentId = particles.getChild(i).getProperty(particlePropIdIdentifier);
-        if (currentId > highestNumberId)
-        {
+    for(int i = 0; i < particles.getNumChildren(); i++) {
+        int currentId =
+            particles.getChild(i).getProperty(particlePropIdIdentifier);
+        if(currentId > highestNumberId) {
             highestNumberId = currentId;
         }
     }
@@ -195,33 +207,37 @@ int ParticleSelector::getNewParticleId()
 void ParticleSelector::saveParticle()
 {
     // check there is a valid source
-    if (!source.isValid())
-    {
+    if(!source.isValid()) {
         showErrorMessaging(SourceInvalid);
         return;
     }
     // check selection range to ensure is valid
     auto particleRange = transportInteractor.getSelectionRange();
-    if (!(particleRange.rangeEnd > 0.0))
-    {
+    if(!(particleRange.rangeEnd > 0.0)) {
         showErrorMessaging(ParticleRangeInvalid);
         return;
     }
 
-    if (!particle.isValid())
-    {
+    if(!particle.isValid()) {
         // if doesn't exist, add new entry to the particles vt
         auto newId = getNewParticleId();
-        particle = ValueTree(particleIdentifier);
+        particle = juce::ValueTree(particleIdentifier);
         particle.setProperty(particlePropIdIdentifier, newId, nullptr);
         particles.addChild(particle, -1, nullptr);
     }
 
-    particle.setProperty(particlePropSourceIdIdentifier, source[sourcePropIdIdentifier], nullptr);
-    particle.setProperty(particlePropRangeStartIdentifier, particleRange.rangeStart, nullptr);
-    particle.setProperty(particlePropRangeEndIdentifier, particleRange.rangeEnd, nullptr);
+    particle.setProperty(particlePropSourceIdIdentifier,
+                         source[sourcePropIdIdentifier],
+                         nullptr);
+    particle.setProperty(particlePropRangeStartIdentifier,
+                         particleRange.rangeStart,
+                         nullptr);
+    particle.setProperty(particlePropRangeEndIdentifier,
+                         particleRange.rangeEnd,
+                         nullptr);
 
-    // NB: on success, display the details of the particle entry somewhere within this object
+    // NB: on success, display the details of the particle entry somewhere
+    // within this object
     updateViewableData();
 }
 
@@ -230,31 +246,28 @@ void ParticleSelector::showErrorMessaging(const ErrorType &errorType)
     std::make_shared<ErrorManager>(errorType);
 }
 
-void ParticleSelector::addFileToEditAndLoop(File &file, te::AudioFile &audioFile)
+void ParticleSelector::addFileToEditAndLoop(juce::File &file,
+                                            te::AudioFile &audioFile)
 {
     // clear clips from track
-    auto track = edit.getOrInsertAudioTrackAt(0);
+    auto track = te::getAudioTracks(edit)[0];
 
-    if (!track)
-    {
+    if(!track) {
         return;
     }
 
     auto clipsToRemove = track->getClips();
-    for (int i = clipsToRemove.size(); --i >= 0;)
-    {
+    for(int i = clipsToRemove.size(); --i >= 0;) {
         clipsToRemove.getUnchecked(i)->removeFromParentTrack();
     }
 
     // add new clip to track
-    auto newClip = track->insertWaveClip(
-        file.getFileNameWithoutExtension(),
-        file,
-        {{0.0, audioFile.getLength()}, 0.0},
-        false);
+    auto newClip = track->insertWaveClip(file.getFileNameWithoutExtension(),
+                                         file,
+                                         {{0.0, audioFile.getLength()}, 0.0},
+                                         false);
 
-    if (!newClip)
-    {
+    if(!newClip) {
         return;
     }
 
@@ -281,12 +294,11 @@ bool ParticleSelector::readyToBeDeleted()
 
 void ParticleSelector::updateViewableData()
 {
-    if (particle.isValid())
-    {
-        particleNameDisplay.setText(particle.getProperty(particlePropIdIdentifier).toString(), dontSendNotification);
-    }
-    else
-    {
-        particleNameDisplay.setText("Untitled", dontSendNotification);
+    if(particle.isValid()) {
+        particleNameDisplay.setText(
+            particle.getProperty(particlePropIdIdentifier).toString(),
+            juce::dontSendNotification);
+    } else {
+        particleNameDisplay.setText("Untitled", juce::dontSendNotification);
     }
 }

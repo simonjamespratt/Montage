@@ -1,22 +1,11 @@
-/*
-  ==============================================================================
-
-    ParticlesPage.cpp
-    Created: 7 May 2019 8:38:12pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "ParticlesPage.h"
 
-//==============================================================================
-ParticlesPage::ParticlesPage(ValueTree &as, te::Engine &e) : appState(as),
-                                                            engine(e),
-                                                            particlesContainer(engine, appState),
-                                                            sourceManager(appState),
-                                                            particlesManifest(appState)
+ParticlesPage::ParticlesPage(juce::ValueTree &as, te::Engine &e)
+: appState(as),
+  engine(e),
+  particlesContainer(engine, appState),
+  sourceManager(appState, engine),
+  particlesManifest(appState)
 
 {
     addAndMakeVisible(&sourceManager);
@@ -29,12 +18,10 @@ ParticlesPage::ParticlesPage(ValueTree &as, te::Engine &e) : appState(as),
 }
 
 ParticlesPage::~ParticlesPage()
-{
-}
+{}
 
-void ParticlesPage::paint(Graphics &g)
-{
-}
+void ParticlesPage::paint(juce::Graphics &g)
+{}
 
 void ParticlesPage::resized()
 {
@@ -48,5 +35,4 @@ void ParticlesPage::resized()
 
     sourceManager.setBounds(area.removeFromTop((int)rowHeightUnit));
     particlesManifest.setBounds(area);
-
 }

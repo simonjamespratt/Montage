@@ -1,42 +1,27 @@
-/*
-  ==============================================================================
-
-    Particles.h
-    Created: 17 Apr 2019 7:46:25pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "./ParticleSelector.h"
-#include "../Utilities/Icons.h"
+#include "Icons.h"
+#include "ParticleSelector.h"
 
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
-*/
-class Particles : public Component, public ChangeListener
-{
-public:
-    Particles(te::Engine &eng, ValueTree &as);
+class Particles : public juce::Component, public juce::ChangeListener {
+  public:
+    Particles(te::Engine &eng, juce::ValueTree &as);
     ~Particles();
 
-    void paint(Graphics &g) override;
+    void paint(juce::Graphics &g) override;
     void resized() override;
 
-    void changeListenerCallback(ChangeBroadcaster *source) override;
+    void changeListenerCallback(juce::ChangeBroadcaster *source) override;
 
-private:
+  private:
     te::Engine &engine;
-    ValueTree &appState;
-    Label heading;
+    juce::ValueTree &appState;
+    juce::Label heading;
     Icons icons;
-    DrawablePath crossIcon;
-    DrawableButton addParticleButton;
+    juce::DrawablePath crossIcon;
+    juce::DrawableButton addParticleButton;
     std::vector<std::unique_ptr<ParticleSelector>> particles;
     int headerHeight;
     void addParticle();

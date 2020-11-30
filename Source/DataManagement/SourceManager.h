@@ -1,57 +1,69 @@
-/*
-  ==============================================================================
-
-    SourceManager.h
-    Created: 22 Apr 2019 7:30:41pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Utilities/Identifiers.h"
-#include "./FileManager.h"
-#include "../Errors/ErrorManager.h"
-#include "../Utilities/Icons.h"
+#include "ErrorManager.h"
+#include "FileManager.h"
+#include "Icons.h"
+#include "Identifiers.h"
 
-//==============================================================================
-/*
-*/
-class SourceManager : public Component, public TableListBoxModel, public ValueTree::Listener
-{
-public:
-    SourceManager(ValueTree &as);
+#include <tracktion_engine/tracktion_engine.h>
+
+namespace te = tracktion_engine;
+
+class SourceManager :
+public juce::Component,
+    public juce::TableListBoxModel,
+    public juce::ValueTree::Listener {
+  public:
+    SourceManager(juce::ValueTree &as, te::Engine &eng);
     ~SourceManager();
 
     void resized() override;
 
     // TableListBoxModel overrides
     int getNumRows() override;
-    void paintRowBackground(Graphics &g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected) override;
-    void paintCell(Graphics &g, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
-    void backgroundClicked(const MouseEvent &) override;
+    void paintRowBackground(juce::Graphics &g,
+                            int rowNumber,
+                            int /*width*/,
+                            int /*height*/,
+                            bool rowIsSelected) override;
+    void paintCell(juce::Graphics &g,
+                   int rowNumber,
+                   int columnId,
+                   int width,
+                   int height,
+                   bool rowIsSelected) override;
+    void backgroundClicked(const juce::MouseEvent &) override;
 
     // ValueTree change listeners
-    void valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
-    void valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) override;
-    void valueTreeChildOrderChanged(ValueTree &parentTreeWhoseChildrenHaveMoved, int oldInex, int newIndex) override;
-    void valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) override;
+    void valueTreePropertyChanged(juce::ValueTree &treeWhosePropertyHasChanged,
+                                  const juce::Identifier &property) override;
+    void valueTreeChildAdded(juce::ValueTree &parentTree,
+                             juce::ValueTree &childWhichHasBeenAdded) override;
+    void valueTreeChildRemoved(juce::ValueTree &parentTree,
+                               juce::ValueTree &childWhichHasBeenRemoved,
+                               int indexFromWhichChildWasRemoved) override;
+    void valueTreeChildOrderChanged(
+        juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
+        int oldInex,
+        int newIndex) override;
+    void
+    valueTreeParentChanged(juce::ValueTree &treeWhoseParentHasChanged) override;
 
-private:
-    Label heading;
-    ValueTree &appState;
-    ValueTree sources;
-    ValueTree particles;
-    TableListBox table;
+  private:
+    juce::Label heading;
+    juce::ValueTree &appState;
+    te::Engine &engine;
+    juce::ValueTree sources;
+    juce::ValueTree particles;
+    juce::TableListBox table;
     Icons icons;
-    DrawablePath crossIcon;
-    DrawableButton addSourceFileButton;
-    DrawablePath dashIcon;
-    DrawableButton deleteSourceFilesButton;
-    std::array<Identifier, 3> dataTypes = {sourcePropIdIdentifier, sourcePropFileNameIdentifier, sourcePropFilePathIdentifier};
+    juce::DrawablePath crossIcon;
+    juce::DrawableButton addSourceFileButton;
+    juce::DrawablePath dashIcon;
+    juce::DrawableButton deleteSourceFilesButton;
+    std::array<juce::Identifier, 3> dataTypes = {sourcePropIdIdentifier,
+                                                 sourcePropFileNameIdentifier,
+                                                 sourcePropFilePathIdentifier};
     int numRows = 0;
 
     void selectNewSourceFile();

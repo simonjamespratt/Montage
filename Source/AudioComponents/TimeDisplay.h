@@ -9,26 +9,23 @@
 */
 
 #pragma once
-
-#include "../JuceLibraryCode/JuceHeader.h"
-
+#include <tracktion_engine/tracktion_engine.h>
 namespace te = tracktion_engine;
 
 //==============================================================================
 /*
-*/
-class TimeDisplay : public Component, public Timer
-{
-public:
-  TimeDisplay(te::TransportControl &tc);
-  ~TimeDisplay();
+ */
+class TimeDisplay : public juce::Component, public juce::Timer {
+  public:
+    TimeDisplay(te::TransportControl &tc);
+    ~TimeDisplay();
 
-  void resized() override;
+    void resized() override;
 
-  void timerCallback() override;
+    void timerCallback() override;
 
-private:
-  te::TransportControl &transport;
-  Label transportPosition;
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeDisplay)
+  private:
+    te::TransportControl &transport;
+    juce::Label transportPosition;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimeDisplay)
 };

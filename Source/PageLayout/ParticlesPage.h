@@ -1,38 +1,23 @@
-/*
-  ==============================================================================
-
-    ParticlesPage.h
-    Created: 7 May 2019 8:38:12pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Particles/Particles.h"
-#include "../DataManagement/SourceManager.h"
-#include "../DataManagement/ParticlesManifest.h"
+#include "Particles.h"
+#include "ParticlesManifest.h"
+#include "SourceManager.h"
 
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
-*/
-class ParticlesPage : public Component
-{
-public:
-    ParticlesPage(ValueTree &as, te::Engine &e);
+class ParticlesPage : public juce::Component {
+  public:
+    ParticlesPage(juce::ValueTree &as, te::Engine &e);
     ~ParticlesPage();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
-private:
-    ValueTree &appState;
+  private:
+    juce::ValueTree &appState;
     te::Engine &engine;
-    Viewport particlesViewport;
+    juce::Viewport particlesViewport;
     Particles particlesContainer;
     SourceManager sourceManager;
     ParticlesManifest particlesManifest;

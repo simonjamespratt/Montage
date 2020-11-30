@@ -8,11 +8,11 @@
   ==============================================================================
 */
 
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "TransportInteractor.h"
 
 //==============================================================================
-TransportInteractor::TransportInteractor(te::TransportControl &tc, te::Edit &e) : transport(tc), edit(e)
+TransportInteractor::TransportInteractor(te::TransportControl &tc, te::Edit &e)
+: transport(tc), edit(e)
 {
     interactionState = ControlCursor;
     rangeStart = 0.0;
@@ -20,38 +20,35 @@ TransportInteractor::TransportInteractor(te::TransportControl &tc, te::Edit &e) 
 }
 
 TransportInteractor::~TransportInteractor()
-{
-}
+{}
 
 SelectionRange TransportInteractor::getSelectionRange()
 {
     return {rangeStart, rangeEnd};
 }
 
-void TransportInteractor::paint(Graphics &g)
+void TransportInteractor::paint(juce::Graphics &g)
 {
-    if (interactionState == ControlRangeSelection)
-    {
-        g.setColour(Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
-        g.fillRect(mousePositionA, 0.0f, (mousePositionB - mousePositionA), float(getHeight()));
+    if(interactionState == ControlRangeSelection) {
+        g.setColour(juce::Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
+        g.fillRect(mousePositionA,
+                   0.0f,
+                   (mousePositionB - mousePositionA),
+                   float(getHeight()));
     }
 }
 
-void TransportInteractor::mouseDown(const MouseEvent &event)
+void TransportInteractor::mouseDown(const juce::MouseEvent &event)
 {
-    if (event.mods.isShiftDown())
-    {
+    if(event.mods.isShiftDown()) {
         interactionState = ControlRangeSelection;
-    }
-    else
-    {
+    } else {
         interactionState = ControlCursor;
     }
 
     transport.setUserDragging(true);
 
-    if (interactionState == ControlCursor)
-    {
+    if(interactionState == ControlCursor) {
         repaint();
         rangeStart = 0.0;
         rangeEnd = 0.0;
@@ -59,8 +56,7 @@ void TransportInteractor::mouseDown(const MouseEvent &event)
         mouseDrag(event);
     }
 
-    if (interactionState == ControlRangeSelection)
-    {
+    if(interactionState == ControlRangeSelection) {
         transport.stop(false, false);
         mousePositionA = event.position.x;
         rangeStart = calculateAudioPosition(mousePositionA);
@@ -68,26 +64,23 @@ void TransportInteractor::mouseDown(const MouseEvent &event)
     }
 }
 
-void TransportInteractor::mouseDrag(const MouseEvent &event)
+void TransportInteractor::mouseDrag(const juce::MouseEvent &event)
 {
-    if (interactionState == ControlCursor)
-    {
+    if(interactionState == ControlCursor) {
         transport.position = calculateAudioPosition(event.position.x);
     }
 
-    if (interactionState == ControlRangeSelection)
-    {
+    if(interactionState == ControlRangeSelection) {
         mousePositionB = event.position.x;
         handleMouseMovement();
     }
 }
 
-void TransportInteractor::mouseUp(const MouseEvent &event)
+void TransportInteractor::mouseUp(const juce::MouseEvent &event)
 {
     transport.setUserDragging(false);
 
-    if (interactionState == ControlRangeSelection)
-    {
+    if(interactionState == ControlRangeSelection) {
         handleMouseMovement();
         transport.position = rangeStart;
         transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
@@ -105,23 +98,17 @@ double TransportInteractor::calculateAudioPosition(float mousePosition)
 
 void TransportInteractor::handleMouseMovement()
 {
-    if (mousePositionB > mousePositionA && mousePositionB > getWidth())
-    {
+    if(mousePositionB > mousePositionA && mousePositionB > getWidth()) {
         mousePositionB = getWidth();
-    }
-    else if (mousePositionB < mousePositionA && mousePositionB < 0)
-    {
+    } else if(mousePositionB < mousePositionA && mousePositionB < 0) {
         mousePositionB = 0;
     }
 
-    if (mousePositionB >= mousePositionA)
-    {
+    if(mousePositionB >= mousePositionA) {
         // set the audio segment params
         rangeStart = calculateAudioPosition(mousePositionA);
         rangeEnd = calculateAudioPosition(mousePositionB);
-    }
-    else
-    {
+    } else {
         // set the audio segment params
         rangeStart = calculateAudioPosition(mousePositionB);
         rangeEnd = calculateAudioPosition(mousePositionA);

@@ -10,33 +10,33 @@
 
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Utilities/Icons.h"
-#include "./TimeDisplay.h"
+#include "Icons.h"
+#include "TimeDisplay.h"
 
 namespace te = tracktion_engine;
 
 //==============================================================================
 /*
-*/
-class TransportController : public Component, public ChangeListener
-{
-public:
+ */
+class TransportController :
+public juce::Component,
+    public juce::ChangeListener {
+  public:
     TransportController(te::TransportControl &tc);
     ~TransportController();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
-private:
+  private:
     te::TransportControl &transport;
     Icons icons;
-    DrawablePath stopIcon;
-    DrawableButton stopButton;
+    juce::DrawablePath stopIcon;
+    juce::DrawableButton stopButton;
 
-    DrawablePath playIcon;
-    DrawablePath pauseIcon;
-    DrawableButton playPauseButton;
+    juce::DrawablePath playIcon;
+    juce::DrawablePath pauseIcon;
+    juce::DrawableButton playPauseButton;
 
     TimeDisplay transportPosition;
 
@@ -44,7 +44,7 @@ private:
     void togglePlayPause();
     void stop();
 
-    void changeListenerCallback(ChangeBroadcaster *) override;
+    void changeListenerCallback(juce::ChangeBroadcaster *) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportController)
 };

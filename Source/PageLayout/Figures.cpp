@@ -1,39 +1,32 @@
-/*
-  ==============================================================================
-
-    Figures.cpp
-    Created: 7 May 2019 8:17:45pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "Figures.h"
 
-//==============================================================================
-Figures::Figures(te::Engine &e, ValueTree &as) : engine(e), appState(as), sequencer(engine, appState), figureGenerator(appState), figureManager(appState)
+Figures::Figures(te::Engine &e, juce::ValueTree &as)
+: engine(e),
+  appState(as),
+  sequencer(engine, appState),
+  figureGenerator(appState),
+  figureManager(appState)
 {
     addAndMakeVisible(&figureGenerator);
     addAndMakeVisible(&figureManager);
     addAndMakeVisible(&sequencer);
 
-    heading.setText("Figures", dontSendNotification);
-    heading.setFont(Font(24.0f, Font::bold));
+    heading.setText("Figures", juce::dontSendNotification);
+    heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
 
     generateButton.setButtonText("Generate figure");
     addAndMakeVisible(&generateButton);
-    generateButton.onClick = [this] { generateAndArrangeFigure(); };
+    generateButton.onClick = [this] {
+        generateAndArrangeFigure();
+    };
 }
 
 Figures::~Figures()
-{
-}
+{}
 
-void Figures::paint(Graphics &g)
-{
-}
+void Figures::paint(juce::Graphics &g)
+{}
 
 void Figures::resized()
 {
@@ -55,6 +48,6 @@ void Figures::resized()
 
 void Figures::generateAndArrangeFigure()
 {
-    ValueTree figure = figureGenerator.generateFigure();
+    juce::ValueTree figure = figureGenerator.generateFigure();
     sequencer.readFigure(figure);
 }
