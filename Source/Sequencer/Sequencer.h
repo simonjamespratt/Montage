@@ -1,29 +1,19 @@
-/*
-  ==============================================================================
-
-    Sequencer.h
-    Created: 13 Mar 2019 7:34:49pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "./Timeline.h"
-#include "../AudioComponents/Cursor.h"
-#include "./Arrangement.h"
-#include "../AudioComponents/TransportInteractor.h"
-#include "../AudioComponents/TransportController.h"
-#include "../Utilities/Identifiers.h"
-#include "../DataManagement/FileManager.h"
-#include "../Errors/ErrorManager.h"
+#include "Arrangement.h"
+#include "Cursor.h"
+#include "ErrorManager.h"
+#include "FileManager.h"
+#include "Identifiers.h"
+#include "Timeline.h"
+#include "TransportController.h"
+#include "TransportInteractor.h"
+
+#include <tracktion_engine/tracktion_engine.h>
 
 namespace te = tracktion_engine;
 
-struct ClipData
-{
+struct ClipData {
     juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> clip;
     int trackIndex;
     double clipStart;
@@ -33,26 +23,26 @@ struct ClipData
 
 //==============================================================================
 /*
-*/
-class Sequencer : public Component
-{
-public:
-    Sequencer(te::Engine &eng, ValueTree &as);
+ */
+class Sequencer : public juce::Component {
+  public:
+    Sequencer(te::Engine &eng, juce::ValueTree &as);
     ~Sequencer();
 
-    void paint(Graphics &g) override;
+    void paint(juce::Graphics &g) override;
     void resized() override;
 
-    void readFigure(ValueTree &figure);
+    void readFigure(juce::ValueTree &figure);
 
-private:
+  private:
     te::Engine &engine;
-    // NB: note that the edit is set up with en empty edit rather than by referencing a file to write to
-    // when the sequencer is working seriously, probably need to change this
+    // NB: note that the edit is set up with en empty edit rather than by
+    // referencing a file to write to when the sequencer is working seriously,
+    // probably need to change this
     te::Edit edit;
     te::TransportControl &transport;
 
-    ValueTree &appState;
+    juce::ValueTree &appState;
 
     Timeline timeline;
     Arrangement arrangement;
@@ -63,7 +53,12 @@ private:
     void showErrorMessaging(const ErrorType &errorType);
     void prepareForNewFigure(int noOfParticles);
     void prepareTracks();
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> addClipToTrack(const File &file, const int trackIndex, const double &clipStart, const double &clipEnd, const double &offset);
+    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
+    addClipToTrack(const juce::File &file,
+                   const int trackIndex,
+                   const double &clipStart,
+                   const double &clipEnd,
+                   const double &offset);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };

@@ -1,40 +1,27 @@
-/*
-  ==============================================================================
-
-    FigureGenerator.h
-    Created: 17 May 2019 4:37:12pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Utilities/Identifiers.h"
-#include "../Utilities/NumberGenerators.h"
+#include "Identifiers.h"
+#include "NumberGenerators.h"
 
-//==============================================================================
-/*
-*/
-class FigureGenerator : public Component
-{
-public:
-    FigureGenerator(ValueTree &as);
+#include <juce_gui_basics/juce_gui_basics.h>
+
+class FigureGenerator : public juce::Component {
+  public:
+    FigureGenerator(juce::ValueTree &as);
     ~FigureGenerator();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
-    ValueTree generateFigure();
+    juce::ValueTree generateFigure();
 
-private:
-    ValueTree &appState;
-    ValueTree generatedFigure;
-    Label holdingMessage;
-    TextButton generateButton;
-    Label randomNumberDisplay;
-    TextButton getRandomNumberButton;
+  private:
+    juce::ValueTree &appState;
+    juce::ValueTree generatedFigure;
+    juce::Label holdingMessage;
+    juce::TextButton generateButton;
+    juce::Label randomNumberDisplay;
+    juce::TextButton getRandomNumberButton;
     void getRandomNumber();
 
     int getNewFigureId();

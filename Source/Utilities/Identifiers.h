@@ -9,32 +9,31 @@
 */
 
 #pragma once
+#include <juce_core/juce_core.h>
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
-static Identifier appStateIdentifier("AppState");
+static juce::Identifier appStateIdentifier("AppState");
 
 // Sources
-static Identifier sourcesIdentifier("Sources");
-static Identifier sourceIdentifier("Source");
-static Identifier sourcePropIdIdentifier("id");
-static Identifier sourcePropFilePathIdentifier("filePath");
-static Identifier sourcePropFileNameIdentifier("fileName");
+static juce::Identifier sourcesIdentifier("Sources");
+static juce::Identifier sourceIdentifier("Source");
+static juce::Identifier sourcePropIdIdentifier("id");
+static juce::Identifier sourcePropFilePathIdentifier("filePath");
+static juce::Identifier sourcePropFileNameIdentifier("fileName");
 
 // Particles
-static Identifier particlesIdentifier("Particles");
-static Identifier particleIdentifier("Particle");
-static Identifier particlePropIdIdentifier("id");
-static Identifier particlePropNameIdentifier("name");
-static Identifier particlePropSourceIdIdentifier("sourceId");
-static Identifier particlePropRangeStartIdentifier("rangeStart");
-static Identifier particlePropRangeEndIdentifier("rangeEnd");
+static juce::Identifier particlesIdentifier("Particles");
+static juce::Identifier particleIdentifier("Particle");
+static juce::Identifier particlePropIdIdentifier("id");
+static juce::Identifier particlePropNameIdentifier("name");
+static juce::Identifier particlePropSourceIdIdentifier("sourceId");
+static juce::Identifier particlePropRangeStartIdentifier("rangeStart");
+static juce::Identifier particlePropRangeEndIdentifier("rangeEnd");
 
 // Figures
-static Identifier figuresIdentifier("Figures");
-static Identifier figureIdentifier("Figure");
-static Identifier figurePropIdIdentifier("figureId");
-static Identifier figureEventIdentifier("FigureEvent");
-static Identifier figureEventPropIdIdentifier("figureEventId");
-static Identifier figureEventPropOnsetIdentifier("onset");
-static Identifier figureEventPropParticleIdIdentifier("particleId");
+static juce::Identifier figuresIdentifier("Figures");
+static juce::Identifier figureIdentifier("Figure");
+static juce::Identifier figurePropIdIdentifier("figureId");
+static juce::Identifier figureEventIdentifier("FigureEvent");
+static juce::Identifier figureEventPropIdIdentifier("figureEventId");
+static juce::Identifier figureEventPropOnsetIdentifier("onset");
+static juce::Identifier figureEventPropParticleIdIdentifier("particleId");

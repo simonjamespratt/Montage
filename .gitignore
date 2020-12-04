@@ -1,3 +1,2 @@
-Builds/
-JuceLibraryCode/
-MontageApp.code-workspace
+build/
+Montage.code-workspace

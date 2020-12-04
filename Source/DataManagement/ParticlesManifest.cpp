@@ -1,35 +1,27 @@
-/*
-  ==============================================================================
-
-    ParticlesManifest.cpp
-    Created: 27 Apr 2019 3:41:45pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
-#include "../JuceLibraryCode/JuceHeader.h"
 #include "ParticlesManifest.h"
 
-//==============================================================================
-ParticlesManifest::ParticlesManifest(ValueTree &as) : appState(as), particles(), table({}, this)
+ParticlesManifest::ParticlesManifest(juce::ValueTree &as)
+: appState(as), particles(), table({}, this)
 {
-    heading.setText("Particles Manifest", dontSendNotification);
-    heading.setFont(Font(24.0f, Font::bold));
+    heading.setText("Particles Manifest", juce::dontSendNotification);
+    heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
-    
+
     appState.addListener(this);
     particles = (appState.getChildWithName(particlesIdentifier));
 
     addAndMakeVisible(table);
-    table.setColour(ListBox::outlineColourId, Colours::grey);
+    table.setColour(juce::ListBox::outlineColourId, juce::Colours::grey);
     table.setOutlineThickness(1);
 
     // Add table columns to the header
-    for (int i = 0; i < dataTypes.size(); i++)
-    {
+    for(int i = 0; i < dataTypes.size(); i++) {
         int columnId = i + 1;
-        table.getHeader().addColumn(dataTypes[i].toString(), columnId, 100, 50, 400);
+        table.getHeader().addColumn(dataTypes[i].toString(),
+                                    columnId,
+                                    100,
+                                    50,
+                                    400);
     }
 
     // Set the number of rows for the table
@@ -37,8 +29,7 @@ ParticlesManifest::ParticlesManifest(ValueTree &as) : appState(as), particles(),
 }
 
 ParticlesManifest::~ParticlesManifest()
-{
-}
+{}
 
 void ParticlesManifest::resized()
 {
@@ -47,13 +38,15 @@ void ParticlesManifest::resized()
     area.removeFromRight(5);
     area.removeFromBottom(10);
     area.removeFromLeft(5);
-    
-    FlexBox headerContainer;
-    headerContainer.justifyContent = FlexBox::JustifyContent::flexStart;
-    headerContainer.alignContent = FlexBox::AlignContent::center;
-    headerContainer.items.add(FlexItem(heading).withHeight(24.0f).withWidth(200.0f).withMargin(FlexItem::Margin(5.0f)));
+
+    juce::FlexBox headerContainer;
+    headerContainer.justifyContent = juce::FlexBox::JustifyContent::flexStart;
+    headerContainer.alignContent = juce::FlexBox::AlignContent::center;
+    headerContainer.items.add(
+        juce::FlexItem(heading).withHeight(24.0f).withWidth(200.0f).withMargin(
+            juce::FlexItem::Margin(5.0f)));
     headerContainer.performLayout(headerArea);
-    
+
     table.setBounds(area);
 }
 
@@ -62,63 +55,95 @@ int ParticlesManifest::getNumRows()
     return numRows;
 }
 
-void ParticlesManifest::paintRowBackground(Graphics &g, int rowNumber, int /*width*/, int /*height*/, bool rowIsSelected)
+void ParticlesManifest::paintRowBackground(juce::Graphics &g,
+                                           int rowNumber,
+                                           int /*width*/,
+                                           int /*height*/,
+                                           bool rowIsSelected)
 {
-    auto alternateRowColour = getLookAndFeel().findColour(ListBox::backgroundColourId).interpolatedWith(getLookAndFeel().findColour(ListBox::textColourId), 0.03f);
+    auto alternateRowColour =
+        getLookAndFeel()
+            .findColour(juce::ListBox::backgroundColourId)
+            .interpolatedWith(
+                getLookAndFeel().findColour(juce::ListBox::textColourId),
+                0.03f);
 
-    if (rowIsSelected)
-    {
-        g.fillAll(Colours::lightblue);
-    }
-    else if (rowNumber % 2)
-    {
+    if(rowIsSelected) {
+        g.fillAll(juce::Colours::lightblue);
+    } else if(rowNumber % 2) {
         g.fillAll(alternateRowColour);
     }
 }
 
-void ParticlesManifest::paintCell(Graphics &g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
+void ParticlesManifest::paintCell(juce::Graphics &g,
+                                  int rowNumber,
+                                  int columnId,
+                                  int width,
+                                  int height,
+                                  bool rowIsSelected)
 {
-    g.setColour(rowIsSelected ? Colours::darkblue : getLookAndFeel().findColour(ListBox::textColourId));
+    g.setColour(rowIsSelected
+                    ? juce::Colours::darkblue
+                    : getLookAndFeel().findColour(juce::ListBox::textColourId));
     g.setFont(14.0f);
 
-    ValueTree rowElement = particles.getChild(rowNumber);
-    if (rowElement.isValid())
-    {
-        // get prop from source (rowElement) by comparing columnId to dataType array position (columnId -1)
+    juce::ValueTree rowElement = particles.getChild(rowNumber);
+    if(rowElement.isValid()) {
+        // get prop from source (rowElement) by comparing columnId to dataType
+        // array position (columnId -1)
         auto propIdentifier = dataTypes[columnId - 1];
 
-        if (rowElement.hasProperty(propIdentifier))
-        {
+        if(rowElement.hasProperty(propIdentifier)) {
             auto cellData = rowElement.getProperty(propIdentifier);
-            g.drawText(cellData, 2, 0, width - 4, height, Justification::centredLeft, true);
+            g.drawText(cellData,
+                       2,
+                       0,
+                       width - 4,
+                       height,
+                       juce::Justification::centredLeft,
+                       true);
         }
     }
 
     // draw RH-side column separator
-    g.setColour(getLookAndFeel().findColour(ListBox::backgroundColourId));
+    g.setColour(getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
     g.fillRect(width - 1, 0, 1, height);
 }
 
-void ParticlesManifest::valueTreeChildAdded(ValueTree &parentTree, ValueTree &childWhichHasBeenAdded)
+void ParticlesManifest::valueTreeChildAdded(
+    juce::ValueTree &parentTree, juce::ValueTree &childWhichHasBeenAdded)
 {
     particles = (appState.getChildWithName(particlesIdentifier));
     numRows = particles.getNumChildren();
     table.updateContent();
 }
 
-void ParticlesManifest::valueTreeChildRemoved(ValueTree &parentTree, ValueTree &childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) {
+void ParticlesManifest::valueTreeChildRemoved(
+    juce::ValueTree &parentTree,
+    juce::ValueTree &childWhichHasBeenRemoved,
+    int indexFromWhichChildWasRemoved)
+{
     particles = (appState.getChildWithName(particlesIdentifier));
     numRows = particles.getNumChildren();
     table.updateContent();
 }
 
-void ParticlesManifest::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasChanged, const Identifier &property) {
+void ParticlesManifest::valueTreePropertyChanged(
+    juce::ValueTree &treeWhosePropertyHasChanged,
+    const juce::Identifier &property)
+{
     particles = (appState.getChildWithName(particlesIdentifier));
     numRows = particles.getNumChildren();
     table.repaint();
 }
 // -====================================================
 // Unused listeners
-void ParticlesManifest::valueTreeChildOrderChanged(ValueTree &parentTreeWhoseChildrenHaveMoved, int oldInex, int newIndex) {}
-void ParticlesManifest::valueTreeParentChanged(ValueTree &treeWhoseParentHasChanged) {}
+void ParticlesManifest::valueTreeChildOrderChanged(
+    juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
+    int oldInex,
+    int newIndex)
+{}
+void ParticlesManifest::valueTreeParentChanged(
+    juce::ValueTree &treeWhoseParentHasChanged)
+{}
 // =====================================================

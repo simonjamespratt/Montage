@@ -1,39 +1,24 @@
-/*
-  ==============================================================================
-
-    Figures.h
-    Created: 7 May 2019 8:17:45pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "../Figures/FigureGenerator.h"
-#include "../Sequencer/Sequencer.h"
-#include "../DataManagement/FigureManager.h"
+#include "FigureGenerator.h"
+#include "FigureManager.h"
+#include "Sequencer.h"
 
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
-*/
-class Figures : public Component
-{
-public:
-    Figures(te::Engine &e, ValueTree &as);
+class Figures : public juce::Component {
+  public:
+    Figures(te::Engine &e, juce::ValueTree &as);
     ~Figures();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
-private:
-    Label heading;
-    TextButton generateButton;
+  private:
+    juce::Label heading;
+    juce::TextButton generateButton;
     te::Engine &engine;
-    ValueTree &appState;
+    juce::ValueTree &appState;
     Sequencer sequencer;
     FigureGenerator figureGenerator;
     FigureManager figureManager;

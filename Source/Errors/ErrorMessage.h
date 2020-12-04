@@ -1,29 +1,14 @@
-/*
-  ==============================================================================
-
-    ErrorMessage.h
-    Created: 21 Apr 2019 10:04:45pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
+#include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
-//==============================================================================
-/*
-*/
-class ErrorMessage    : public Component
-{
-public:
-    ErrorMessage(String &messageReceived);
+class ErrorMessage : public juce::Component {
+  public:
+    ErrorMessage(juce::String &messageReceived);
     ~ErrorMessage();
 
-    void paint (Graphics&) override;
+    void paint(juce::Graphics &) override;
 
-private:
-    String &message;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ErrorMessage)
+  private:
+    juce::String &message;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ErrorMessage)
 };

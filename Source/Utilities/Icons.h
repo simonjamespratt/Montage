@@ -1,49 +1,27 @@
-/*
-  ==============================================================================
-
-    Icons.h
-    Created: 5 May 2019 7:05:01pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
+#include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
-//==============================================================================
-/*
-*/
-class Icons
-{
-public:
+class Icons {
+  public:
     Icons();
     ~Icons();
 
-    enum IconType
-    {
-        Cross,
-        Dash,
-        Stop,
-        Play,
-        Pause
-    };
+    enum IconType { Cross, Dash, Stop, Play, Pause };
 
-    DrawablePath getIcon(IconType iconType);
+    juce::DrawablePath getIcon(IconType iconType);
 
-private:
+  private:
     // ICONS
-    Path crossPath;
-    DrawablePath cross;
-    Path dashPath;
-    DrawablePath dash;
-    Path stopPath;
-    DrawablePath stop;
-    Path playPath;
-    DrawablePath play;
-    Path pausePath;
-    DrawablePath pause;
+    juce::Path crossPath;
+    juce::DrawablePath cross;
+    juce::Path dashPath;
+    juce::DrawablePath dash;
+    juce::Path stopPath;
+    juce::DrawablePath stop;
+    juce::Path playPath;
+    juce::DrawablePath play;
+    juce::Path pausePath;
+    juce::DrawablePath pause;
 
     // DRAWING FUNCTIONS
     void drawCross();

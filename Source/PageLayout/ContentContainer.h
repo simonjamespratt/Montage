@@ -1,44 +1,30 @@
-/*
-  ==============================================================================
-
-    ContentContainer.h
-    Created: 29 Apr 2019 8:01:36pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
 
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "./MainHeader.h"
-#include "./Figures.h"
-#include "./ParticlesPage.h"
+#include "Figures.h"
+#include "MainHeader.h"
+#include "ParticlesPage.h"
 
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
-*/
-class ContentContainer : public Component
-{
-public:
-    ContentContainer(ValueTree &as);
+class ContentContainer : public juce::Component {
+  public:
+    ContentContainer(juce::ValueTree &as);
     ~ContentContainer();
 
-    void paint(Graphics &) override;
+    void paint(juce::Graphics &) override;
     void resized() override;
 
-private:
-    ValueTree &appState;
+  private:
+    juce::ValueTree &appState;
     te::Engine engine;
     MainHeader mainHeader;
 
-    TabbedComponent pages;
+    juce::TabbedComponent pages;
     Figures figures;
     ParticlesPage particlesPage;
 
-    Rectangle<int> screenSize = Desktop::getInstance().getDisplays().getMainDisplay().userArea;
+    juce::Rectangle<int> screenSize =
+        juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ContentContainer)
 };
