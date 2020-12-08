@@ -14,5 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Dependencies (external content)
 add_subdirectory(dependencies)
 
+enable_testing()
+
 # Main targets
 add_subdirectory(source)

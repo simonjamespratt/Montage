@@ -1,4 +1,11 @@
 juce_add_gui_app(Montage)
+juce_add_console_app(Tests)
+
+# Populate CMAKE_MODULE_PATH with Catch helper scripts
+# This block needs to be done in the file where the Tests target is created, hence here and not in Tests dir
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/contrib)
+include(Catch)
+catch_discover_tests(Tests)
 
 target_sources(Montage PRIVATE
     Main.cpp
@@ -14,6 +21,8 @@ add_subdirectory(PageLayout)
 add_subdirectory(Particles)
 add_subdirectory(Sequencer)
 add_subdirectory(Utilities)
+
+add_subdirectory(Tests)
 
 target_compile_definitions(Montage PRIVATE
     # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
