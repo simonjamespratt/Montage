@@ -1,5 +1,10 @@
 #include "FigureGenerator.h"
 
+#include "MyTestClass.h"
+#include "TestIdentifiers.h"
+
+#include <Range.hpp>
+
 FigureGenerator::FigureGenerator(juce::ValueTree &as) : appState(as)
 {
     holdingMessage.setText("holding area for figure generation options.",
@@ -205,13 +210,25 @@ void FigureGenerator::getRandomNumber()
     //     DBG("csv file not found");
     // }
 
-    RandomNumberWithinRange rwr(1, 10);
+    // RandomNumberWithinRange rwr(1, 10);
+    // auto text = randomNumberDisplay.getText();
+    // for(int i = 0; i < 50; i++) {
+    //     int number = rwr.getNumber();
+    //     auto text = randomNumberDisplay.getText();
+    //     text += juce::String(number);
+    //     text += juce::String(", ");
+    //     randomNumberDisplay.setText(text, juce::dontSendNotification);
+    // }
+
+    MyTestClass instance;
+    juce::ValueTree myNode(myNodeType);
+    myNode.setProperty(rangeStart, 10, nullptr);
+    myNode.setProperty(rangeEnd, 20, nullptr);
+    auto range = instance.someMethod(myNode);
     auto text = randomNumberDisplay.getText();
-    for(int i = 0; i < 50; i++) {
-        int number = rwr.getNumber();
-        auto text = randomNumberDisplay.getText();
-        text += juce::String(number);
-        text += juce::String(", ");
-        randomNumberDisplay.setText(text, juce::dontSendNotification);
-    }
+    text += juce::String("Range is: ");
+    text += juce::String(range.start);
+    text += juce::String(", ");
+    text += juce::String(range.end);
+    randomNumberDisplay.setText(text, juce::dontSendNotification);
 }

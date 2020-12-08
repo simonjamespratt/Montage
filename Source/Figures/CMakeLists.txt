@@ -1,6 +1,9 @@
 target_sources(Montage PRIVATE
     FigureGenerator.cpp
     FigureGenerator.h
+    MyTestClass.cpp
+    MyTestClass.h
+    TestIdentifiers.h
 )
 
 target_include_directories(Montage
