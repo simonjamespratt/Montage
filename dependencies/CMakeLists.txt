@@ -15,10 +15,16 @@ FetchContent_Declare(
 FetchContent_Declare(
     Aleatoric
     GIT_REPOSITORY  https://github.com/simonjamespratt/Aleatoric.git
-    GIT_TAG         901b3a2ec0276bc4fbd327381aaa8fda2222824c #v0.1.0-beta
+    GIT_TAG         70014ceb8cf0fe335f847a4294b5fb7cefb84890 #v0.1.1-beta
 )
 
-FetchContent_MakeAvailable(JUCE tracktion Aleatoric)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY  https://github.com/catchorg/Catch2.git
+        GIT_TAG         ff349a50bfc6214b4081f4ca63c7de35e2162f60 #v2.13.3
+)
+
+FetchContent_MakeAvailable(JUCE tracktion Aleatoric Catch2)
 
 juce_add_modules(
     ${tracktion_SOURCE_DIR}/modules/tracktion_engine

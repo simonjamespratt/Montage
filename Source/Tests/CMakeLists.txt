@@ -1,5 +1,6 @@
 target_sources(Tests PRIVATE
-    Main.cpp
+    main.cpp
+    MyTestClassTest.cpp
 )
 
 target_compile_definitions(Tests
@@ -13,4 +14,6 @@ target_link_libraries(Tests
         # ConsoleAppData            # If you'd created a binary data target, you'd link to it here
         juce::juce_core
         juce::juce_data_structures
+        Catch2::Catch2
+        Aleatoric::Aleatoric
 )
