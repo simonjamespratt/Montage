@@ -1,4 +1,5 @@
 juce_add_gui_app(Montage)
+juce_add_console_app(Tests)
 
 target_sources(Montage PRIVATE
     Main.cpp
@@ -14,6 +15,8 @@ add_subdirectory(PageLayout)
 add_subdirectory(Particles)
 add_subdirectory(Sequencer)
 add_subdirectory(Utilities)
+
+add_subdirectory(Tests)
 
 target_compile_definitions(Montage PRIVATE
     # JUCE_WEB_BROWSER and JUCE_USE_CURL would be on by default, but you might not need them.
