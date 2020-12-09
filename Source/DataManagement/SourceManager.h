@@ -9,10 +9,9 @@
 
 namespace te = tracktion_engine;
 
-class SourceManager :
-public juce::Component,
-    public juce::TableListBoxModel,
-    public juce::ValueTree::Listener {
+class SourceManager : public juce::Component,
+                      public juce::TableListBoxModel,
+                      public juce::ValueTree::Listener {
   public:
     SourceManager(juce::ValueTree &as, te::Engine &eng);
     ~SourceManager();
@@ -61,9 +60,8 @@ public juce::Component,
     juce::DrawableButton addSourceFileButton;
     juce::DrawablePath dashIcon;
     juce::DrawableButton deleteSourceFilesButton;
-    std::array<juce::Identifier, 3> dataTypes = {sourcePropIdIdentifier,
-                                                 sourcePropFileNameIdentifier,
-                                                 sourcePropFilePathIdentifier};
+    std::array<juce::Identifier, 3> dataTypes = {
+        IDs::id, IDs::file_name, IDs::file_path};
     int numRows = 0;
 
     void selectNewSourceFile();

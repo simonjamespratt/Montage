@@ -8,7 +8,7 @@ ParticlesManifest::ParticlesManifest(juce::ValueTree &as)
     addAndMakeVisible(&heading);
 
     appState.addListener(this);
-    particles = (appState.getChildWithName(particlesIdentifier));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
 
     addAndMakeVisible(table);
     table.setColour(juce::ListBox::outlineColourId, juce::Colours::grey);
@@ -113,7 +113,7 @@ void ParticlesManifest::paintCell(juce::Graphics &g,
 void ParticlesManifest::valueTreeChildAdded(
     juce::ValueTree &parentTree, juce::ValueTree &childWhichHasBeenAdded)
 {
-    particles = (appState.getChildWithName(particlesIdentifier));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
     numRows = particles.getNumChildren();
     table.updateContent();
 }
@@ -123,7 +123,7 @@ void ParticlesManifest::valueTreeChildRemoved(
     juce::ValueTree &childWhichHasBeenRemoved,
     int indexFromWhichChildWasRemoved)
 {
-    particles = (appState.getChildWithName(particlesIdentifier));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
     numRows = particles.getNumChildren();
     table.updateContent();
 }
@@ -132,7 +132,7 @@ void ParticlesManifest::valueTreePropertyChanged(
     juce::ValueTree &treeWhosePropertyHasChanged,
     const juce::Identifier &property)
 {
-    particles = (appState.getChildWithName(particlesIdentifier));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
     numRows = particles.getNumChildren();
     table.repaint();
 }

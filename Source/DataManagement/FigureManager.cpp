@@ -121,7 +121,7 @@ void FigureManager::backgroundClicked(const juce::MouseEvent &)
 
 void FigureManager::setData()
 {
-    figures = (appState.getChildWithName(figuresIdentifier));
+    figures = (appState.getChildWithName(IDs::FIGURES));
     figure = (figures.getChild(0)); // NB: when there are more than one figure
                                     // in figures, this will need changing
     numRows = figure.getNumChildren(); // this should be ok because it only

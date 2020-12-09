@@ -57,8 +57,8 @@ void Sequencer::readFigure(juce::ValueTree &figure)
 {
     std::vector<ClipData> clips;
     int noOfFigureEvents = figure.getNumChildren();
-    auto sources = appState.getChildWithName(sourcesIdentifier);
-    auto particles = appState.getChildWithName(particlesIdentifier);
+    auto sources = appState.getChildWithName(IDs::SOURCES);
+    auto particles = appState.getChildWithName(IDs::PARTICLES);
     int noOfParticles = particles.getNumChildren();
     prepareForNewFigure(noOfParticles);
 
@@ -66,23 +66,17 @@ void Sequencer::readFigure(juce::ValueTree &figure)
         // unpack each figure event value tree:- particleId, onset
         auto currentFigure = figure.getChild(i);
 
-        int particleId =
-            int(currentFigure[figureEventPropParticleIdIdentifier]);
-        auto particle = particles.getChildWithProperty(particlePropIdIdentifier,
-                                                       particleId);
-        double particleRangeStart =
-            double(particle[particlePropRangeStartIdentifier]);
-        double particleRangeEnd =
-            double(particle[particlePropRangeEndIdentifier]);
+        int particleId = int(currentFigure[IDs::particle_id]);
+        auto particle = particles.getChildWithProperty(IDs::id, particleId);
+        double particleRangeStart = double(particle[IDs::start]);
+        double particleRangeEnd = double(particle[IDs::end]);
 
         int trackIndex = particleId - 1;
-        double clipStart =
-            double(currentFigure[figureEventPropOnsetIdentifier]);
+        double clipStart = double(currentFigure[IDs::onset]);
         double clipEnd = (particleRangeEnd - particleRangeStart) + clipStart;
         double offset = particleRangeStart;
-        int sourceId = int(particle[particlePropIdIdentifier]);
-        auto requestedSource =
-            sources.getChildWithProperty(sourcePropIdIdentifier, sourceId);
+        int sourceId = int(particle[IDs::id]);
+        auto requestedSource = sources.getChildWithProperty(IDs::id, sourceId);
 
         if(requestedSource.isValid()) {
             FileManager fileManager;

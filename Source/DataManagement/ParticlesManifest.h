@@ -4,10 +4,9 @@
 #include <array>
 #include <juce_gui_basics/juce_gui_basics.h>
 
-class ParticlesManifest :
-public juce::Component,
-    public juce::TableListBoxModel,
-    public juce::ValueTree::Listener {
+class ParticlesManifest : public juce::Component,
+                          public juce::TableListBoxModel,
+                          public juce::ValueTree::Listener {
   public:
     ParticlesManifest(juce::ValueTree &as);
     ~ParticlesManifest();
@@ -49,10 +48,7 @@ public juce::Component,
     juce::ValueTree particles;
     juce::TableListBox table;
     std::array<juce::Identifier, 4> dataTypes = {
-        particlePropIdIdentifier,
-        particlePropSourceIdIdentifier,
-        particlePropRangeStartIdentifier,
-        particlePropRangeEndIdentifier};
+        IDs::id, IDs::source_id, IDs::start, IDs::end};
     int numRows = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticlesManifest)
