@@ -31,14 +31,10 @@ bool FileManager::fileIsValid(te::Engine &engine)
 
 juce::ValueTree FileManager::addSourceToState(juce::ValueTree &sources)
 {
-    juce::ValueTree source(sourceIdentifier);
-    source.setProperty(sourcePropIdIdentifier,
-                       getNewSourceId(sources),
-                       nullptr);
-    source.setProperty(sourcePropFilePathIdentifier,
-                       file.getFullPathName(),
-                       nullptr);
-    source.setProperty(sourcePropFileNameIdentifier,
+    juce::ValueTree source(IDs::SOURCE);
+    source.setProperty(IDs::id, getNewSourceId(sources), nullptr);
+    source.setProperty(IDs::file_path, file.getFullPathName(), nullptr);
+    source.setProperty(IDs::file_name,
                        file.getFileNameWithoutExtension(),
                        nullptr);
     sources.addChild(source, -1, nullptr);
@@ -47,7 +43,7 @@ juce::ValueTree FileManager::addSourceToState(juce::ValueTree &sources)
 
 void FileManager::loadExistingSourceFile(juce::ValueTree &source)
 {
-    file = juce::File(source[sourcePropFilePathIdentifier]);
+    file = juce::File(source[IDs::file_path]);
 }
 
 juce::File FileManager::getFile()
@@ -65,7 +61,7 @@ int FileManager::getNewSourceId(juce::ValueTree &sources)
     int highestNumberId = 0;
 
     for(int i = 0; i < sources.getNumChildren(); i++) {
-        int currentId = sources.getChild(i).getProperty(sourcePropIdIdentifier);
+        int currentId = sources.getChild(i).getProperty(IDs::id);
         if(currentId > highestNumberId) {
             highestNumberId = currentId;
         }

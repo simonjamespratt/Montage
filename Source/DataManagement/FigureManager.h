@@ -52,9 +52,7 @@ class FigureManager : public juce::Component,
     juce::ValueTree figure;
     juce::TableListBox table;
     std::array<juce::Identifier, 3> dataTypes {
-        figureEventPropIdIdentifier,
-        figureEventPropOnsetIdentifier,
-        figureEventPropParticleIdIdentifier};
+        IDs::id, IDs::onset, IDs::particle_id};
     int numRows = 0;
 
     void setData();

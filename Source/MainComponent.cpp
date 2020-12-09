@@ -1,12 +1,14 @@
 #include "MainComponent.h"
 
+#include "Identifiers.h"
+
 // constructor
 MainComponent::MainComponent()
-: appState(appStateIdentifier), contentContainer(appState)
+: appState(IDs::APP_STATE), contentContainer(appState)
 {
-    juce::ValueTree sources(sourcesIdentifier);
-    juce::ValueTree particles(particlesIdentifier);
-    juce::ValueTree figures(figuresIdentifier);
+    juce::ValueTree sources(IDs::SOURCES);
+    juce::ValueTree particles(IDs::PARTICLES);
+    juce::ValueTree figures(IDs::FIGURES);
     appState.addChild(sources, -1, nullptr);
     appState.addChild(particles, -1, nullptr);
     appState.addChild(figures, -1, nullptr);

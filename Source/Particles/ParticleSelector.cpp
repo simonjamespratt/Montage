@@ -18,8 +18,8 @@ ParticleSelector::ParticleSelector(te::Engine &eng, juce::ValueTree &as)
   transportInteractor(transport, edit),
   transportController(transport)
 {
-    sources = (appState.getChildWithName(sourcesIdentifier));
-    particles = (appState.getChildWithName(particlesIdentifier));
+    sources = (appState.getChildWithName(IDs::SOURCES));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
 
     addAndMakeVisible(&particleNameDisplay);
     particleNameDisplay.setFont(juce::Font(20.0f, juce::Font::bold));
@@ -119,8 +119,7 @@ void ParticleSelector::initialiseSourceSelector()
 
     for(int i = 0; i < sources.getNumChildren(); i++) {
         auto source = sources.getChild(i);
-        sourceSelector.addItem(source[sourcePropFileNameIdentifier],
-                               source[sourcePropIdIdentifier]);
+        sourceSelector.addItem(source[IDs::file_name], source[IDs::id]);
     }
 }
 
@@ -149,16 +148,15 @@ void ParticleSelector::selectNewSourceFile()
     // if the fileapth already exists, error and return
     const auto filePath = fileManager.getFile().getFullPathName();
     const auto existingEntry =
-        sources.getChildWithProperty(sourcePropFilePathIdentifier, filePath);
+        sources.getChildWithProperty(IDs::file_path, filePath);
     if(existingEntry.isValid()) {
         showErrorMessaging(FileAlreadyExists);
         return;
     }
 
     source = fileManager.addSourceToState(sources);
-    sourceSelector.addItem(source[sourcePropFileNameIdentifier],
-                           source[sourcePropIdIdentifier]);
-    sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
+    sourceSelector.addItem(source[IDs::file_name], source[IDs::id]);
+    sourceSelector.setSelectedId(source[IDs::id]);
 
     juce::File file = fileManager.getFile();
     te::AudioFile audioFile = fileManager.getAudioFile(engine);
@@ -167,8 +165,7 @@ void ParticleSelector::selectNewSourceFile()
 
 void ParticleSelector::loadExistingSourceFile(int &id)
 {
-    auto requestedSource =
-        sources.getChildWithProperty(sourcePropIdIdentifier, id);
+    auto requestedSource = sources.getChildWithProperty(IDs::id, id);
 
     if(requestedSource.isValid()) {
         FileManager fileManager;
@@ -181,7 +178,7 @@ void ParticleSelector::loadExistingSourceFile(int &id)
         }
 
         source = requestedSource;
-        sourceSelector.setSelectedId(source[sourcePropIdIdentifier]);
+        sourceSelector.setSelectedId(source[IDs::id]);
 
         juce::File file = fileManager.getFile();
         te::AudioFile audioFile = fileManager.getAudioFile(engine);
@@ -194,8 +191,7 @@ int ParticleSelector::getNewParticleId()
     int highestNumberId = 0;
 
     for(int i = 0; i < particles.getNumChildren(); i++) {
-        int currentId =
-            particles.getChild(i).getProperty(particlePropIdIdentifier);
+        int currentId = particles.getChild(i).getProperty(IDs::id);
         if(currentId > highestNumberId) {
             highestNumberId = currentId;
         }
@@ -221,20 +217,14 @@ void ParticleSelector::saveParticle()
     if(!particle.isValid()) {
         // if doesn't exist, add new entry to the particles vt
         auto newId = getNewParticleId();
-        particle = juce::ValueTree(particleIdentifier);
-        particle.setProperty(particlePropIdIdentifier, newId, nullptr);
+        particle = juce::ValueTree(IDs::PARTICLE);
+        particle.setProperty(IDs::id, newId, nullptr);
         particles.addChild(particle, -1, nullptr);
     }
 
-    particle.setProperty(particlePropSourceIdIdentifier,
-                         source[sourcePropIdIdentifier],
-                         nullptr);
-    particle.setProperty(particlePropRangeStartIdentifier,
-                         particleRange.rangeStart,
-                         nullptr);
-    particle.setProperty(particlePropRangeEndIdentifier,
-                         particleRange.rangeEnd,
-                         nullptr);
+    particle.setProperty(IDs::source_id, source[IDs::id], nullptr);
+    particle.setProperty(IDs::start, particleRange.rangeStart, nullptr);
+    particle.setProperty(IDs::end, particleRange.rangeEnd, nullptr);
 
     // NB: on success, display the details of the particle entry somewhere
     // within this object
@@ -295,9 +285,8 @@ bool ParticleSelector::readyToBeDeleted()
 void ParticleSelector::updateViewableData()
 {
     if(particle.isValid()) {
-        particleNameDisplay.setText(
-            particle.getProperty(particlePropIdIdentifier).toString(),
-            juce::dontSendNotification);
+        particleNameDisplay.setText(particle.getProperty(IDs::id).toString(),
+                                    juce::dontSendNotification);
     } else {
         particleNameDisplay.setText("Untitled", juce::dontSendNotification);
     }

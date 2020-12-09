@@ -20,8 +20,8 @@ SourceManager::SourceManager(juce::ValueTree &as, te::Engine &eng)
     addAndMakeVisible(&heading);
 
     appState.addListener(this);
-    sources = (appState.getChildWithName(sourcesIdentifier));
-    particles = (appState.getChildWithName(particlesIdentifier));
+    sources = (appState.getChildWithName(IDs::SOURCES));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
 
     addAndMakeVisible(table);
     table.setColour(juce::ListBox::outlineColourId, juce::Colours::grey);
@@ -152,8 +152,8 @@ void SourceManager::backgroundClicked(const juce::MouseEvent &)
 void SourceManager::valueTreeChildAdded(juce::ValueTree &parentTree,
                                         juce::ValueTree &childWhichHasBeenAdded)
 {
-    sources = (appState.getChildWithName(sourcesIdentifier));
-    particles = (appState.getChildWithName(particlesIdentifier));
+    sources = (appState.getChildWithName(IDs::SOURCES));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
     numRows = sources.getNumChildren();
     table.updateContent();
 }
@@ -163,8 +163,8 @@ void SourceManager::valueTreeChildRemoved(
     juce::ValueTree &childWhichHasBeenRemoved,
     int indexFromWhichChildWasRemoved)
 {
-    sources = (appState.getChildWithName(sourcesIdentifier));
-    particles = (appState.getChildWithName(particlesIdentifier));
+    sources = (appState.getChildWithName(IDs::SOURCES));
+    particles = (appState.getChildWithName(IDs::PARTICLES));
     numRows = sources.getNumChildren();
     table.updateContent();
 }
@@ -198,7 +198,7 @@ void SourceManager::selectNewSourceFile()
     // if the fileapth already exists, error and return
     const auto filePath = fileManager.getFile().getFullPathName();
     const auto existingEntry =
-        sources.getChildWithProperty(sourcePropFilePathIdentifier, filePath);
+        sources.getChildWithProperty(IDs::file_path, filePath);
     if(existingEntry.isValid()) {
         showErrorMessaging(FileAlreadyExists);
         return;
@@ -228,9 +228,9 @@ void SourceManager::deleteSources()
 bool SourceManager::sourceIsInUse(int index)
 {
     auto source = sources.getChild(index);
-    int sourceId = source.getProperty(sourcePropIdIdentifier);
+    int sourceId = source.getProperty(IDs::id);
     auto particleUsingSource =
-        particles.getChildWithProperty(particlePropSourceIdIdentifier,
+        particles.getChildWithProperty(IDs::source_id,
                                        sourceId);
     if(particleUsingSource.isValid()) {
         return true;

@@ -30,11 +30,11 @@ void FigureGenerator::resized()
 
 int FigureGenerator::getNewFigureId()
 {
-    auto figures = appState.getChildWithName(figuresIdentifier);
+    auto figures = appState.getChildWithName(IDs::FIGURES);
     int highestNumberId = 0;
 
     for(int i = 0; i < figures.getNumChildren(); i++) {
-        int currentId = figures.getChild(i).getProperty(figurePropIdIdentifier);
+        int currentId = figures.getChild(i).getProperty(IDs::id);
         if(currentId > highestNumberId) {
             highestNumberId = currentId;
         }
@@ -55,16 +55,14 @@ juce::ValueTree FigureGenerator::generateFigure()
     // notification from the listener but all you are really doing is the same
     // as here - taking a copy from the reference to appState particles here
     // could be a reference but I can't work out how to initialize it properly
-    auto particles = appState.getChildWithName(particlesIdentifier);
+    auto particles = appState.getChildWithName(IDs::PARTICLES);
     auto particlesLength = particles.getNumChildren();
     if(particlesLength > 0) // flip this and make handle error
     {
         // create new figure locally (don't add it to appState yet)
-        generatedFigure = juce::ValueTree(figureIdentifier);
+        generatedFigure = juce::ValueTree(IDs::FIGURE);
         auto newFigureId = getNewFigureId();
-        generatedFigure.setProperty(figurePropIdIdentifier,
-                                    newFigureId,
-                                    nullptr);
+        generatedFigure.setProperty(IDs::id, newFigureId, nullptr);
 
         int figEventId = 1;
         double onset = 0.0;
@@ -72,23 +70,18 @@ juce::ValueTree FigureGenerator::generateFigure()
         for(int i = 0; i < particlesLength; i++) {
             // for each particle, add a FigureEvent with an onset 1000ms more
             // than the previous
-            juce::ValueTree figureEvent(figureEventIdentifier);
-            figureEvent.setProperty(figureEventPropIdIdentifier,
-                                    figEventId,
+            juce::ValueTree figureEvent(IDs::EVENT);
+            figureEvent.setProperty(IDs::id, figEventId, nullptr);
+            figureEvent.setProperty(IDs::onset, onset, nullptr);
+            figureEvent.setProperty(IDs::particle_id,
+                                    particles.getChild(i).getProperty(IDs::id),
                                     nullptr);
-            figureEvent.setProperty(figureEventPropOnsetIdentifier,
-                                    onset,
-                                    nullptr);
-            figureEvent.setProperty(
-                figureEventPropParticleIdIdentifier,
-                particles.getChild(i).getProperty(particlePropIdIdentifier),
-                nullptr);
             generatedFigure.addChild(figureEvent, -1, nullptr);
             figEventId++;
             onset += 1.0;
         }
 
-        auto figures = appState.getChildWithName(figuresIdentifier);
+        auto figures = appState.getChildWithName(IDs::FIGURES);
         figures.addChild(generatedFigure,
                          -1,
                          nullptr); // this will need to check in future whether
