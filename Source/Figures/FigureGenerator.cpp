@@ -1,17 +1,17 @@
 #include "FigureGenerator.h"
 
+#include "FigureCollection.h"
+#include "FigureProcessor.h"
+#include "ParticleCollection.h"
+
+#include <CollectionsProducer.hpp>
+#include <DurationsProducer.hpp>
+
 FigureGenerator::FigureGenerator(juce::ValueTree &as) : appState(as)
 {
     holdingMessage.setText("holding area for figure generation options.",
                            juce::dontSendNotification);
     addAndMakeVisible(&holdingMessage);
-    randomNumberDisplay.setText("", juce::dontSendNotification);
-    addAndMakeVisible(&randomNumberDisplay);
-    addAndMakeVisible(&getRandomNumberButton);
-    getRandomNumberButton.setButtonText("Get random number");
-    getRandomNumberButton.onClick = [this] {
-        getRandomNumber();
-    };
 }
 
 FigureGenerator::~FigureGenerator()
@@ -24,27 +24,12 @@ void FigureGenerator::resized()
 {
     auto area = getLocalBounds();
     holdingMessage.setBounds(area.removeFromTop(50));
-    getRandomNumberButton.setBounds(area.removeFromTop(50));
-    randomNumberDisplay.setBounds(area.removeFromTop(50));
 }
 
-int FigureGenerator::getNewFigureId()
+Figure FigureGenerator::generateFigure()
 {
-    auto figures = appState.getChildWithName(IDs::FIGURES);
-    int highestNumberId = 0;
+    using namespace aleatoric;
 
-    for(int i = 0; i < figures.getNumChildren(); i++) {
-        int currentId = figures.getChild(i).getProperty(IDs::id);
-        if(currentId > highestNumberId) {
-            highestNumberId = currentId;
-        }
-    }
-
-    return highestNumberId + 1;
-}
-
-juce::ValueTree FigureGenerator::generateFigure()
-{
     // NB: note that particles is NOT a member of the class and only gets
     // particles from appState at the last minute, just before using it. This is
     // because of the difference between a copy and a reference. appState is a
@@ -55,156 +40,29 @@ juce::ValueTree FigureGenerator::generateFigure()
     // notification from the listener but all you are really doing is the same
     // as here - taking a copy from the reference to appState particles here
     // could be a reference but I can't work out how to initialize it properly
-    auto particles = appState.getChildWithName(IDs::PARTICLES);
-    auto particlesLength = particles.getNumChildren();
-    if(particlesLength > 0) // flip this and make handle error
-    {
-        // create new figure locally (don't add it to appState yet)
-        generatedFigure = juce::ValueTree(IDs::FIGURE);
-        auto newFigureId = getNewFigureId();
-        generatedFigure.setProperty(IDs::id, newFigureId, nullptr);
+    auto particleCollectionState = appState.getChildWithName(IDs::PARTICLES);
+    ParticleCollection particleCollection(particleCollectionState);
 
-        int figEventId = 1;
-        double onset = 0.0;
+    auto figureCollectionState = appState.getChildWithName(IDs::FIGURES);
+    FigureCollection figureCollection(figureCollectionState);
 
-        for(int i = 0; i < particlesLength; i++) {
-            // for each particle, add a FigureEvent with an onset 1000ms more
-            // than the previous
-            juce::ValueTree figureEvent(IDs::EVENT);
-            figureEvent.setProperty(IDs::id, figEventId, nullptr);
-            figureEvent.setProperty(IDs::onset, onset, nullptr);
-            figureEvent.setProperty(IDs::particle_id,
-                                    particles.getChild(i).getProperty(IDs::id),
-                                    nullptr);
-            generatedFigure.addChild(figureEvent, -1, nullptr);
-            figEventId++;
-            onset += 1.0;
-        }
+    // TODO: delete this when UI for selection of protocol etc. is in place
+    int numOfEventsToMake = 8;
+    std::vector<int> durations {1000, 2000};
 
-        auto figures = appState.getChildWithName(IDs::FIGURES);
-        figures.addChild(generatedFigure,
-                         -1,
-                         nullptr); // this will need to check in future whether
-                                   // this figure already exists in figures
-        return generatedFigure;
-    }
+    // Basic predictable results using prescribed durations and cycling of
+    // durations and particles
+    DurationsProducer durationsProducer(
+        DurationProtocol::createPrescribed(durations),
+        NumberProtocol::create(NumberProtocol::Type::cycle));
 
-    return juce::ValueTree();
-}
+    CollectionsProducer<Particle> collectionsProducer(
+        particleCollection.getParticles(),
+        NumberProtocol::create(NumberProtocol::Type::cycle));
 
-void FigureGenerator::getRandomNumber()
-{
-    // RandomNumber rn(1, 10);
-    // int number = rn.getNumber();
-
-    // SeriesRandomNumber sn(1, 10);
-    // auto text = randomNumberDisplay.getText();
-    // text += String("first set: ");
-    // randomNumberDisplay.setText(text, dontSendNotification);
-    // for (int i = 0; i < 10; i++)
-    // {
-    //     int number = sn.getNumber();
-    //     text = randomNumberDisplay.getText();
-    //     text += String(number);
-    //     text += String(", ");
-    //     randomNumberDisplay.setText(text, dontSendNotification);
-    // }
-    // text = randomNumberDisplay.getText();
-    // text += String("second set: ");
-    // randomNumberDisplay.setText(text, dontSendNotification);
-    // for (int i = 0; i < 10; i++)
-    // {
-    //     int number = sn.getNumber();
-    //     text = randomNumberDisplay.getText();
-    //     text += String(number);
-    //     text += String(", ");
-    //     randomNumberDisplay.setText(text, dontSendNotification);
-    // }
-
-    // RandomNumberWithoutDirectRepetition rwoutdp(1, 3);
-    // for (int i = 0; i < 20; i++)
-    // {
-    //     int number = rwoutdp.getNumber();
-    //     auto text = randomNumberDisplay.getText();
-    //     text += String(number);
-    //     text += String(", ");
-    //     randomNumberDisplay.setText(text, dontSendNotification);
-    // }
-
-    // RandomNumberAdjacentSteps ras(1, 3, 1);
-    // for (int i = 0; i < 20; i++)
-    // {
-    //     int number = ras.getNumber();
-    //     auto text = randomNumberDisplay.getText();
-    //     text += String(number);
-    //     text += String(", ");
-    //     randomNumberDisplay.setText(text, dontSendNotification);
-    // }
-
-    // PeriodicRandomNumber pr(1, 3, 0.75, 1);
-    // for (int i = 0; i < 20; i++)
-    // {
-    //     int number = pr.getNumber();
-    //     auto text = randomNumberDisplay.getText();
-    //     text += String(number);
-    //     text += String(", ");
-    //     randomNumberDisplay.setText(text, dontSendNotification);
-    // }
-
-    // RandomNumberWalk rw(50, 100, 5, 75);
-
-    // File csvFile("~/Desktop/test_random_walk.csv");
-
-    // if (csvFile.exists())
-    // {
-    //     String resultString;
-    //     for (int i = 0; i < 10; i++)
-    //     {
-    //         int number = rw.getNumber();
-    //         DBG(String(number));
-    //         resultString += String(i + 1);
-    //         resultString += String(", ");
-    //         resultString += String(number);
-    //         resultString += String("\n");
-    //     }
-    //     csvFile.replaceWithText(resultString);
-    // }
-    // else
-    // {
-    //     DBG("csv file not found");
-    // }
-
-    // RandomNumberWalkGranular rwg(1, 100, 0.5);
-    // RandomNumberWalkGranular rwg(1, 100, 0.1, 50);
-
-    // File csvFile("~/Desktop/test_random_walk.csv");
-
-    // if (csvFile.exists())
-    // {
-    //     String resultString;
-    //     for (int i = 0; i < 1000; i++)
-    //     {
-    //         auto number = rwg.getNumber();
-    //         DBG(String(number));
-    //         resultString += String(i + 1);
-    //         resultString += String(", ");
-    //         resultString += String(number);
-    //         resultString += String("\n");
-    //     }
-    //     csvFile.replaceWithText(resultString);
-    // }
-    // else
-    // {
-    //     DBG("csv file not found");
-    // }
-
-    RandomNumberWithinRange rwr(1, 10);
-    auto text = randomNumberDisplay.getText();
-    for(int i = 0; i < 50; i++) {
-        int number = rwr.getNumber();
-        auto text = randomNumberDisplay.getText();
-        text += juce::String(number);
-        text += juce::String(", ");
-        randomNumberDisplay.setText(text, juce::dontSendNotification);
-    }
+    FigureProcessor processor;
+    return processor.composeFigure(numOfEventsToMake,
+                                   durationsProducer,
+                                   collectionsProducer,
+                                   figureCollection);
 }

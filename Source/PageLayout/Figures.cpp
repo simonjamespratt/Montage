@@ -48,6 +48,6 @@ void Figures::resized()
 
 void Figures::generateAndArrangeFigure()
 {
-    juce::ValueTree figure = figureGenerator.generateFigure();
+    auto figure = figureGenerator.generateFigure();
     sequencer.readFigure(figure);
 }

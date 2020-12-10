@@ -5,10 +5,10 @@
 
 namespace te = tracktion_engine;
 
-class Particles : public juce::Component, public juce::ChangeListener {
+class ParticlesSelection : public juce::Component, public juce::ChangeListener {
   public:
-    Particles(te::Engine &eng, juce::ValueTree &as);
-    ~Particles();
+    ParticlesSelection(te::Engine &eng, juce::ValueTree &as);
+    ~ParticlesSelection();
 
     void paint(juce::Graphics &g) override;
     void resized() override;
@@ -28,5 +28,5 @@ class Particles : public juce::Component, public juce::ChangeListener {
     void recalculateSize();
     void refreshView();
     void addListeners();
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Particles)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticlesSelection)
 };

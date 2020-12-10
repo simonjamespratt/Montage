@@ -53,31 +53,35 @@ void Sequencer::resized()
     transportController.setBounds(transportArea);
 }
 
-void Sequencer::readFigure(juce::ValueTree &figure)
+void Sequencer::readFigure(Figure &figure)
 {
     std::vector<ClipData> clips;
-    int noOfFigureEvents = figure.getNumChildren();
     auto sources = appState.getChildWithName(IDs::SOURCES);
     auto particles = appState.getChildWithName(IDs::PARTICLES);
     int noOfParticles = particles.getNumChildren();
     prepareForNewFigure(noOfParticles);
 
-    for(int i = 0; i < noOfFigureEvents; i++) {
-        // unpack each figure event value tree:- particleId, onset
-        auto currentFigure = figure.getChild(i);
-
-        int particleId = int(currentFigure[IDs::particle_id]);
+    for(auto &event : figure.getEvents()) {
+        int particleId = event.getParticleId();
         auto particle = particles.getChildWithProperty(IDs::id, particleId);
         double particleRangeStart = double(particle[IDs::start]);
         double particleRangeEnd = double(particle[IDs::end]);
 
         int trackIndex = particleId - 1;
-        double clipStart = double(currentFigure[IDs::onset]);
+        double clipStart = event.getOnset() * 0.001; // convert from ms to s
         double clipEnd = (particleRangeEnd - particleRangeStart) + clipStart;
         double offset = particleRangeStart;
-        int sourceId = int(particle[IDs::id]);
-        auto requestedSource = sources.getChildWithProperty(IDs::id, sourceId);
+        int sourceId = int(particle[IDs::source_id]);
 
+        auto requestedSource = sources.getChildWithProperty(IDs::id, sourceId);
+        // TODO: below should be throwing an error if not found rather
+        // than just checking whether the source is valid and then silently
+        // disregarding when it is not valid. Really it should be part of the
+        // SourceCollection class (or any of the collection classes) where they
+        // have a method SourceCollection.getSourceById(int id) etc. If the
+        // provided id doesn't match a child in the value tree, throw exception.
+        // And here, when calling that method, catch the exception and handle
+        // with UI error message.
         if(requestedSource.isValid()) {
             FileManager fileManager;
             fileManager.loadExistingSourceFile(requestedSource);

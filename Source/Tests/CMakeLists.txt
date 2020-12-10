@@ -1,6 +1,14 @@
 target_sources(Tests PRIVATE
     main.cpp
+    EventTest.cpp
+    FigureTest.cpp
+    FigureCollectionTest.cpp
+    FigureProcessorTest.cpp
+    ParticleCollectionTest.cpp
+    ParticleTest.cpp
 )
+
+add_subdirectory(Helpers)
 
 target_compile_definitions(Tests
     PRIVATE

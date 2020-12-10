@@ -1,6 +1,6 @@
-#include "Particles.h"
+#include "ParticlesSelection.h"
 
-Particles::Particles(te::Engine &eng, juce::ValueTree &as)
+ParticlesSelection::ParticlesSelection(te::Engine &eng, juce::ValueTree &as)
 : engine(eng),
   appState(as),
   crossIcon(icons.getIcon(Icons::IconType::Cross)),
@@ -20,13 +20,13 @@ Particles::Particles(te::Engine &eng, juce::ValueTree &as)
     recalculateSize();
 }
 
-Particles::~Particles()
+ParticlesSelection::~ParticlesSelection()
 {}
 
-void Particles::paint(juce::Graphics &g)
+void ParticlesSelection::paint(juce::Graphics &g)
 {}
 
-void Particles::resized()
+void ParticlesSelection::resized()
 {
     auto area = getLocalBounds();
     auto headerArea = area.removeFromTop(headerHeight);
@@ -47,7 +47,7 @@ void Particles::resized()
     }
 }
 
-void Particles::changeListenerCallback(juce::ChangeBroadcaster *source)
+void ParticlesSelection::changeListenerCallback(juce::ChangeBroadcaster *source)
 {
     // find out which particle did this
     for(auto it = particles.begin(); it != particles.end(); it++) {
@@ -60,7 +60,7 @@ void Particles::changeListenerCallback(juce::ChangeBroadcaster *source)
     refreshView();
 }
 
-void Particles::addParticle()
+void ParticlesSelection::addParticle()
 {
     particles.emplace_back(
         std::make_unique<ParticleSelector>(engine, appState));
@@ -68,7 +68,7 @@ void Particles::addParticle()
     refreshView();
 }
 
-void Particles::recalculateSize()
+void ParticlesSelection::recalculateSize()
 {
     headerHeight = 50;
     auto totalHeight = headerHeight;
@@ -80,7 +80,7 @@ void Particles::recalculateSize()
     setSize(getWidth(), totalHeight);
 }
 
-void Particles::refreshView()
+void ParticlesSelection::refreshView()
 {
     for(int i = 0; i < particles.size(); i++) {
         addAndMakeVisible(*particles[i]);
@@ -89,7 +89,7 @@ void Particles::refreshView()
     recalculateSize();
 }
 
-void Particles::addListeners()
+void ParticlesSelection::addListeners()
 {
     for(int i = 0; i < particles.size(); i++) {
         particles[i]->addChangeListener(this);
