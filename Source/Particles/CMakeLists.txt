@@ -1,6 +1,6 @@
 target_sources(Montage PRIVATE
-    Particles.cpp
-    Particles.h
+    ParticlesSelection.cpp
+    ParticlesSelection.h
     ParticleSelector.cpp
     ParticleSelector.h
 )

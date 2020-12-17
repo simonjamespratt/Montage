@@ -3,6 +3,7 @@
 #include "Arrangement.h"
 #include "Cursor.h"
 #include "ErrorManager.h"
+#include "Figure.h"
 #include "FileManager.h"
 #include "Identifiers.h"
 #include "Timeline.h"
@@ -21,9 +22,6 @@ struct ClipData {
     double offset;
 };
 
-//==============================================================================
-/*
- */
 class Sequencer : public juce::Component {
   public:
     Sequencer(te::Engine &eng, juce::ValueTree &as);
@@ -32,7 +30,7 @@ class Sequencer : public juce::Component {
     void paint(juce::Graphics &g) override;
     void resized() override;
 
-    void readFigure(juce::ValueTree &figure);
+    void readFigure(Figure &figure);
 
   private:
     te::Engine &engine;
