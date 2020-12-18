@@ -29,6 +29,8 @@ target_include_directories(Montage
 )
 
 target_sources(Tests PRIVATE
+    AppState.cpp
+    AppState.h
     CollectionHelper.cpp
     CollectionHelper.h
     Event.cpp
