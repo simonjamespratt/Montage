@@ -20,10 +20,18 @@ TEST_CASE("Creating a file")
 TEST_CASE("Save app state")
 {
     // TODO: tests
-    // xml element first
-    // then expand to file
-    // when provided file does not exist
-    // when the file provided is not .xml
+
+    // try to alter internal state rather than return from loading method
+
+    // check properly what the content of the val tree is - try making it have
+    // different props, then loading it
+
+    // when provided file does not exist when
+
+    // the file provided is not .xml
+
+    // review the other checks that tracktion example makes
+
     juce::ValueTree state(IDs::APP_STATE);
     state.setProperty(IDs::id, 123, nullptr);
     AppState appState(state);
