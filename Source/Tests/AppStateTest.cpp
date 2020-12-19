@@ -21,8 +21,6 @@ TEST_CASE("Save app state")
 {
     // TODO: tests
 
-    // try to alter internal state rather than return from loading method
-
     // check properly what the content of the val tree is - try making it have
     // different props, then loading it
 
@@ -43,13 +41,14 @@ TEST_CASE("Save app state")
 
     CHECK(appState.saveStateToFile(file));
 
-    // empty state before reloading
+    // change state before reloading
     state.removeProperty(IDs::id, nullptr);
+    state.setProperty(IDs::onset, 456, nullptr);
 
-    // CHECK(appState.loadStateFromFile(file));
+    CHECK(appState.loadStateFromFile(file));
 
-    auto loadedState = appState.loadStateFromFile(file);
-    CHECK(loadedState.getNumProperties() == 1);
+    CHECK_FALSE(state.hasProperty(IDs::id));
+    CHECK(state.hasProperty(IDs::onset));
 
     // NB: don't remove this line unless also remove file.create() above as this
     // is clean up

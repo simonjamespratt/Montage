@@ -4,9 +4,9 @@
 
 class AppState {
   public:
-    AppState(const juce::ValueTree &v);
+    AppState(juce::ValueTree &v);
     bool saveStateToFile(const juce::File &file);
-    juce::ValueTree loadStateFromFile(const juce::File &file);
+    bool loadStateFromFile(const juce::File &file);
 
   private:
     juce::ValueTree state;

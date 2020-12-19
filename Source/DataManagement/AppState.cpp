@@ -1,6 +1,6 @@
 #include "AppState.h"
 
-AppState::AppState(const juce::ValueTree &v) : state(v)
+AppState::AppState(juce::ValueTree &v) : state(v)
 {}
 
 bool AppState::saveStateToFile(const juce::File &file)
@@ -12,8 +12,10 @@ bool AppState::saveStateToFile(const juce::File &file)
     return temp.overwriteTargetFileWithTemporary();
 }
 
-juce::ValueTree AppState::loadStateFromFile(const juce::File &file)
+bool AppState::loadStateFromFile(const juce::File &file)
 {
     std::unique_ptr<juce::XmlElement> xml(juce::XmlDocument::parse(file));
-    return juce::ValueTree::fromXml(*xml);
+    state.copyPropertiesAndChildrenFrom(juce::ValueTree::fromXml(*xml),
+                                        nullptr);
+    return true;
 }
