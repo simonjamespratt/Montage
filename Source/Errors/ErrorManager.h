@@ -7,7 +7,8 @@ enum ErrorType {
     FileAlreadyExists,
     SourceInvalid,
     ParticleRangeInvalid,
-    DeleteSourceInvalidSourceInUse
+    DeleteSourceInvalidSourceInUse,
+    FigureInvalidNumberOfEvents
 };
 
 class ErrorManager {
@@ -16,7 +17,6 @@ class ErrorManager {
     ~ErrorManager();
 
   private:
-    juce::String message;
     juce::String getMessage(ErrorType errorType);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ErrorManager)
 };

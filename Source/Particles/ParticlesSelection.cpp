@@ -42,6 +42,7 @@ void ParticlesSelection::resized()
                                   .withMargin(juce::FlexItem::Margin(5.0f)));
     headerContainer.performLayout(headerArea);
 
+    // TODO: make this range for loop
     for(int i = 0; i < particles.size(); i++) {
         particles[i]->setBounds(area.removeFromTop(300));
     }
@@ -73,6 +74,7 @@ void ParticlesSelection::recalculateSize()
     headerHeight = 50;
     auto totalHeight = headerHeight;
 
+    // TODO: this doesn't need to be a loop. Use multiplication
     for(int i = 0; i < particles.size(); i++) {
         totalHeight += 300;
     }
@@ -82,6 +84,7 @@ void ParticlesSelection::recalculateSize()
 
 void ParticlesSelection::refreshView()
 {
+    // TODO: make this a range for loop
     for(int i = 0; i < particles.size(); i++) {
         addAndMakeVisible(*particles[i]);
     }

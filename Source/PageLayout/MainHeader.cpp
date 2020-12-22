@@ -1,12 +1,7 @@
 #include "MainHeader.h"
 
-//==============================================================================
 MainHeader::MainHeader(te::Engine &e) : engine(e)
 {
-    appName.setText("Montage", juce::dontSendNotification);
-    appName.setFont(juce::Font(32.0f, juce::Font::bold));
-    addAndMakeVisible(&appName);
-
     addAndMakeVisible(&settingsButton);
     settingsButton.setButtonText("Settings");
     settingsButton.onClick = [this] {
@@ -28,10 +23,8 @@ void MainHeader::resized()
     area.removeFromBottom(10);
     area.removeFromLeft(10);
     juce::FlexBox fb;
-    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+    fb.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
     fb.alignContent = juce::FlexBox::AlignContent::flexStart;
-    fb.items.add(
-        juce::FlexItem(appName).withMinHeight(50.0f).withMinWidth(200.0f));
     fb.items.add(
         juce::FlexItem(settingsButton).withHeight(20.0f).withWidth(100.0f));
     fb.performLayout(area.toFloat());

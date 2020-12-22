@@ -23,6 +23,7 @@ void Arrangement::paint(juce::Graphics &g)
 
 void Arrangement::prepareArrangement(int noOfTracksToMake)
 {
+    thumbnails.clear();
     noOfTracks = noOfTracksToMake;
     repaint();
 }

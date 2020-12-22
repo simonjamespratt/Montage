@@ -2,7 +2,7 @@
 
 ErrorManager::ErrorManager(ErrorType et)
 {
-    message = getMessage(et);
+    auto message = getMessage(et);
     juce::DialogWindow::LaunchOptions options;
     options.content.setOwned(new ErrorMessage(message));
     options.content->setSize(400, 200);
@@ -29,6 +29,9 @@ juce::String ErrorManager::getMessage(ErrorType errorType)
     case DeleteSourceInvalidSourceInUse:
         return "Cannot delete source as it is currently being used by a "
                "particle";
+    case FigureInvalidNumberOfEvents:
+        return "The number of events specified for a figure must be greater "
+               "than 0";
     default:
         break;
     }

@@ -15,13 +15,17 @@ class Figures : public juce::Component {
     void resized() override;
 
   private:
-    juce::Label heading;
-    juce::TextButton generateButton;
     te::Engine &engine;
     juce::ValueTree &appState;
     Sequencer sequencer;
     FigureGenerator figureGenerator;
     FigureManager figureManager;
     void generateAndArrangeFigure();
+
+    juce::Label heading;
+    bool showGenerator {true};
+    juce::TextButton toggleGeneratOutputButton;
+    void toggleGenerateManagerState();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Figures)
 };

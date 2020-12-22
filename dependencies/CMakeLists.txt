@@ -15,7 +15,7 @@ FetchContent_Declare(
 FetchContent_Declare(
     Aleatoric
     GIT_REPOSITORY  https://github.com/simonjamespratt/Aleatoric.git
-    GIT_TAG         70014ceb8cf0fe335f847a4294b5fb7cefb84890 #v0.1.1-beta
+    GIT_TAG         master
 )
 
 FetchContent_Declare(

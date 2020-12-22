@@ -12,7 +12,6 @@ class MainHeader : public juce::Component {
 
   private:
     te::Engine &engine;
-    juce::Label appName;
     juce::TextButton settingsButton;
 
     void showAudioDeviceSettings(te::Engine &engine);

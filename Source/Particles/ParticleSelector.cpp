@@ -2,14 +2,14 @@
 
 ParticleSelector::ParticleSelector(te::Engine &eng, juce::ValueTree &as)
 : engine(eng),
-  edit(
-      engine,
-      /* TODO: method signature for te::createEmptyEdit() is a legacy signature.
-         Update to newer version. See tracktion_EditFileOperations.h */
-      te::createEmptyEdit(engine),
-      te::Edit::forEditing,
-      nullptr,
-      0),
+  edit(engine,
+       /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
+          legacy signature. Update to newer version. See
+          tracktion_EditFileOperations.h */
+       te::createEmptyEdit(engine),
+       te::Edit::forEditing,
+       nullptr,
+       0),
   transport(edit.getTransport()),
   appState(as),
   sources(),
@@ -202,6 +202,8 @@ int ParticleSelector::getNewParticleId()
 
 void ParticleSelector::saveParticle()
 {
+    auto isUpdate = particle.isValid();
+
     // check there is a valid source
     if(!source.isValid()) {
         showErrorMessaging(SourceInvalid);
@@ -214,17 +216,23 @@ void ParticleSelector::saveParticle()
         return;
     }
 
-    if(!particle.isValid()) {
-        // if doesn't exist, add new entry to the particles vt
+    if(!isUpdate) {
+        // if doesn't exist, make new vt for particle
         auto newId = getNewParticleId();
         particle = juce::ValueTree(IDs::PARTICLE);
         particle.setProperty(IDs::id, newId, nullptr);
-        particles.addChild(particle, -1, nullptr);
     }
 
     particle.setProperty(IDs::source_id, source[IDs::id], nullptr);
     particle.setProperty(IDs::start, particleRange.rangeStart, nullptr);
     particle.setProperty(IDs::end, particleRange.rangeEnd, nullptr);
+
+    if(!isUpdate) {
+        // if doesn't exist, add new entry to the particles vt, BUT only AFTER
+        // adding all required props otherwise will throw exception in Particle
+        // class
+        particles.addChild(particle, -1, nullptr);
+    }
 
     // NB: on success, display the details of the particle entry somewhere
     // within this object

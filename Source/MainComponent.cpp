@@ -13,7 +13,8 @@ MainComponent::MainComponent()
     appState.addChild(particles, -1, nullptr);
     appState.addChild(figures, -1, nullptr);
 
-    // TODO: temporary measure until data saving and loading is possible
+    // TODO: DATA-MANAGEMENT: temporary measure until data saving and loading is
+    // possible
     if(PRE_POPULATE_DUMMY_DATA) {
         // SOURCES
         juce::String pathBase(AUDIO_ASSETS_DIR);

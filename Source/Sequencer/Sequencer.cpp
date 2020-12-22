@@ -2,14 +2,14 @@
 
 Sequencer::Sequencer(te::Engine &eng, juce::ValueTree &as)
 : engine(eng),
-  edit(
-      engine,
-      /* TODO: method signature for te::createEmptyEdit() is a legacy signature.
-         Update to newer version. See tracktion_EditFileOperations.h */
-      te::createEmptyEdit(engine),
-      te::Edit::forEditing,
-      nullptr,
-      0),
+  edit(engine,
+       /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
+          legacy signature. Update to newer version. See
+          tracktion_EditFileOperations.h */
+       te::createEmptyEdit(engine),
+       te::Edit::forEditing,
+       nullptr,
+       0),
   transport(edit.getTransport()),
   appState(as),
   timeline(edit),
@@ -74,14 +74,14 @@ void Sequencer::readFigure(Figure &figure)
         int sourceId = int(particle[IDs::source_id]);
 
         auto requestedSource = sources.getChildWithProperty(IDs::id, sourceId);
-        // TODO: below should be throwing an error if not found rather
-        // than just checking whether the source is valid and then silently
-        // disregarding when it is not valid. Really it should be part of the
-        // SourceCollection class (or any of the collection classes) where they
-        // have a method SourceCollection.getSourceById(int id) etc. If the
-        // provided id doesn't match a child in the value tree, throw exception.
-        // And here, when calling that method, catch the exception and handle
-        // with UI error message.
+        // TODO: DATA-MANAGEMENT: below should be throwing an error if not found
+        // rather than just checking whether the source is valid and then
+        // silently disregarding when it is not valid. Really it should be part
+        // of the SourceCollection class (or any of the collection classes)
+        // where they have a method SourceCollection.getSourceById(int id) etc.
+        // If the provided id doesn't match a child in the value tree, throw
+        // exception. And here, when calling that method, catch the exception
+        // and handle with UI error message.
         if(requestedSource.isValid()) {
             FileManager fileManager;
             fileManager.loadExistingSourceFile(requestedSource);
