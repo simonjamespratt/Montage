@@ -1,6 +1,6 @@
 #include "ErrorMessage.h"
 
-ErrorMessage::ErrorMessage(juce::String &messageReceived)
+ErrorMessage::ErrorMessage(juce::String messageReceived)
 : message(messageReceived)
 {}
 

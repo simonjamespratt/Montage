@@ -14,7 +14,7 @@ class Particle {
 
   private:
     juce::ValueTree state;
-    // TODO: why does this cause an error when returning a vector of class
-    // Particle from Particles::getParticles()?
+    // TODO: DATA-MANAGEMENT: why does this cause an error when returning a
+    // vector of class Particle from Particles::getParticles()?
     // JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Particle)
 };

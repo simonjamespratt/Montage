@@ -36,7 +36,6 @@ class Arrangement : public juce::Component {
   private:
     te::Edit &edit;
     te::TransportControl &transport;
-    // std::vector<std::unique_ptr<TracktionThumbnail>> thumbnails;
 
     int noOfTracks;
     void drawTrackDividers(juce::Graphics &g);

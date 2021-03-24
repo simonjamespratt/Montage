@@ -31,8 +31,16 @@ void StateChecker::checkPropsAreValid(
 {
     for(auto &&prop : compulsoryProps) {
         if(!state.hasProperty(prop)) {
-            throw std::invalid_argument("Received ValueTree does not have some "
-                                        "properties that are compulsory");
+            auto valueTreeType = state.getType().toString().toStdString();
+            auto propName = prop.toString().toStdString();
+
+            std::string errorMessage("Received ValueTree of type: ");
+            errorMessage += valueTreeType;
+            errorMessage += ", does not have the property: ";
+            errorMessage += propName;
+            errorMessage += ". This property is compulsory.";
+
+            throw std::invalid_argument(errorMessage);
         }
     }
 

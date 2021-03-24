@@ -30,6 +30,6 @@ void ContentContainer::paint(juce::Graphics &g)
 void ContentContainer::resized()
 {
     auto area = getLocalBounds();
-    mainHeader.setBounds(area.removeFromTop(100));
+    mainHeader.setBounds(area.removeFromTop(30));
     pages.setBounds(area);
 }
