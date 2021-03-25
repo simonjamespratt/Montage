@@ -1,41 +1,26 @@
-/*
-  ==============================================================================
-
-    TransportInteractor.cpp
-    Created: 13 Apr 2019 2:47:28pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #include "TransportInteractor.h"
 
-//==============================================================================
 TransportInteractor::TransportInteractor(te::TransportControl &tc, te::Edit &e)
 : transport(tc), edit(e)
 {
     interactionState = ControlCursor;
-    rangeStart = 0.0;
-    rangeEnd = 0.0;
+    rangeStart = 0;
+    rangeEnd = 0;
 }
 
 TransportInteractor::~TransportInteractor()
 {}
 
-SelectionRange TransportInteractor::getSelectionRange()
-{
-    return {rangeStart, rangeEnd};
-}
-
 void TransportInteractor::paint(juce::Graphics &g)
 {
-    if(interactionState == ControlRangeSelection) {
-        g.setColour(juce::Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
-        g.fillRect(mousePositionA,
-                   0.0f,
-                   (mousePositionB - mousePositionA),
-                   float(getHeight()));
-    }
+    auto mousePositionA = calculateUIPosition(rangeStart);
+    auto mousePositionB = calculateUIPosition(rangeEnd);
+
+    g.setColour(juce::Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
+    g.fillRect(mousePositionA,
+               0.0f,
+               (mousePositionB - mousePositionA),
+               float(getHeight()));
 }
 
 void TransportInteractor::mouseDown(const juce::MouseEvent &event)
@@ -50,16 +35,12 @@ void TransportInteractor::mouseDown(const juce::MouseEvent &event)
 
     if(interactionState == ControlCursor) {
         repaint();
-        rangeStart = 0.0;
-        rangeEnd = 0.0;
-        transport.setLoopRange(te::EditTimeRange(0.0, edit.getLength()));
         mouseDrag(event);
     }
 
     if(interactionState == ControlRangeSelection) {
         transport.stop(false, false);
-        mousePositionA = event.position.x;
-        rangeStart = calculateAudioPosition(mousePositionA);
+        rangeStart = calculateAudioPosition(event.position.x);
         transport.position = rangeStart;
     }
 }
@@ -71,8 +52,10 @@ void TransportInteractor::mouseDrag(const juce::MouseEvent &event)
     }
 
     if(interactionState == ControlRangeSelection) {
-        mousePositionB = event.position.x;
-        handleMouseMovement();
+        auto mousePositionA = event.getMouseDownPosition().x;
+        auto mousePositionB = event.position.x;
+
+        handleMouseMovement(mousePositionA, mousePositionB);
     }
 }
 
@@ -81,14 +64,48 @@ void TransportInteractor::mouseUp(const juce::MouseEvent &event)
     transport.setUserDragging(false);
 
     if(interactionState == ControlRangeSelection) {
-        handleMouseMovement();
+        auto mousePositionA = event.getMouseDownPosition().x;
+        auto mousePositionB = event.position.x;
+
+        handleMouseMovement(mousePositionA, mousePositionB);
+
         transport.position = rangeStart;
         transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
         transport.looping = true;
         transport.play(false);
+
+        if(onSelectionChange) {
+            onSelectionChange();
+        }
     }
 }
 
+SelectionRange TransportInteractor::getSelectionRange()
+{
+    return {rangeStart, rangeEnd};
+}
+
+void TransportInteractor::setSelectionRange(SelectionRange newRange)
+{
+    rangeStart = newRange.rangeStart;
+    rangeEnd = newRange.rangeEnd;
+    transport.position = rangeStart;
+    transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
+    transport.looping = true;
+    repaint();
+}
+
+void TransportInteractor::clearSelectionRange()
+{
+    rangeStart = 0;
+    rangeEnd = 0;
+
+    if(onSelectionChange) {
+        onSelectionChange();
+    }
+}
+
+// Private methods
 double TransportInteractor::calculateAudioPosition(float mousePosition)
 {
     jassert(getWidth() > 0);
@@ -96,7 +113,15 @@ double TransportInteractor::calculateAudioPosition(float mousePosition)
     return proportion * edit.getLength();
 }
 
-void TransportInteractor::handleMouseMovement()
+float TransportInteractor::calculateUIPosition(double rangePosition)
+{
+    jassert(getWidth() > 0);
+    auto proportion = rangePosition / edit.getLength();
+    return getWidth() * proportion;
+}
+
+void TransportInteractor::handleMouseMovement(int mousePositionA,
+                                              int mousePositionB)
 {
     if(mousePositionB > mousePositionA && mousePositionB > getWidth()) {
         mousePositionB = getWidth();

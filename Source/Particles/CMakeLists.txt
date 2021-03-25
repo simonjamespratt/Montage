@@ -1,8 +1,12 @@
 target_sources(Montage PRIVATE
-    ParticlesSelection.cpp
-    ParticlesSelection.h
-    ParticleSelector.cpp
-    ParticleSelector.h
+    ParticleEditor.cpp
+    ParticleEditor.h
+    ParticlesManager.cpp
+    ParticlesManager.h
+    ParticleView.cpp
+    ParticleView.h
+    SourceSelector.cpp
+    SourceSelector.h
 )
 
 target_include_directories(Montage

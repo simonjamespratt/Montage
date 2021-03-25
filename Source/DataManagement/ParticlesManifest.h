@@ -1,14 +1,14 @@
 #pragma once
 #include "Identifiers.h"
+#include "ParticleList.h"
 
 #include <array>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 class ParticlesManifest : public juce::Component,
-                          public juce::TableListBoxModel,
-                          public juce::ValueTree::Listener {
+                          public juce::TableListBoxModel {
   public:
-    ParticlesManifest(juce::ValueTree &as);
+    ParticlesManifest(ParticleList pl);
     ~ParticlesManifest();
 
     void resized() override;
@@ -27,29 +27,23 @@ class ParticlesManifest : public juce::Component,
                    int height,
                    bool rowIsSelected) override;
 
-    // ValueTree change listeners
-    void valueTreePropertyChanged(juce::ValueTree &treeWhosePropertyHasChanged,
-                                  const juce::Identifier &property) override;
-    void valueTreeChildAdded(juce::ValueTree &parentTree,
-                             juce::ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(juce::ValueTree &parentTree,
-                               juce::ValueTree &childWhichHasBeenRemoved,
-                               int indexFromWhichChildWasRemoved) override;
-    void valueTreeChildOrderChanged(
-        juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
-        int oldInex,
-        int newIndex) override;
-    void
-    valueTreeParentChanged(juce::ValueTree &treeWhoseParentHasChanged) override;
-
   private:
-    juce::Label heading;
-    juce::ValueTree &appState;
-    juce::ValueTree particles;
+    enum Columns : int {
+        id = 1,
+        sourceId = 2,
+        sourceFileName = 3,
+        start = 4,
+        end = 5
+    };
+
+    ParticleList particleList;
+
     juce::TableListBox table;
-    std::array<juce::Identifier, 4> dataTypes = {
-        IDs::id, IDs::source_id, IDs::start, IDs::end};
     int numRows = 0;
+
+    juce::Label heading;
+
+    void refreshView();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticlesManifest)
 };

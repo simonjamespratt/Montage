@@ -1,8 +1,6 @@
 #include "FigureProcessor.h"
 
-#include "FigureCollection.h"
 #include "Identifiers.h"
-#include "ParticleCollection.h"
 #include "StateHelpers.h"
 
 #include <CollectionsProducer.hpp>
@@ -14,23 +12,34 @@ SCENARIO("Figure processor")
 {
     using namespace aleatoric;
 
-    juce::ValueTree particleCollectionState(IDs::PARTICLES);
-    auto particleOne = StateHelpers::getParticleState(1);
-    auto particleTwo = StateHelpers::getParticleState(2);
-    auto particleThree = StateHelpers::getParticleState(3);
-    auto particleFour = StateHelpers::getParticleState(4);
-    particleCollectionState.appendChild(particleOne, nullptr);
-    particleCollectionState.appendChild(particleTwo, nullptr);
-    particleCollectionState.appendChild(particleThree, nullptr);
-    particleCollectionState.appendChild(particleFour, nullptr);
+    using sh = StateHelpers;
 
-    ParticleCollection particleCollection(particleCollectionState);
+    juce::ValueTree state(IDs::PROJECT_STATE);
+    juce::Uuid sourceId;
+    state.appendChild(sh::createSourceState(sourceId), nullptr);
+    juce::Uuid p1Id;
+    juce::Uuid p2Id;
+    juce::Uuid p3Id;
+    juce::Uuid p4Id;
+    auto particleOne = sh::createParticleState(p1Id, sourceId);
+    auto particleTwo = sh::createParticleState(p2Id, sourceId);
+    auto particleThree = sh::createParticleState(p3Id, sourceId);
+    auto particleFour = sh::createParticleState(p4Id, sourceId);
+    state.appendChild(particleOne, nullptr);
+    state.appendChild(particleTwo, nullptr);
+    state.appendChild(particleThree, nullptr);
+    state.appendChild(particleFour, nullptr);
 
-    juce::ValueTree figureCollectionState(IDs::FIGURES);
-    FigureCollection figureCollection(figureCollectionState);
+    ProjectState projectState(state);
 
-    // assert that the figureCollection has no figures yet
-    REQUIRE(figureCollection.getFigures().size() == 0);
+    auto particleList = projectState.getParticleList();
+    REQUIRE(particleList.getObjects().size() == 4);
+
+    auto figureList = projectState.getFigureList();
+    REQUIRE(figureList.getObjects().size() == 0);
+
+    auto eventListAll = projectState.getEventList();
+    REQUIRE(eventListAll.getObjects().size() == 0);
 
     int numOfParticles = 8;
     std::vector<int> durations {100, 200};
@@ -42,38 +51,41 @@ SCENARIO("Figure processor")
         NumberProtocol::create(NumberProtocol::Type::cycle));
 
     CollectionsProducer<Particle> collectionsProducer(
-        particleCollection.getParticles(),
+        particleList.getObjects(),
         NumberProtocol::create(NumberProtocol::Type::cycle));
 
     FigureProcessor processor;
     auto figure = processor.composeFigure(numOfParticles,
                                           durationsProducer,
                                           collectionsProducer,
-                                          figureCollection);
+                                          projectState);
 
-    auto events = figure.getEvents();
+    auto eventListForFigure = projectState.getEventList(figure);
 
-    THEN("Events returned should match number of particles requested")
+    THEN("The figure is added to the project state")
     {
-        REQUIRE(events.size() == numOfParticles);
+        auto figures = figureList.getObjects();
+        REQUIRE(figures.size() == 1);
+        REQUIRE(figures[0].getId() == figure.getId());
+    }
+
+    THEN("The events added to project state should match number of events "
+         "requested")
+    {
+        REQUIRE(eventListAll.getObjects().size() == numOfParticles);
+        REQUIRE(eventListForFigure.getObjects().size() == numOfParticles);
     }
 
     SECTION("Check event data")
     {
-        std::vector<int> actualIds;
-        std::vector<double> actualOnsets;
-        std::vector<int> actualParticleIds;
+        auto events = eventListForFigure.getObjects();
 
-        for(auto &&event : events) {
-            actualIds.push_back(event.getId());
+        std::vector<double> actualOnsets;
+        std::vector<juce::Uuid> actualParticleIds;
+
+        for(auto &event : events) {
             actualOnsets.push_back(event.getOnset());
             actualParticleIds.push_back(event.getParticleId());
-        }
-
-        THEN("Event ids should be incremental")
-        {
-            std::vector<int> expectedIds {1, 2, 3, 4, 5, 6, 7, 8};
-            REQUIRE_THAT(actualIds, Catch::Equals(expectedIds));
         }
 
         THEN("First event should be at onset zero")
@@ -92,16 +104,16 @@ SCENARIO("Figure processor")
 
         THEN("Particle ids selected should match ids provided in cyclical form")
         {
-            std::vector<int> expectedParticleIds {1, 2, 3, 4, 1, 2, 3, 4};
-            REQUIRE_THAT(actualParticleIds, Catch::Equals(expectedParticleIds));
-        }
-    }
+            std::vector<juce::Uuid> expectedParticleIds {p1Id,
+                                                         p2Id,
+                                                         p3Id,
+                                                         p4Id,
+                                                         p1Id,
+                                                         p2Id,
+                                                         p3Id,
+                                                         p4Id};
 
-    SECTION("Figure collection updating")
-    {
-        THEN("The figure is added to the collection")
-        {
-            REQUIRE(figureCollection.getFigures().size() == 1);
+            REQUIRE_THAT(actualParticleIds, Catch::Equals(expectedParticleIds));
         }
     }
 }

@@ -1,26 +1,31 @@
 target_sources(Montage PRIVATE
-    CollectionHelper.cpp
-    CollectionHelper.h
     Event.cpp
     Event.h
+    EventList.cpp
+    EventList.h
     Figure.cpp
     Figure.h
-    FigureCollection.cpp
-    FigureCollection.h
+    FigureList.cpp
+    FigureList.h
     FigureManager.cpp
     FigureManager.h
-    FileManager.cpp
-    FileManager.h
+    ObjectList.h
     Particle.cpp
     Particle.h
-    ParticleCollection.cpp
-    ParticleCollection.h
+    ParticleList.cpp
+    ParticleList.h
     ParticlesManifest.cpp
     ParticlesManifest.h
+    ProjectState.cpp
+    ProjectState.h
+    Source.cpp
+    Source.h
+    SourceList.cpp
+    SourceList.h
     SourceManager.cpp
     SourceManager.h
-    StateChecker.cpp
-    StateChecker.h
+    StateService.cpp
+    StateService.h
 )
 
 target_include_directories(Montage
@@ -29,20 +34,27 @@ target_include_directories(Montage
 )
 
 target_sources(Tests PRIVATE
-    CollectionHelper.cpp
-    CollectionHelper.h
     Event.cpp
     Event.h
+    EventList.cpp
+    EventList.h
     Figure.cpp
     Figure.h
-    FigureCollection.cpp
-    FigureCollection.h
+    FigureList.cpp
+    FigureList.h
+    ObjectList.h
     Particle.cpp
     Particle.h
-    ParticleCollection.cpp
-    ParticleCollection.h
-    StateChecker.cpp
-    StateChecker.h
+    ParticleList.cpp
+    ParticleList.h
+    ProjectState.cpp
+    ProjectState.h
+    Source.cpp
+    Source.h
+    SourceList.cpp
+    SourceList.h
+    StateService.cpp
+    StateService.h
 )
 
 target_include_directories(Tests

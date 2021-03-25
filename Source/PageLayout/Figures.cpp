@@ -1,13 +1,7 @@
 #include "Figures.h"
 
-#include "ErrorManager.h"
-
-Figures::Figures(te::Engine &e, juce::ValueTree &as)
-: engine(e),
-  appState(as),
-  sequencer(engine, appState),
-  figureGenerator(appState),
-  figureManager(appState)
+Figures::Figures(te::Engine &e, ProjectState &ps)
+: engine(e), projectState(ps), sequencer(engine), figureGenerator(ps)
 {
     addAndMakeVisible(&toggleGeneratOutputButton);
     toggleGeneratOutputButton.setButtonText("Show Output");
@@ -23,11 +17,12 @@ Figures::Figures(te::Engine &e, juce::ValueTree &as)
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
 
-    // TODO: DATA-MANAGEMENT: This is a hack. Ideally this component would
-    // listen to a value tree to know a figure has been added and then get a
-    // Figure data object and call the sequencer with it.
-    figureGenerator.generateButton.onClick = [this] {
-        generateAndArrangeFigure();
+    // better to have this callback here than to listen for changes to state, as
+    // all the events will not have been created yet when the listener is
+    // triggered for having added a new figure to the state. By listening to
+    // this, you can be sure all the events will have been created.
+    figureGenerator.onFigureGenerated = [this](Figure f) {
+        arrangeFigure(f);
     };
 }
 
@@ -58,19 +53,11 @@ void Figures::resized()
     sequencer.setBounds(sequencerArea);
 }
 
-void Figures::generateAndArrangeFigure()
+void Figures::arrangeFigure(Figure f)
 {
-    try {
-        auto figure = figureGenerator.generateFigure();
-        sequencer.readFigure(figure);
-        toggleGenerateManagerState();
-    } catch(const std::runtime_error &e) {
-        // NB: this should really be a subclassed exception specific to number
-        // of events specified when generating a figure. This will do for now
-        // though
-        std::make_shared<ErrorManager>(ErrorType::FigureInvalidNumberOfEvents);
-        return;
-    }
+    sequencer.readFigure(f, projectState);
+    figureManager.setData(f, projectState);
+    toggleGenerateManagerState();
 }
 
 void Figures::toggleGenerateManagerState()

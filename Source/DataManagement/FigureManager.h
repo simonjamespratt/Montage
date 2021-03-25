@@ -1,18 +1,16 @@
 #pragma once
-#include "Identifiers.h"
+#include "EventList.h"
+#include "ProjectState.h"
 
-#include <array>
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <memory>
 
-class FigureManager : public juce::Component,
-                      public juce::TableListBoxModel,
-                      public juce::ValueTree::Listener {
+class FigureManager : public juce::Component, public juce::TableListBoxModel {
   public:
-    FigureManager(juce::ValueTree &as);
+    FigureManager();
     ~FigureManager();
 
-    void paint(juce::Graphics &) override;
     void resized() override;
 
     // TableListBoxModel overrides
@@ -30,32 +28,24 @@ class FigureManager : public juce::Component,
                    bool rowIsSelected) override;
     void backgroundClicked(const juce::MouseEvent &) override;
 
-    // ValueTree change listeners
-    void valueTreePropertyChanged(juce::ValueTree &treeWhosePropertyHasChanged,
-                                  const juce::Identifier &property) override;
-    void valueTreeChildAdded(juce::ValueTree &parentTree,
-                             juce::ValueTree &childWhichHasBeenAdded) override;
-    void valueTreeChildRemoved(juce::ValueTree &parentTree,
-                               juce::ValueTree &childWhichHasBeenRemoved,
-                               int indexFromWhichChildWasRemoved) override;
-    void valueTreeChildOrderChanged(
-        juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
-        int oldInex,
-        int newIndex) override;
-    void
-    valueTreeParentChanged(juce::ValueTree &treeWhoseParentHasChanged) override;
+    void setData(const Figure &f, const ProjectState &ps);
 
   private:
-    juce::Label heading;
-    juce::ValueTree &appState;
-    juce::ValueTree figures;
-    juce::ValueTree figure;
+    enum Columns : int {
+        eventNum = 1,
+        id = 2,
+        onset = 3,
+        particleStart = 4,
+        particleEnd = 5,
+        fileName = 6
+    };
+
+    std::unique_ptr<EventList> eventList;
+
     juce::TableListBox table;
-    std::array<juce::Identifier, 3> dataTypes {
-        IDs::id, IDs::onset, IDs::particle_id};
     int numRows = 0;
 
-    void setData();
+    juce::Label heading;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FigureManager)
 };

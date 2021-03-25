@@ -1,6 +1,6 @@
 #include "Sequencer.h"
 
-Sequencer::Sequencer(te::Engine &eng, juce::ValueTree &as)
+Sequencer::Sequencer(te::Engine &eng)
 : engine(eng),
   edit(engine,
        /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
@@ -11,7 +11,6 @@ Sequencer::Sequencer(te::Engine &eng, juce::ValueTree &as)
        nullptr,
        0),
   transport(edit.getTransport()),
-  appState(as),
   timeline(edit),
   arrangement(edit, transport),
   cursor(transport, edit),
@@ -32,9 +31,6 @@ Sequencer::~Sequencer()
     edit.getTempDirectory(false).deleteRecursively();
 }
 
-void Sequencer::paint(juce::Graphics &g)
-{}
-
 void Sequencer::resized()
 {
     auto area = getLocalBounds();
@@ -53,49 +49,29 @@ void Sequencer::resized()
     transportController.setBounds(transportArea);
 }
 
-void Sequencer::readFigure(Figure &figure)
+void Sequencer::readFigure(const Figure &figure,
+                           const ProjectState &projectState)
 {
     std::vector<ClipData> clips;
-    auto sources = appState.getChildWithName(IDs::SOURCES);
-    auto particles = appState.getChildWithName(IDs::PARTICLES);
-    int noOfParticles = particles.getNumChildren();
-    prepareForNewFigure(noOfParticles);
 
-    for(auto &event : figure.getEvents()) {
-        int particleId = event.getParticleId();
-        auto particle = particles.getChildWithProperty(IDs::id, particleId);
-        double particleRangeStart = double(particle[IDs::start]);
-        double particleRangeEnd = double(particle[IDs::end]);
+    auto eventList = projectState.getEventList(figure);
+    auto particleList = projectState.getParticleList();
 
-        int trackIndex = particleId - 1;
+    prepareForNewFigure(particleList.getObjects().size());
+
+    for(auto &event : eventList.getObjects()) {
+        auto particle = event.getParticle();
+
+        int trackIndex = particleList.getIndex(particle);
+        jassert(trackIndex != -1);
         double clipStart = event.getOnset() * 0.001; // convert from ms to s
-        double clipEnd = (particleRangeEnd - particleRangeStart) + clipStart;
-        double offset = particleRangeStart;
-        int sourceId = int(particle[IDs::source_id]);
+        double clipEnd = (particle.getEnd() - particle.getStart()) + clipStart;
+        double offset = particle.getStart();
+        auto file = particle.getSource().getFile();
 
-        auto requestedSource = sources.getChildWithProperty(IDs::id, sourceId);
-        // TODO: DATA-MANAGEMENT: below should be throwing an error if not found
-        // rather than just checking whether the source is valid and then
-        // silently disregarding when it is not valid. Really it should be part
-        // of the SourceCollection class (or any of the collection classes)
-        // where they have a method SourceCollection.getSourceById(int id) etc.
-        // If the provided id doesn't match a child in the value tree, throw
-        // exception. And here, when calling that method, catch the exception
-        // and handle with UI error message.
-        if(requestedSource.isValid()) {
-            FileManager fileManager;
-            fileManager.loadExistingSourceFile(requestedSource);
-
-            if(!fileManager.fileIsValid(engine)) {
-                showErrorMessaging(FileInvalid);
-                return;
-            }
-
-            auto file = fileManager.getFile();
-            auto clip =
-                addClipToTrack(file, trackIndex, clipStart, clipEnd, offset);
-            clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
-        }
+        auto clip =
+            addClipToTrack(file, trackIndex, clipStart, clipEnd, offset);
+        clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
     }
 
     for(auto &&entry : clips) {
@@ -109,11 +85,6 @@ void Sequencer::readFigure(Figure &figure)
     timeline.recalculate();
     transport.position = 0.0;
     transport.play(false);
-}
-
-void Sequencer::showErrorMessaging(const ErrorType &errorType)
-{
-    std::make_shared<ErrorManager>(errorType);
 }
 
 void Sequencer::prepareForNewFigure(int noOfParticles)

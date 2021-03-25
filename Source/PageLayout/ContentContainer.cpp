@@ -1,13 +1,11 @@
 #include "ContentContainer.h"
 
-ContentContainer::ContentContainer(juce::ValueTree &as)
-: appState(as),
-  engine(JUCE_APPLICATION_NAME_STRING),
+ContentContainer::ContentContainer(ProjectState &ps)
+: engine(JUCE_APPLICATION_NAME_STRING),
   mainHeader(engine),
   pages(juce::TabbedButtonBar::Orientation::TabsAtTop),
-  figures(engine, appState),
-  particlesPage(appState, engine)
-
+  figures(engine, ps),
+  particlesPage(engine, ps)
 {
     addAndMakeVisible(&mainHeader);
     addAndMakeVisible(&pages);

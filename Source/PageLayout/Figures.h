@@ -2,13 +2,14 @@
 
 #include "FigureGenerator.h"
 #include "FigureManager.h"
+#include "ProjectState.h"
 #include "Sequencer.h"
 
 namespace te = tracktion_engine;
 
 class Figures : public juce::Component {
   public:
-    Figures(te::Engine &e, juce::ValueTree &as);
+    Figures(te::Engine &e, ProjectState &ps);
     ~Figures();
 
     void paint(juce::Graphics &) override;
@@ -16,11 +17,12 @@ class Figures : public juce::Component {
 
   private:
     te::Engine &engine;
-    juce::ValueTree &appState;
+    ProjectState &projectState;
+
     Sequencer sequencer;
     FigureGenerator figureGenerator;
     FigureManager figureManager;
-    void generateAndArrangeFigure();
+    void arrangeFigure(Figure f);
 
     juce::Label heading;
     bool showGenerator {true};

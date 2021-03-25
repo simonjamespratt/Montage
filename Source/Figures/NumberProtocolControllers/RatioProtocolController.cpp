@@ -31,10 +31,5 @@ void RatioProtocolController::setParams(aleatoric::NumberProtocolParams params)
 
 aleatoric::NumberProtocolParams RatioProtocolController::getParams()
 {
-    // TODO: delete this
-    for(auto &value : ratios) {
-        DBG("value in ratios: " << value);
-    }
-
     return aleatoric::NumberProtocolParams(aleatoric::RatioParams(ratios));
 }

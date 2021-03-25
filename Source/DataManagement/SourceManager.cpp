@@ -1,61 +1,54 @@
 #include "SourceManager.h"
 
-SourceManager::SourceManager(juce::ValueTree &as, te::Engine &eng)
-: appState(as),
-  engine(eng),
-  sources(),
-  particles(),
+#include "ErrorMessageModal.h"
+
+SourceManager::SourceManager(SourceList sl)
+: sourceList(sl),
   table({}, this),
   crossIcon(icons.getIcon(Icons::IconType::Cross)),
-  addSourceFileButton(
-      "Add source file",
-      juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
+  addSourceButton("Add source file",
+                  juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   dashIcon(icons.getIcon(Icons::IconType::Dash)),
-  deleteSourceFilesButton(
-      "Delete source files",
-      juce::DrawableButton::ButtonStyle::ImageOnButtonBackground)
+  deleteSourceButton("Delete source files",
+                     juce::DrawableButton::ButtonStyle::ImageOnButtonBackground)
 {
     heading.setText("Source Manager", juce::dontSendNotification);
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
 
-    appState.addListener(this);
-    sources = (appState.getChildWithName(IDs::SOURCES));
-    particles = (appState.getChildWithName(IDs::PARTICLES));
+    sourceList.onObjectAdded = [this](Source s) {
+        refreshView();
+    };
+    sourceList.onObjectRemoved = [this](Source s) {
+        refreshView();
+    };
 
+    refreshView();
+
+    // table settings
     addAndMakeVisible(table);
     table.setColour(juce::ListBox::outlineColourId, juce::Colours::grey);
     table.setOutlineThickness(1);
     table.setMultipleSelectionEnabled(false);
 
-    addSourceFileButton.setImages(&crossIcon);
-    addAndMakeVisible(&addSourceFileButton);
-    addSourceFileButton.onClick = [this] {
+    table.getHeader().addColumn("ID", Columns::id, 100, 50, 400);
+    table.getHeader().addColumn("File name", Columns::name, 100, 50, 400);
+    table.getHeader().addColumn("File path", Columns::path, 300, 50, 400);
+    table.getHeader().addColumn("File length", Columns::length, 100, 50, 400);
+    numRows = sourceList.getObjects().size(); // sets no. of rows for table
+
+    addSourceButton.setImages(&crossIcon);
+    addAndMakeVisible(&addSourceButton);
+    addSourceButton.onClick = [this] {
         selectNewSourceFile();
     };
 
-    deleteSourceFilesButton.setImages(&dashIcon);
-    addAndMakeVisible(&deleteSourceFilesButton);
-    deleteSourceFilesButton.onClick = [this] {
-        deleteSources();
+    deleteSourceButton.setImages(&dashIcon);
+    addAndMakeVisible(&deleteSourceButton);
+    deleteSourceButton.onClick = [this] {
+        deleteSource();
     };
-
-    // Add table columns to the header
-    for(int i = 0; i < dataTypes.size(); i++) {
-        int columnId = i + 1;
-        table.getHeader().addColumn(dataTypes[i].toString(),
-                                    columnId,
-                                    100,
-                                    50,
-                                    400);
-    }
-
-    // Set the number of rows for the table
-    numRows = sources.getNumChildren();
 }
-
-SourceManager::~SourceManager()
-{}
 
 void SourceManager::resized()
 {
@@ -71,11 +64,11 @@ void SourceManager::resized()
     headerContainer.items.add(
         juce::FlexItem(heading).withHeight(24.0f).withWidth(200.0f).withMargin(
             juce::FlexItem::Margin(5.0f)));
-    headerContainer.items.add(juce::FlexItem(addSourceFileButton)
+    headerContainer.items.add(juce::FlexItem(addSourceButton)
                                   .withHeight(24.0f)
                                   .withWidth(24.0f)
                                   .withMargin(juce::FlexItem::Margin(5.0f)));
-    headerContainer.items.add(juce::FlexItem(deleteSourceFilesButton)
+    headerContainer.items.add(juce::FlexItem(deleteSourceButton)
                                   .withHeight(24.0f)
                                   .withWidth(24.0f)
                                   .withMargin(juce::FlexItem::Margin(5.0f)));
@@ -121,23 +114,32 @@ void SourceManager::paintCell(juce::Graphics &g,
                     : getLookAndFeel().findColour(juce::ListBox::textColourId));
     g.setFont(14.0f);
 
-    juce::ValueTree rowElement = sources.getChild(rowNumber);
-    if(rowElement.isValid()) {
-        // get prop from source (rowElement) by comparing columnId to dataType
-        // array position (columnId -1)
-        auto propIdentifier = dataTypes[columnId - 1];
-
-        if(rowElement.hasProperty(propIdentifier)) {
-            auto cellData = rowElement.getProperty(propIdentifier);
-            g.drawText(cellData,
-                       2,
-                       0,
-                       width - 4,
-                       height,
-                       juce::Justification::centredLeft,
-                       true);
-        }
+    auto source = sourceList.getObjects()[rowNumber];
+    juce::String cellText;
+    switch(columnId) {
+    case Columns::id:
+        cellText = source.getId().toString();
+        break;
+    case Columns::name:
+        cellText = source.getFileName();
+        break;
+    case Columns::path:
+        cellText = source.getFile().getFullPathName();
+        break;
+    case Columns::length:
+        cellText = juce::String(source.getFileLengthInSeconds());
+        break;
+    default:
+        break;
     }
+
+    g.drawText(cellText,
+               2,
+               0,
+               width - 4,
+               height,
+               juce::Justification::centredLeft,
+               true);
 
     // draw RH-side column separator
     g.setColour(getLookAndFeel().findColour(juce::ListBox::backgroundColourId));
@@ -149,92 +151,52 @@ void SourceManager::backgroundClicked(const juce::MouseEvent &)
     table.deselectAllRows();
 }
 
-void SourceManager::valueTreeChildAdded(juce::ValueTree &parentTree,
-                                        juce::ValueTree &childWhichHasBeenAdded)
-{
-    sources = (appState.getChildWithName(IDs::SOURCES));
-    particles = (appState.getChildWithName(IDs::PARTICLES));
-    numRows = sources.getNumChildren();
-    table.updateContent();
-}
-
-void SourceManager::valueTreeChildRemoved(
-    juce::ValueTree &parentTree,
-    juce::ValueTree &childWhichHasBeenRemoved,
-    int indexFromWhichChildWasRemoved)
-{
-    sources = (appState.getChildWithName(IDs::SOURCES));
-    particles = (appState.getChildWithName(IDs::PARTICLES));
-    numRows = sources.getNumChildren();
-    table.updateContent();
-}
-
-// -====================================================
-// Unused listeners
-void SourceManager::valueTreePropertyChanged(
-    juce::ValueTree &treeWhosePropertyHasChanged,
-    const juce::Identifier &property)
-{}
-void SourceManager::valueTreeChildOrderChanged(
-    juce::ValueTree &parentTreeWhoseChildrenHaveMoved,
-    int oldInex,
-    int newIndex)
-{}
-void SourceManager::valueTreeParentChanged(
-    juce::ValueTree &treeWhoseParentHasChanged)
-{}
-// =====================================================
-
+// Private methods
 void SourceManager::selectNewSourceFile()
 {
-    FileManager fileManager;
-    fileManager.chooseFile();
+    juce::FileChooser fileChooser(
+        "Load an audio file to use as a source",
+        juce::File::getSpecialLocation(juce::File::userHomeDirectory),
+        "*.wav,*.aif,*.aiff");
 
-    if(!fileManager.fileIsValid(engine)) {
-        showErrorMessaging(FileInvalid);
-        return;
+    if(fileChooser.browseForFileToOpen()) {
+        auto selectedFile = fileChooser.getResult();
+        addSource(selectedFile);
     }
-
-    // if the fileapth already exists, error and return
-    const auto filePath = fileManager.getFile().getFullPathName();
-    const auto existingEntry =
-        sources.getChildWithProperty(IDs::file_path, filePath);
-    if(existingEntry.isValid()) {
-        showErrorMessaging(FileAlreadyExists);
-        return;
-    }
-
-    fileManager.addSourceToState(sources);
 }
 
-void SourceManager::showErrorMessaging(const ErrorType &errorType)
+void SourceManager::addSource(juce::File &file)
 {
-    std::make_shared<ErrorManager>(errorType);
-}
-
-void SourceManager::deleteSources()
-{
-    auto selectedRow = table.getLastRowSelected();
-    if(sourceIsInUse(selectedRow)) {
-        showErrorMessaging(DeleteSourceInvalidSourceInUse);
+    try {
+        Source newSource(file);
+        sourceList.addObject(newSource);
+    } catch(const std::exception &e) {
+        /* catches:
+        - InvalidFilePath
+        - InvalidAudioFile
+        - ObjectAlreadyExists
+        - FileAlreadyExists */
+        std::make_shared<ErrorMessageModal>(juce::String(e.what()));
         return;
     }
-    sources.removeChild(selectedRow, nullptr);
+}
 
-    numRows = sources.getNumChildren();
+void SourceManager::deleteSource()
+{
+    auto index = table.getLastRowSelected();
+    auto sourceToRemove = sourceList.getObjects()[index];
+
+    try {
+        sourceList.removeObject(sourceToRemove);
+    } catch(const std::exception &e) {
+        // catches: ObjectNotFound and ObjectInUse
+        std::make_shared<ErrorMessageModal>(juce::String(e.what()));
+        return;
+    }
+}
+
+void SourceManager::refreshView()
+{
+    numRows = sourceList.getObjects().size();
     table.updateContent();
-}
-
-bool SourceManager::sourceIsInUse(int index)
-{
-    auto source = sources.getChild(index);
-    int sourceId = source.getProperty(IDs::id);
-    auto particleUsingSource =
-        particles.getChildWithProperty(IDs::source_id,
-                                       sourceId);
-    if(particleUsingSource.isValid()) {
-        return true;
-    }
-
-    return false;
 }
