@@ -3,19 +3,19 @@
 #include "Figures.h"
 #include "MainHeader.h"
 #include "ParticlesPage.h"
+#include "ProjectState.h"
 
 namespace te = tracktion_engine;
 
 class ContentContainer : public juce::Component {
   public:
-    ContentContainer(juce::ValueTree &as);
+    ContentContainer(ProjectState &ps);
     ~ContentContainer();
 
     void paint(juce::Graphics &) override;
     void resized() override;
 
   private:
-    juce::ValueTree &appState;
     te::Engine engine;
     MainHeader mainHeader;
 

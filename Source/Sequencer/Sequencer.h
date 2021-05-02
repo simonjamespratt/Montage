@@ -2,10 +2,9 @@
 
 #include "Arrangement.h"
 #include "Cursor.h"
-#include "ErrorManager.h"
 #include "Figure.h"
-#include "FileManager.h"
 #include "Identifiers.h"
+#include "ProjectState.h"
 #include "Timeline.h"
 #include "TransportController.h"
 #include "TransportInteractor.h"
@@ -24,13 +23,12 @@ struct ClipData {
 
 class Sequencer : public juce::Component {
   public:
-    Sequencer(te::Engine &eng, juce::ValueTree &as);
+    Sequencer(te::Engine &eng);
     ~Sequencer();
 
-    void paint(juce::Graphics &g) override;
     void resized() override;
 
-    void readFigure(Figure &figure);
+    void readFigure(const Figure &figure, const ProjectState &projectState);
 
   private:
     te::Engine &engine;
@@ -40,15 +38,12 @@ class Sequencer : public juce::Component {
     te::Edit edit;
     te::TransportControl &transport;
 
-    juce::ValueTree &appState;
-
     Timeline timeline;
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
     TransportController transportController;
     int noOfTracks;
-    void showErrorMessaging(const ErrorType &errorType);
     void prepareForNewFigure(int noOfParticles);
     void prepareTracks();
     juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>

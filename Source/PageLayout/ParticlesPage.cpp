@@ -1,20 +1,14 @@
 #include "ParticlesPage.h"
 
-ParticlesPage::ParticlesPage(juce::ValueTree &as, te::Engine &e)
-: appState(as),
-  engine(e),
-  particlesContainer(engine, appState),
-  sourceManager(appState, engine),
-  particlesManifest(appState)
+ParticlesPage::ParticlesPage(te::Engine &e, ProjectState &ps)
+: particlesManager(ps, e),
+  sourceManager(ps.getSourceList()),
+  particlesManifest(ps.getParticleList())
 
 {
     addAndMakeVisible(&sourceManager);
     addAndMakeVisible(&particlesManifest);
-    addAndMakeVisible(&particlesContainer);
-
-    particlesViewport.setViewedComponent(&particlesContainer, false);
-    particlesViewport.setScrollBarsShown(true, false);
-    addAndMakeVisible(&particlesViewport);
+    addAndMakeVisible(&particlesManager);
 }
 
 ParticlesPage::~ParticlesPage()
@@ -29,10 +23,7 @@ void ParticlesPage::resized()
     auto rowHeightUnit = area.getHeight() / 2.0;
     auto colWidthUnit = area.getWidth() / 2.0;
 
-    auto particlesArea = area.removeFromLeft((int)colWidthUnit);
-    particlesViewport.setBounds(particlesArea);
-    particlesContainer.setBounds(particlesArea);
-
+    particlesManager.setBounds(area.removeFromLeft((int)colWidthUnit));
     sourceManager.setBounds(area.removeFromTop((int)rowHeightUnit));
     particlesManifest.setBounds(area);
 }

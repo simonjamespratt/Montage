@@ -1,9 +1,9 @@
-#include "StateChecker.h"
+#include "StateService.h"
 
 #include <algorithm>
 #include <stdexcept>
 
-void StateChecker::checkTypeIsValid(const juce::ValueTree &state,
+void StateService::checkTypeIsValid(const juce::ValueTree &state,
                                     juce::Identifier identifier)
 {
     if(!state.hasType(identifier)) {
@@ -12,7 +12,7 @@ void StateChecker::checkTypeIsValid(const juce::ValueTree &state,
     }
 }
 
-void StateChecker::checkChildTypesAreValid(const juce::ValueTree &state,
+void StateService::checkChildTypesAreValid(const juce::ValueTree &state,
                                            juce::Identifier identifier)
 {
     for(int i = 0; i < state.getNumChildren(); i++) {
@@ -24,7 +24,7 @@ void StateChecker::checkChildTypesAreValid(const juce::ValueTree &state,
     }
 }
 
-void StateChecker::checkPropsAreValid(
+void StateService::checkPropsAreValid(
     const juce::ValueTree &state,
     std::vector<juce::Identifier> compulsoryProps,
     std::vector<juce::Identifier> optionalProps)
@@ -59,4 +59,41 @@ void StateChecker::checkPropsAreValid(
                 "Received ValueTree has unexpected properties");
         }
     }
+}
+
+juce::ValueTree
+StateService::getSourceStateForObject(const juce::ValueTree &objectState,
+                                      const juce::ValueTree &stateToSearch)
+{
+    return getState(objectState, IDs::SOURCE, IDs::source_id, stateToSearch);
+}
+
+juce::ValueTree
+StateService::getParticleStateForObject(const juce::ValueTree &objectState,
+                                        const juce::ValueTree &stateToSearch)
+{
+    return getState(objectState,
+                    IDs::PARTICLE,
+                    IDs::particle_id,
+                    stateToSearch);
+}
+
+juce::ValueTree
+StateService::getFigureStateForObject(const juce::ValueTree &objectState,
+                                      const juce::ValueTree &stateToSearch)
+{
+    return getState(objectState, IDs::FIGURE, IDs::figure_id, stateToSearch);
+}
+
+// Private methods
+juce::ValueTree StateService::getState(const juce::ValueTree &objState,
+                                       juce::Identifier typeToFind,
+                                       juce::Identifier idTypeToFind,
+                                       const juce::ValueTree &stateToSearch)
+{
+    jassert(objState.hasProperty(idTypeToFind));
+    auto foundState =
+        stateToSearch.getChildWithProperty(IDs::id, objState[idTypeToFind]);
+    jassert(foundState.isValid() && foundState.hasType(typeToFind));
+    return foundState;
 }

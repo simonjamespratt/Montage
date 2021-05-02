@@ -7,14 +7,20 @@ Figure FigureProcessor::composeFigure(
     int numOfParticles,
     aleatoric::DurationsProducer &durationsProducer,
     aleatoric::CollectionsProducer<Particle> &collectionsProducer,
-    FigureCollection &figureCollection)
+    ProjectState &projectState)
 {
-    auto newFigure = figureCollection.createFigure();
+    Figure newFigure;
+    auto figureList = projectState.getFigureList();
+    figureList.addObject(newFigure);
+
+    auto eventList = projectState.getEventList(newFigure);
+
     double onsetCount = 0;
 
     for(int i = 0; i < numOfParticles; i++) {
         auto selectedParticle = collectionsProducer.getItem();
-        newFigure.createEvent(onsetCount, selectedParticle.getId());
+        Event event(newFigure, selectedParticle, onsetCount);
+        eventList.addObject(event);
         onsetCount += durationsProducer.getDuration();
     }
 
