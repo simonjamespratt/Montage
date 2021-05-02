@@ -14,11 +14,12 @@ namespace te = tracktion_engine;
 
 class ParticlesManager : public juce::Component {
   public:
-    ParticlesManager(ProjectState &ps, te::Engine &eng);
+    ParticlesManager(const ProjectState &ps, te::Engine &eng);
 
     void resized() override;
 
   private:
+    ProjectState projectState;
     ParticleList particleList;
     te::Engine &engine;
     std::vector<std::unique_ptr<ParticleView>> particleViews;

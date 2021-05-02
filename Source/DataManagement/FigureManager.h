@@ -29,6 +29,7 @@ class FigureManager : public juce::Component, public juce::TableListBoxModel {
     void backgroundClicked(const juce::MouseEvent &) override;
 
     void setData(const Figure &f, const ProjectState &ps);
+    void clear();
 
   private:
     enum Columns : int {

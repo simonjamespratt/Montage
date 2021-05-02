@@ -21,10 +21,17 @@ void Arrangement::paint(juce::Graphics &g)
     }
 }
 
-void Arrangement::prepareArrangement(int noOfTracksToMake)
+void Arrangement::prepare(int noOfTracksToMake)
 {
     thumbnails.clear();
     noOfTracks = noOfTracksToMake;
+    repaint();
+}
+
+void Arrangement::clear()
+{
+    thumbnails.clear();
+    noOfTracks = 0;
     repaint();
 }
 
@@ -42,7 +49,7 @@ void Arrangement::drawTrackDividers(juce::Graphics &g)
     }
 }
 
-void Arrangement::addClipToArrangement(
+void Arrangement::addClip(
     juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
     const int trackIndex,
     const double &clipStart,

@@ -39,3 +39,8 @@ class StateHelpers {
                                               int noOfFigures,
                                               int noOfEvents);
 };
+
+class FileHelpers {
+  public:
+    static juce::String getTestFileName();
+};

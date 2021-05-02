@@ -1,19 +1,33 @@
 #pragma once
+#include "ProjectState.h"
+
 #include <tracktion_engine/tracktion_engine.h>
 namespace te = tracktion_engine;
 
 class MainHeader : public juce::Component {
   public:
-    MainHeader(te::Engine &e);
+    MainHeader(te::Engine &e, const ProjectState &ps);
     ~MainHeader();
 
-    void paint(juce::Graphics &) override;
     void resized() override;
 
   private:
     te::Engine &engine;
+    ProjectState state;
+
     juce::TextButton settingsButton;
 
+    // project state save / load
+    juce::TextButton saveButton;
+    juce::TextButton saveAsButton;
+    juce::TextButton loadButton;
+    bool showSaveButton = false;
+    bool showSaveAsButton = false;
+
     void showAudioDeviceSettings(te::Engine &engine);
+    void refreshView(ProjectState::Status status);
+    void saveAs();
+    void load();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainHeader)
 };

@@ -2,7 +2,7 @@
 
 #include "ErrorTypes.h"
 #include "ProjectState.h"
-#include "StateHelpers.h"
+#include "TestHelpers.h"
 
 #include <catch2/catch.hpp>
 #include <juce_data_structures/juce_data_structures.h>
@@ -121,7 +121,7 @@ SCENARIO("SourceList: addObjects")
     WHEN("Source does not already exist in project state")
     {
         auto filepath =
-            juce::String(AUDIO_ASSETS_DIR) + "/whitenoise-2000ms-copy.wav";
+            juce::String(ASSETS_DIR) + "/audio/whitenoise-2000ms-copy.wav";
         juce::File newFile(filepath);
         Source newSource(newFile);
         auto returnedSource = list1.addObject(newSource);

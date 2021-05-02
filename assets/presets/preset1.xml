@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<PROJECT_STATE>
+  <SOURCE id="acbae40869df4f0f904d99c11cf4a62a" file_path="/Users/simonpratt/Projects/Montage/assets/audio/brick.wav"/>
+  <SOURCE id="b6580bafb7f54dd6bf74a6ccbd43f71c" file_path="/Users/simonpratt/Projects/Montage/assets/audio/click.wav"/>
+  <SOURCE id="dc0f754963ca41f5b8e36434cc9ee422" file_path="/Users/simonpratt/Projects/Montage/assets/audio/glass.wav"/>
+  <PARTICLE id="9045faf52620401593c0d119c636aa2c" source_id="acbae40869df4f0f904d99c11cf4a62a"
+            start="0.16" end="0.55"/>
+  <PARTICLE id="4d628c0cebd94123b06f7b91b03eaf0b" source_id="b6580bafb7f54dd6bf74a6ccbd43f71c"
+            start="0" end="0.2"/>
+  <PARTICLE id="81f93a6a89384099a10da21575f643e7" source_id="dc0f754963ca41f5b8e36434cc9ee422"
+            start="0.125" end="0.29"/>
+</PROJECT_STATE>

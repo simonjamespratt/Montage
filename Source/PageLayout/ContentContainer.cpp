@@ -2,7 +2,7 @@
 
 ContentContainer::ContentContainer(ProjectState &ps)
 : engine(JUCE_APPLICATION_NAME_STRING),
-  mainHeader(engine),
+  mainHeader(engine, ps),
   pages(juce::TabbedButtonBar::Orientation::TabsAtTop),
   figures(engine, ps),
   particlesPage(engine, ps)

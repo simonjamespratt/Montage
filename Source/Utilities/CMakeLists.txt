@@ -4,6 +4,8 @@ target_sources(Montage PRIVATE
     Identifiers.h
     DoubleValueEditorWithLabel.cpp
     DoubleValueEditorWithLabel.h
+    DecisionModal.h
+    DecisionModal.cpp
     NumericCollectionEditor.cpp
     NumericCollectionEditor.h
     NumericValueEditorWithLabel.cpp

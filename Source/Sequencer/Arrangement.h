@@ -25,13 +25,15 @@ class Arrangement : public juce::Component {
     ~Arrangement();
 
     void paint(juce::Graphics &) override;
-    void prepareArrangement(int noOfTracksToMake);
-    void addClipToArrangement(juce::ReferenceCountedObjectPtr<
-                                  tracktion_engine::WaveAudioClip> newClip,
-                              const int trackIndex,
-                              const double &clipStart,
-                              const double &clipEnd,
-                              const double &offset);
+    void prepare(int noOfTracksToMake);
+    void clear();
+    void
+    addClip(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
+                newClip,
+            const int trackIndex,
+            const double &clipStart,
+            const double &clipEnd,
+            const double &offset);
 
   private:
     te::Edit &edit;

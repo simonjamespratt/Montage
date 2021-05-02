@@ -1,4 +1,4 @@
-#include "StateHelpers.h"
+#include "TestHelpers.h"
 
 #include "Identifiers.h"
 
@@ -34,7 +34,7 @@ juce::ValueTree StateHelpers::createSourceState()
     juce::ValueTree source(IDs::SOURCE);
     source.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
 
-    auto filepath = juce::String(AUDIO_ASSETS_DIR) + "/whitenoise-2000ms.wav";
+    auto filepath = juce::String(ASSETS_DIR) + "/audio/whitenoise-2000ms.wav";
     source.setProperty(IDs::file_path, filepath, nullptr);
     return source;
 }
@@ -44,7 +44,7 @@ juce::ValueTree StateHelpers::createSourceState(juce::Uuid id)
     juce::ValueTree source(IDs::SOURCE);
     source.setProperty(IDs::id, id.toString(), nullptr);
 
-    auto filepath = juce::String(AUDIO_ASSETS_DIR) + "/whitenoise-2000ms.wav";
+    auto filepath = juce::String(ASSETS_DIR) + "/audio/whitenoise-2000ms.wav";
     source.setProperty(IDs::file_path, filepath, nullptr);
     return source;
 }
@@ -129,4 +129,9 @@ juce::ValueTree StateHelpers::createProjectState(int noOfSources,
     }
 
     return projectState;
+}
+
+juce::String FileHelpers::getTestFileName()
+{
+    return "test-" + juce::Uuid().toString();
 }
