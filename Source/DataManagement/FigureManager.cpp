@@ -143,3 +143,10 @@ void FigureManager::setData(const Figure &f, const ProjectState &ps)
     numRows = eventList->getObjects().size();
     table.updateContent();
 }
+
+void FigureManager::clear()
+{
+    eventList = nullptr;
+    numRows = 0;
+    table.updateContent();
+}

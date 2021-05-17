@@ -1,7 +1,7 @@
 #include "Source.h"
 
 #include "ErrorTypes.h"
-#include "StateHelpers.h"
+#include "TestHelpers.h"
 
 #include <catch2/catch.hpp>
 #include <juce_data_structures/juce_data_structures.h>
@@ -75,7 +75,7 @@ SCENARIO("Source: receive existing state")
     WHEN("Data is valid")
     {
         juce::Uuid id;
-        juce::String pathBase(AUDIO_ASSETS_DIR);
+        auto pathBase = juce::String(ASSETS_DIR) + "/audio";
         auto filepath = pathBase + "/whitenoise-2000ms.wav";
         double approxLengthInSeconds = 2.0;
 
@@ -128,7 +128,7 @@ SCENARIO("Source: create state from file")
 
     WHEN("Data is valid")
     {
-        juce::String pathBase(AUDIO_ASSETS_DIR);
+        auto pathBase = juce::String(ASSETS_DIR) + "/audio";
         auto filepath = pathBase + "/whitenoise-2000ms.wav";
         double approxLengthInSeconds = 2.0;
         juce::File file(filepath);

@@ -1,6 +1,6 @@
 target_sources(Tests PRIVATE
-    StateHelpers.cpp
-    StateHelpers.h
+    TestHelpers.cpp
+    TestHelpers.h
 )
 
 target_include_directories(Tests

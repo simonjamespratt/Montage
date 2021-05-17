@@ -29,7 +29,7 @@ ObjectDependencyInvalid::ObjectDependencyInvalid(std::string object,
                         object)
 {}
 
-// Source specific types ======================================================
+// File management types ======================================================
 InvalidFilePath::InvalidFilePath()
 : std::invalid_argument(
       "File path does not point to a file that exists or it is a directory")
@@ -41,6 +41,23 @@ InvalidAudioFile::InvalidAudioFile()
       "type .wav, .aif or .aiff")
 {}
 
+InvalidProjectFile::InvalidProjectFile()
+: std::invalid_argument(
+      "Project state can only be loaded from and saved to an xml file. In the "
+      "case of loading, the file must contain valid xml and a valid "
+      "representation of project state data")
+{}
+
+ProjectFileNotFound::ProjectFileNotFound()
+: std::invalid_argument(
+      "Project state does not have a file to save to. Please provide one")
+{}
+
+ProjectSaveFailed::ProjectSaveFailed()
+: std::invalid_argument("Failed to save project")
+{}
+
+// Source specific types ======================================================
 FileAlreadyExists::FileAlreadyExists()
 : std::invalid_argument(
       "A source already exists within project state with this file and path")

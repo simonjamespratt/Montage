@@ -30,7 +30,7 @@ target_compile_definitions(Montage PRIVATE
     JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_gui_app` call
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:Montage,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:Montage,JUCE_VERSION>"
-    AUDIO_ASSETS_DIR="${montage_SOURCE_DIR}/assets/audio"
+    ASSETS_DIR="${montage_SOURCE_DIR}/assets"
     PRE_POPULATE_DUMMY_DATA=1 # TODO: CMAKE: this should probably be in a gen expression
 )
 

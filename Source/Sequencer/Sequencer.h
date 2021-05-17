@@ -29,6 +29,7 @@ class Sequencer : public juce::Component {
     void resized() override;
 
     void readFigure(const Figure &figure, const ProjectState &projectState);
+    void clear();
 
   private:
     te::Engine &engine;
@@ -45,6 +46,7 @@ class Sequencer : public juce::Component {
     TransportController transportController;
     int noOfTracks;
     void prepareForNewFigure(int noOfParticles);
+    void clearTracks();
     void prepareTracks();
     juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
     addClipToTrack(const juce::File &file,

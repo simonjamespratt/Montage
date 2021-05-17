@@ -29,7 +29,7 @@ class ObjectDependencyInvalid : public std::invalid_argument {
     ObjectDependencyInvalid(std::string object, std::string objectItDependsOn);
 };
 
-// Source specific types ======================================================
+// File management types ======================================================
 class InvalidFilePath : public std::invalid_argument {
   public:
     InvalidFilePath();
@@ -40,6 +40,22 @@ class InvalidAudioFile : public std::invalid_argument {
     InvalidAudioFile();
 };
 
+class InvalidProjectFile : public std::invalid_argument {
+  public:
+    InvalidProjectFile();
+};
+
+class ProjectFileNotFound : public std::invalid_argument {
+  public:
+    ProjectFileNotFound();
+};
+
+class ProjectSaveFailed : public std::invalid_argument {
+  public:
+    ProjectSaveFailed();
+};
+
+// Source specific types ======================================================
 class FileAlreadyExists : public std::invalid_argument {
   public:
     FileAlreadyExists();

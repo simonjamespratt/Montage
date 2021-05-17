@@ -75,11 +75,11 @@ void Sequencer::readFigure(const Figure &figure,
     }
 
     for(auto &&entry : clips) {
-        arrangement.addClipToArrangement(entry.clip,
-                                         entry.trackIndex,
-                                         entry.clipStart,
-                                         entry.clipEnd,
-                                         entry.offset);
+        arrangement.addClip(entry.clip,
+                            entry.trackIndex,
+                            entry.clipStart,
+                            entry.clipEnd,
+                            entry.offset);
     }
 
     timeline.recalculate();
@@ -87,7 +87,31 @@ void Sequencer::readFigure(const Figure &figure,
     transport.play(false);
 }
 
+void Sequencer::clear()
+{
+    clearTracks();
+    arrangement.clear();
+}
+
+// Private methods
 void Sequencer::prepareForNewFigure(int noOfParticles)
+{
+    clearTracks();
+
+    // set the no of tracks required for the incoming figure
+    noOfTracks = noOfParticles;
+    // prepare the new tracks
+    prepareTracks();
+    arrangement.prepare(noOfTracks);
+
+    // NB: find a way to delete audio tracks from edit: cannot see a good way to
+    // this at the moment, which means there will be empty unused tracks in the
+    // ether these unused tracks will not have clips on them because clips will
+    // be cleared from all previously used tracks in this method they will also
+    // not be displayed as display is the result of the noOfTracks member of
+    // this class but they will still just be hanging around
+}
+void Sequencer::clearTracks()
 {
     // for each track in use from the last figure, remove all clips
     auto tracks = te::getAudioTracks(edit);
@@ -97,19 +121,6 @@ void Sequencer::prepareForNewFigure(int noOfParticles)
             clipsToRemove.getUnchecked(i)->removeFromParentTrack();
         }
     }
-
-    // set the no of tracks required for the incoming figure
-    noOfTracks = noOfParticles;
-    // prepare the new tracks
-    prepareTracks();
-    arrangement.prepareArrangement(noOfTracks);
-
-    // NB: find a way to delete audio tracks from edit: cannot see a good way to
-    // this at the moment, which means there will be empty unused tracks in the
-    // ether these unused tracks will not have clips on them because clips will
-    // be cleared from all previously used tracks in this method they will also
-    // not be displayed as display is the result of the noOfTracks member of
-    // this class but they will still just be hanging around
 }
 
 void Sequencer::prepareTracks()

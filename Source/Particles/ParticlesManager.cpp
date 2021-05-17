@@ -2,14 +2,21 @@
 
 #include "ErrorMessageModal.h"
 
-ParticlesManager::ParticlesManager(ProjectState &ps, te::Engine &eng)
-: particleList(ps.getParticleList()),
+ParticlesManager::ParticlesManager(const ProjectState &ps, te::Engine &eng)
+: projectState(ps),
+  particleList(ps.getParticleList()),
   crossIcon(icons.getIcon(Icons::IconType::Cross)),
   addParticleButton("Add particle button",
                     juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   sourceSelector(ps.getSourceList()),
   engine(eng)
 {
+    projectState.onStatusChanged = [this](auto status, auto action) {
+        if(action == ProjectState::Action::LoadNewFile) {
+            closeEditor();
+        }
+    };
+
     heading.setText("Particles Manager", juce::dontSendNotification);
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);

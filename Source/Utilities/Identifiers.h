@@ -7,6 +7,12 @@ namespace IDs {
 // Top level
 DECLARE_ID(PROJECT_STATE)
 
+// STATUS
+DECLARE_ID(PROJECT_STATE_STATUS)
+DECLARE_ID(has_unsaved_changes)
+DECLARE_ID(has_file)
+DECLARE_ID(action)
+
 // Reused types
 DECLARE_ID(id) // source, particle, figure and event all have ids
 

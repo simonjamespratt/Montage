@@ -3,6 +3,13 @@
 Figures::Figures(te::Engine &e, ProjectState &ps)
 : engine(e), projectState(ps), sequencer(engine), figureGenerator(ps)
 {
+    projectState.onStatusChanged = [this](auto status, auto action) {
+        if(action == ProjectState::Action::LoadNewFile) {
+            sequencer.clear();
+            figureManager.clear();
+        }
+    };
+
     addAndMakeVisible(&toggleGeneratOutputButton);
     toggleGeneratOutputButton.setButtonText("Show Output");
     toggleGeneratOutputButton.onClick = [this] {

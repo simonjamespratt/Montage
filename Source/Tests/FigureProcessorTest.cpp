@@ -1,7 +1,7 @@
 #include "FigureProcessor.h"
 
 #include "Identifiers.h"
-#include "StateHelpers.h"
+#include "TestHelpers.h"
 
 #include <CollectionsProducer.hpp>
 #include <DurationsProducer.hpp>
