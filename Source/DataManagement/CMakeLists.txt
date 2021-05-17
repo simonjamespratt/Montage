@@ -7,15 +7,15 @@ target_sources(Montage PRIVATE
     Figure.h
     FigureList.cpp
     FigureList.h
-    FigureManager.cpp
-    FigureManager.h
+    FiguresTable.cpp
+    FiguresTable.h
+    EventsTable.cpp
+    EventsTable.h
     ObjectList.h
     Particle.cpp
     Particle.h
     ParticleList.cpp
     ParticleList.h
-    ParticlesManifest.cpp
-    ParticlesManifest.h
     ProjectState.cpp
     ProjectState.h
     Source.cpp

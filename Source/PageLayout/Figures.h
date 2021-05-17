@@ -1,7 +1,9 @@
 #pragma once
 
+#include "EventsTable.h"
 #include "FigureGenerator.h"
-#include "FigureManager.h"
+#include "FiguresTable.h"
+#include "Icons.h"
 #include "ProjectState.h"
 #include "Sequencer.h"
 
@@ -21,13 +23,20 @@ class Figures : public juce::Component {
 
     Sequencer sequencer;
     FigureGenerator figureGenerator;
-    FigureManager figureManager;
+    FiguresTable figuresTable;
+    EventsTable eventsTable;
     void arrangeFigure(Figure f);
 
     juce::Label heading;
-    bool showGenerator {true};
-    juce::TextButton toggleGeneratOutputButton;
+    Icons icons;
+    juce::DrawablePath crossIcon;
+    juce::DrawablePath dashIcon;
+    juce::DrawableButton addFigureButton;
+    juce::DrawableButton deleteFigureButton;
+    bool showGenerator {false};
+    juce::TextButton closeGeneratorButton;
     void toggleGenerateManagerState();
+    void refreshView();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Figures)
 };

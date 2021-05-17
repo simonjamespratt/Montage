@@ -116,7 +116,8 @@ double TransportInteractor::calculateAudioPosition(float mousePosition)
 float TransportInteractor::calculateUIPosition(double rangePosition)
 {
     jassert(getWidth() > 0);
-    auto proportion = rangePosition / edit.getLength();
+    auto editLength = edit.getLength();
+    auto proportion = editLength ? rangePosition / editLength : 0;
     return getWidth() * proportion;
 }
 

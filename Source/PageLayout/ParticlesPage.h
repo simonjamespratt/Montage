@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ParticlesManager.h"
-#include "ParticlesManifest.h"
 #include "ProjectState.h"
 #include "SourceManager.h"
 
@@ -18,7 +17,6 @@ class ParticlesPage : public juce::Component {
   private:
     ParticlesManager particlesManager;
     SourceManager sourceManager;
-    ParticlesManifest particlesManifest;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParticlesPage)
 };
