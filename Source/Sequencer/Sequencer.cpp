@@ -52,6 +52,8 @@ void Sequencer::resized()
 void Sequencer::readFigure(const Figure &figure,
                            const ProjectState &projectState)
 {
+    clear();
+
     std::vector<ClipData> clips;
 
     auto eventList = projectState.getEventList(figure);
@@ -83,12 +85,12 @@ void Sequencer::readFigure(const Figure &figure,
     }
 
     timeline.recalculate();
-    transport.position = 0.0;
-    transport.play(false);
 }
 
 void Sequencer::clear()
 {
+    transport.stop(false, false);
+    transport.position = 0.0;
     clearTracks();
     arrangement.clear();
 }
@@ -96,8 +98,6 @@ void Sequencer::clear()
 // Private methods
 void Sequencer::prepareForNewFigure(int noOfParticles)
 {
-    clearTracks();
-
     // set the no of tracks required for the incoming figure
     noOfTracks = noOfParticles;
     // prepare the new tracks

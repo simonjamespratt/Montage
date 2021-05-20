@@ -6,10 +6,10 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <memory>
 
-class FigureManager : public juce::Component, public juce::TableListBoxModel {
+class EventsTable : public juce::Component, public juce::TableListBoxModel {
   public:
-    FigureManager();
-    ~FigureManager();
+    EventsTable();
+    ~EventsTable();
 
     void resized() override;
 
@@ -48,5 +48,5 @@ class FigureManager : public juce::Component, public juce::TableListBoxModel {
 
     juce::Label heading;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FigureManager)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EventsTable)
 };

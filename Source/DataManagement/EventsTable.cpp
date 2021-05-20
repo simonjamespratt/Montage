@@ -1,8 +1,8 @@
-#include "FigureManager.h"
+#include "EventsTable.h"
 
-FigureManager::FigureManager() : table({}, this)
+EventsTable::EventsTable() : table({}, this)
 {
-    heading.setText("Figure Manager", juce::dontSendNotification);
+    heading.setText("Selected Figure Events", juce::dontSendNotification);
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
 
@@ -31,10 +31,10 @@ FigureManager::FigureManager() : table({}, this)
     table.getHeader().addColumn("File name", Columns::fileName, 100, 50, 400);
 }
 
-FigureManager::~FigureManager()
+EventsTable::~EventsTable()
 {}
 
-void FigureManager::resized()
+void EventsTable::resized()
 {
     auto area = getLocalBounds();
     auto headerArea = area.removeFromTop(50);
@@ -53,16 +53,16 @@ void FigureManager::resized()
     table.setBounds(area);
 }
 
-int FigureManager::getNumRows()
+int EventsTable::getNumRows()
 {
     return numRows;
 }
 
-void FigureManager::paintRowBackground(juce::Graphics &g,
-                                       int rowNumber,
-                                       int /*width*/,
-                                       int /*height*/,
-                                       bool rowIsSelected)
+void EventsTable::paintRowBackground(juce::Graphics &g,
+                                     int rowNumber,
+                                     int /*width*/,
+                                     int /*height*/,
+                                     bool rowIsSelected)
 {
     auto alternateRowColour =
         getLookAndFeel()
@@ -78,12 +78,12 @@ void FigureManager::paintRowBackground(juce::Graphics &g,
     }
 }
 
-void FigureManager::paintCell(juce::Graphics &g,
-                              int rowNumber,
-                              int columnId,
-                              int width,
-                              int height,
-                              bool rowIsSelected)
+void EventsTable::paintCell(juce::Graphics &g,
+                            int rowNumber,
+                            int columnId,
+                            int width,
+                            int height,
+                            bool rowIsSelected)
 {
     if(eventList == nullptr) {
         return;
@@ -132,19 +132,19 @@ void FigureManager::paintCell(juce::Graphics &g,
     g.fillRect(width - 1, 0, 1, height);
 }
 
-void FigureManager::backgroundClicked(const juce::MouseEvent &)
+void EventsTable::backgroundClicked(const juce::MouseEvent &)
 {
     table.deselectAllRows();
 }
 
-void FigureManager::setData(const Figure &f, const ProjectState &ps)
+void EventsTable::setData(const Figure &f, const ProjectState &ps)
 {
     eventList = std::make_unique<EventList>(ps.getEventList(f));
     numRows = eventList->getObjects().size();
     table.updateContent();
 }
 
-void FigureManager::clear()
+void EventsTable::clear()
 {
     eventList = nullptr;
     numRows = 0;
