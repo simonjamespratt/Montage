@@ -7,9 +7,7 @@
 
 Source::Source(const juce::ValueTree &vt) : state(vt)
 {
-    if(!state.hasType(IDs::SOURCE)) {
-        throw std::invalid_argument("value tree type must be SOURCE");
-    }
+    StateService::checkTypeIsValid(state, IDs::SOURCE);
 
     std::vector<juce::Identifier> compulsoryProps {IDs::id, IDs::file_path};
     StateService::checkPropsAreValid(state, compulsoryProps);

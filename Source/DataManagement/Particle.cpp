@@ -13,7 +13,8 @@ Particle::Particle(const juce::ValueTree &v, const Source &s)
     std::vector<juce::Identifier> compulsoryProps {IDs::id,
                                                    IDs::source_id,
                                                    IDs::start,
-                                                   IDs::end};
+                                                   IDs::end,
+                                                   IDs::name};
 
     StateService::checkPropsAreValid(state, compulsoryProps);
 
@@ -23,6 +24,7 @@ Particle::Particle(const juce::ValueTree &v, const Source &s)
     double start {state[IDs::start]};
     double end {state[IDs::end]};
     auto sourceFileLength = source.getFileLengthInSeconds();
+    juce::String name = state[IDs::name];
 
     if(sourceId != source.getId()) {
         throw ObjectDependencyInvalid("Particle", "Source");
@@ -30,6 +32,10 @@ Particle::Particle(const juce::ValueTree &v, const Source &s)
 
     validateStart(start, end);
     validateEnd(start, end, sourceFileLength);
+
+    if(name.isEmpty()) {
+        throw ParticleNameInvalid();
+    }
 }
 
 Particle::Particle(const Source &s) : source(s)
@@ -39,6 +45,7 @@ Particle::Particle(const Source &s) : source(s)
     state.setProperty(IDs::source_id, source.getId().toString(), nullptr);
     state.setProperty(IDs::start, 0, nullptr);
     state.setProperty(IDs::end, source.getFileLengthInSeconds(), nullptr);
+    state.setProperty(IDs::name, juce::String("untitled"), nullptr);
 
     state.addListener(this);
 }
@@ -146,6 +153,20 @@ void Particle::setStartAndEnd(double newStart, double newEnd)
         state.setProperty(IDs::start, newStart, nullptr);
         state.setProperty(IDs::end, newEnd, nullptr);
     }
+}
+
+juce::String Particle::getName() const
+{
+    return state[IDs::name];
+}
+
+void Particle::setName(juce::String newName)
+{
+    if(newName.isEmpty()) {
+        throw ParticleNameInvalid();
+    }
+
+    state.setProperty(IDs::name, newName, nullptr);
 }
 
 juce::ValueTree Particle::getState() const

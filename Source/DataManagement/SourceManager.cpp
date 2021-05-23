@@ -1,14 +1,13 @@
 #include "SourceManager.h"
 
 #include "ErrorMessageModal.h"
+#include "Icons.h"
 
 SourceManager::SourceManager(SourceList sl)
 : sourceList(sl),
   table({}, this),
-  crossIcon(icons.getIcon(Icons::IconType::Cross)),
   addSourceButton("Add source file",
                   juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
-  dashIcon(icons.getIcon(Icons::IconType::Dash)),
   deleteSourceButton("Delete source files",
                      juce::DrawableButton::ButtonStyle::ImageOnButtonBackground)
 {
@@ -37,17 +36,17 @@ SourceManager::SourceManager(SourceList sl)
     table.getHeader().addColumn("File length", Columns::length, 100, 50, 400);
     numRows = sourceList.getObjects().size(); // sets no. of rows for table
 
-    addSourceButton.setImages(&crossIcon);
-    addAndMakeVisible(&addSourceButton);
+    addSourceButton.setImages(Icons::getIcon(Icons::IconType::Cross).get());
     addSourceButton.onClick = [this] {
         selectNewSourceFile();
     };
+    addAndMakeVisible(addSourceButton);
 
-    deleteSourceButton.setImages(&dashIcon);
-    addAndMakeVisible(&deleteSourceButton);
+    deleteSourceButton.setImages(Icons::getIcon(Icons::IconType::Dash).get());
     deleteSourceButton.onClick = [this] {
         deleteSource();
     };
+    addAndMakeVisible(deleteSourceButton);
 }
 
 void SourceManager::resized()

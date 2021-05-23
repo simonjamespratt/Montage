@@ -116,7 +116,7 @@ void ParticleView::allowInteraction(bool isAllowed)
 // Private methods
 void ParticleView::refreshView()
 {
-    juce::String nameString = "Name: " + particle.getId().toString();
+    juce::String nameString = "Name: " + particle.getName();
     juce::String fileNameString =
         "File name: " + particle.getSource().getFileName();
     juce::String startString = "Start: " + juce::String(particle.getStart());

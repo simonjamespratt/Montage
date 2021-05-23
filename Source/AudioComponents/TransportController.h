@@ -1,26 +1,12 @@
-/*
-  ==============================================================================
-
-    TransportController.h
-    Created: 7 May 2019 7:20:07pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
-
-#include "Icons.h"
 #include "TimeDisplay.h"
+
+#include <functional>
 
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
- */
-class TransportController :
-public juce::Component,
-    public juce::ChangeListener {
+class TransportController : public juce::Component,
+                            public juce::ChangeListener {
   public:
     TransportController(te::TransportControl &tc);
     ~TransportController();
@@ -28,21 +14,21 @@ public juce::Component,
     void paint(juce::Graphics &) override;
     void resized() override;
 
+    void togglePlayPause();
+    void stop();
+    bool handleKeyPress(const juce::KeyPress &key);
+    std::function<void()> onTransportStopped;
+
   private:
     te::TransportControl &transport;
-    Icons icons;
-    juce::DrawablePath stopIcon;
-    juce::DrawableButton stopButton;
 
-    juce::DrawablePath playIcon;
-    juce::DrawablePath pauseIcon;
+    juce::DrawableButton stopButton;
     juce::DrawableButton playPauseButton;
+    juce::DrawableButton loopButton;
 
     TimeDisplay transportPosition;
 
     void updatePlayPauseButtonIcon();
-    void togglePlayPause();
-    void stop();
 
     void changeListenerCallback(juce::ChangeBroadcaster *) override;
 

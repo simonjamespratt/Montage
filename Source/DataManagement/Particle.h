@@ -31,6 +31,9 @@ class Particle : public juce::ValueTree::Listener {
 
     void setStartAndEnd(double newStart, double newEnd);
 
+    juce::String getName() const;
+    void setName(juce::String newName);
+
     juce::ValueTree getState() const;
 
     std::function<void(juce::Identifier propertyChanged)> onUpdated;

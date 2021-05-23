@@ -18,6 +18,11 @@ EventsTable::EventsTable() : table({}, this)
                                 400);
     table.getHeader().addColumn("ID", Columns::id, 100, 50, 400);
     table.getHeader().addColumn("Onset", Columns::onset, 100, 50, 400);
+    table.getHeader().addColumn("Particle name",
+                                Columns::particleName,
+                                100,
+                                50,
+                                400);
     table.getHeader().addColumn("Particle start",
                                 Columns::particleStart,
                                 100,
@@ -105,6 +110,9 @@ void EventsTable::paintCell(juce::Graphics &g,
         break;
     case Columns::onset:
         cellText = juce::String(event.getOnset());
+        break;
+    case Columns::particleName:
+        cellText = juce::String(event.getParticle().getName());
         break;
     case Columns::particleStart:
         cellText = juce::String(event.getParticle().getStart());

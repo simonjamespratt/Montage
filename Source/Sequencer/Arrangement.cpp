@@ -1,7 +1,49 @@
 #include "Arrangement.h"
 
-Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc)
-: edit(e), transport(tc)
+PositionableThumbnail::PositionableThumbnail(te::TransportControl &tc,
+                                             te::AudioFile file,
+                                             double editLength,
+                                             double clipStart,
+                                             double clipEnd,
+                                             double offset,
+                                             int trackIndex)
+: thumbnail(tc), trackIndex(trackIndex)
+{
+    auto clipLength = clipEnd - clipStart;
+    thumbnail.setFile(file, offset, clipLength);
+
+    // Note that converting doubles to float may create precision
+    // issues. Doesn't seem to be an issue at the moment
+    normalisedStart = clipStart / editLength;
+    normalisedEnd = clipEnd / editLength;
+}
+
+float PositionableThumbnail::getTop(float trackHeight)
+{
+    return trackHeight * trackIndex;
+}
+
+float PositionableThumbnail::getBottom(float trackHeight)
+{
+    return getTop(trackHeight) + trackHeight;
+}
+
+float PositionableThumbnail::getStart(int containerWidth)
+{
+    return normalisedStart * containerWidth;
+}
+
+float PositionableThumbnail::getEnd(int containerWidth)
+{
+    return normalisedEnd * containerWidth;
+}
+
+// ==========================================================
+
+Arrangement::Arrangement(te::Edit &e,
+                         te::TransportControl &tc,
+                         float initialTrackHeight)
+: edit(e), transport(tc), trackHeight(initialTrackHeight)
 {
     noOfTracks = 0;
 }
@@ -11,13 +53,20 @@ Arrangement::~Arrangement()
 
 void Arrangement::paint(juce::Graphics &g)
 {
-    if(noOfTracks == 0) {
-        g.setColour(juce::Colours::white);
-        g.drawText("No figure selected at present",
-                   getBounds(),
-                   juce::Justification(36));
-    } else {
+    if(noOfTracks > 0) {
         drawTrackDividers(g);
+    }
+}
+
+void Arrangement::resized()
+{
+    for(auto &&t : thumbnails) {
+        auto start = t->getStart(getWidth());
+        auto end = t->getEnd(getWidth());
+        auto top = t->getTop(trackHeight);
+        auto bottom = t->getBottom(trackHeight);
+
+        t->thumbnail.setBounds(start, top, (end - start), (bottom - top));
     }
 }
 
@@ -25,6 +74,7 @@ void Arrangement::prepare(int noOfTracksToMake)
 {
     thumbnails.clear();
     noOfTracks = noOfTracksToMake;
+    resized();
     repaint();
 }
 
@@ -32,21 +82,8 @@ void Arrangement::clear()
 {
     thumbnails.clear();
     noOfTracks = 0;
+    resized();
     repaint();
-}
-
-void Arrangement::drawTrackDividers(juce::Graphics &g)
-{
-    // divide component height by number of tracks
-    auto distanceBetweenDividers = getHeight() / noOfTracks;
-    double currentHeight = 0.0;
-    // draw line offset from top for noOfTracks - 1
-    for(int i = 0; i < noOfTracks - 1; i++) {
-        currentHeight += distanceBetweenDividers;
-        // draw line
-        g.setColour(juce::Colours::darkred);
-        g.fillRect(0.0, currentHeight, getWidth(), 1.0);
-    }
 }
 
 void Arrangement::addClip(
@@ -56,56 +93,33 @@ void Arrangement::addClip(
     const double &clipEnd,
     const double &offset)
 {
-    ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, clipStart, clipEnd);
+    auto thumbnail =
+        std::make_unique<PositionableThumbnail>(transport,
+                                                newClip->getPlaybackFile(),
+                                                edit.getLength(),
+                                                clipStart,
+                                                clipEnd,
+                                                offset,
+                                                trackIndex);
 
-    addThumbnail(newClip, clipCoOrds, offset, (clipEnd - clipStart));
+    addAndMakeVisible(thumbnail->thumbnail);
+    thumbnails.emplace_back(std::move(thumbnail));
+    resized();
 }
 
-TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
+void Arrangement::setTrackHeight(float newHeight)
 {
-    auto containerHeight = getHeight();
-    float trackHeight = containerHeight / noOfTracks;
-    // NB: trackIndices must start at 0 otherwise the next line won't work
-    auto trackTop = trackHeight * trackIndex;
-    auto trackBottom = trackTop + trackHeight;
-    // return top and bottom
-    return TrackHeightCoOrds {trackTop, trackBottom};
+    trackHeight = newHeight;
 }
 
-ClipWidthCoOrds Arrangement::getClipWidthCoOrds(const double clipStart,
-                                                const double clipEnd)
+// Private methods
+void Arrangement::drawTrackDividers(juce::Graphics &g)
 {
-    double editLength = edit.getLength();
-    auto containerWidth = getWidth();
-    float start = (clipStart / editLength) * containerWidth;
-    float end = (clipEnd / editLength) * containerWidth;
-    return ClipWidthCoOrds {start, end};
-}
+    g.setColour(juce::Colours::cornflowerblue);
 
-ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex,
-                                      const double clipStart,
-                                      const double clipEnd)
-{
-    auto yAxis = getTrackHeightCoOrds(trackIndex);
-    auto xAxis = getClipWidthCoOrds(clipStart, clipEnd);
-    return ClipCoOrds {yAxis, xAxis};
-}
-
-void Arrangement::addThumbnail(
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
-    ClipCoOrds clipCoOrds,
-    double offset,
-    double clipLength)
-{
-    std::shared_ptr<TracktionThumbnail> thumbnail =
-        std::make_shared<TracktionThumbnail>(transport);
-    // NB: not sure it's worth putting these in a vector as the items in the
-    // array are never accessed
-    thumbnails.emplace_back(thumbnail);
-    addAndMakeVisible(*thumbnail);
-    thumbnail->setBounds(clipCoOrds.xAxis.start,
-                         clipCoOrds.yAxis.top,
-                         (clipCoOrds.xAxis.end - clipCoOrds.xAxis.start),
-                         (clipCoOrds.yAxis.bottom - clipCoOrds.yAxis.top));
-    thumbnail->setFile(newClip->getPlaybackFile(), offset, clipLength);
+    float currentPosition = 0;
+    for(int i = 0; i < noOfTracks; i++) {
+        currentPosition += trackHeight;
+        g.fillRect(0.0, (currentPosition - 0.5), float(getWidth()), 0.5f);
+    }
 }

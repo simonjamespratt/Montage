@@ -10,6 +10,7 @@ juce::ValueTree StateHelpers::createParticleState()
     particle.setProperty(IDs::source_id, juce::Uuid().toString(), nullptr);
     particle.setProperty(IDs::start, 0.0, nullptr);
     particle.setProperty(IDs::end, 1.0, nullptr);
+    particle.setProperty(IDs::name, juce::String("name"), nullptr);
 
     return particle;
 }
@@ -17,13 +18,15 @@ juce::ValueTree StateHelpers::createParticleState()
 juce::ValueTree StateHelpers::createParticleState(juce::Uuid id,
                                                   juce::Uuid sourceId,
                                                   double start,
-                                                  double end)
+                                                  double end,
+                                                  juce::String name)
 {
     juce::ValueTree particle(IDs::PARTICLE);
     particle.setProperty(IDs::id, id.toString(), nullptr);
     particle.setProperty(IDs::source_id, sourceId.toString(), nullptr);
     particle.setProperty(IDs::start, start, nullptr);
     particle.setProperty(IDs::end, end, nullptr);
+    particle.setProperty(IDs::name, name, nullptr);
 
     return particle;
 }

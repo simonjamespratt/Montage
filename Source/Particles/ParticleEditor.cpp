@@ -4,9 +4,10 @@
 
 ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
 : particle(p),
-  model {particle.getStart(), particle.getEnd()},
+  model {particle.getStart(), particle.getEnd(), particle.getName()},
   startEditor(model.start, "Start"),
   endEditor(model.end, "End"),
+  nameEditor(model.name, "Name"),
   edit(eng,
        /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
           legacy signature. Update to newer version. See
@@ -16,15 +17,38 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
        nullptr,
        0),
   transport(edit.getTransport()),
+  transportManager(edit, cursor),
   thumbnail(transport),
-  cursor(transport, edit),
   transportController(transport),
-  transportInteractor(transport, edit)
+  transportInteractor(transport, edit),
+  timeScalingFactor {100, 100, 0, 1000},
+  xZoom(juce::Slider::SliderStyle::LinearHorizontal,
+        juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    name.setText(particle.getId().toString(), juce::dontSendNotification);
-    addAndMakeVisible(name);
+    transportManager.onChange = [this] {
+        thumbnailViewport.syncToTransportPositionWhenPlaying(
+            transport.getCurrentPosition(),
+            edit.getLength());
+    };
+    transportManager.startManager();
+
+    transportController.onTransportStopped = [this] {
+        thumbnailViewport.syncToTransportPositionWhenPlaying(
+            transport.getCurrentPosition(),
+            edit.getLength());
+    };
+
+    transportInteractor.onSelectionChangeInProgress =
+        [this](const juce::MouseEvent event) {
+            thumbnailViewport.syncToMouseDrag(event);
+        };
 
     startEditor.onChange = [this] {
+        // when model start and end are both at 0 it denotes that there is no
+        // current selection
+        if(model.start == 0 && model.end == 0) {
+            return;
+        }
         auto checkedStart =
             particle.ensureNewStartIsWithinBounds(model.start, model.end);
         if(checkedStart != model.start) {
@@ -37,6 +61,11 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
     addAndMakeVisible(&startEditor);
 
     endEditor.onChange = [this] {
+        // when model start and end are both at 0 it denotes that there is no
+        // current selection
+        if(model.start == 0 && model.end == 0) {
+            return;
+        }
         auto checkedEnd =
             particle.ensureNewEndIsWithinBounds(model.start, model.end);
         if(checkedEnd != model.end) {
@@ -48,11 +77,18 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
     };
     addAndMakeVisible(&endEditor);
 
+    addAndMakeVisible(nameEditor);
+
     prepAudio(eng);
 
-    addAndMakeVisible(&thumbnail);
-    addAndMakeVisible(&cursor);
-    addAndMakeVisible(&transportInteractor);
+    thumbnailViewport.setViewedComponent(&thumbnailContainer, false);
+    addAndMakeVisible(&thumbnailViewport);
+    thumbnailViewport.setScrollBarsShown(false, true);
+
+    thumbnailContainer.addAndMakeVisible(&thumbnail);
+    thumbnailContainer.addAndMakeVisible(&cursor);
+    thumbnailContainer.addAndMakeVisible(&transportInteractor);
+
     transportInteractor.onSelectionChange = [this] {
         auto newRange = transportInteractor.getSelectionRange();
         model.start = newRange.rangeStart;
@@ -96,6 +132,16 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
             }
         }
 
+        if(model.name != particle.getName()) {
+            try {
+                particle.setName(model.name);
+            } catch(const std::exception &e) {
+                // Catches ParticleNameInvalid
+                std::make_shared<ErrorMessageModal>(juce::String(e.what()));
+                return;
+            }
+        }
+
         if(onDoneEditing) {
             onDoneEditing();
         }
@@ -109,6 +155,14 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
         }
     };
     addAndMakeVisible(cancelButton);
+
+    xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
+    xZoom.setValue(timeScalingFactor.current);
+    xZoom.onValueChange = [this] {
+        timeScalingFactor.current = xZoom.getValue();
+        resized();
+    };
+    addAndMakeVisible(xZoom);
 }
 
 void ParticleEditor::paint(juce::Graphics &g)
@@ -116,7 +170,7 @@ void ParticleEditor::paint(juce::Graphics &g)
     auto area = getLocalBounds();
     area.removeFromRight(5);
     area.removeFromLeft(5);
-    area.removeFromBottom(10);
+    area.removeFromBottom(5);
     g.setColour(juce::Colours::darkgrey);
     g.fillRect(area);
 }
@@ -132,30 +186,52 @@ void ParticleEditor::resized()
     waveformArea.removeFromRight(10);
     waveformArea.removeFromLeft(10);
 
-    auto transportArea = area.removeFromTop(50);
-    transportArea.removeFromLeft(10);
-    transportArea.removeFromRight(10);
+    auto audioControlsArea = area.removeFromTop(50);
+    audioControlsArea.removeFromLeft(10);
+    audioControlsArea.removeFromRight(10);
+    auto transportArea = audioControlsArea.reduced(200, 0);
+    auto zoomControlsArea = audioControlsArea.removeFromRight(100);
 
     auto buttonControlsArea = area;
 
     // layout metadata ========================================
-    name.setBounds(metaDataArea.removeFromLeft(300));
+    nameEditor.setBounds(metaDataArea.removeFromLeft(300));
     startEditor.setBounds(metaDataArea.removeFromLeft(200));
     endEditor.setBounds(metaDataArea.removeFromLeft(200));
 
     // layout waveform ========================================
-    thumbnail.setBounds(waveformArea);
-    cursor.setBounds(waveformArea);
-    transportInteractor.setBounds(waveformArea);
+    thumbnailViewport.setBounds(waveformArea);
+
+    if(edit.getLength() > 0) {
+        timeScalingFactor.min = thumbnailViewport.getWidth() / edit.getLength();
+        timeScalingFactor.max =
+            (thumbnailViewport.getWidth() / edit.getLength()) * 10;
+        xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
+    }
+
+    auto thumbnailWidth = edit.getLength() * timeScalingFactor.current;
+    auto thumbnailHeight = waveformArea.getHeight();
+
+    thumbnailContainer.setSize(thumbnailWidth, thumbnailHeight);
+
+    thumbnail.setSize(thumbnailWidth, thumbnailHeight);
+    cursor.setSize(thumbnailWidth, thumbnailHeight);
+    transportInteractor.setSize(thumbnailWidth, thumbnailHeight);
 
     // layout transport =======================================
     transportController.setBounds(transportArea);
+    xZoom.setBounds(zoomControlsArea);
 
     // layout buttons =========================================
     saveButton.setBounds(
         buttonControlsArea.removeFromLeft(100).reduced(margin));
     cancelButton.setBounds(
         buttonControlsArea.removeFromRight(100).reduced(margin));
+}
+
+void ParticleEditor::setFocus()
+{
+    transportController.grabKeyboardFocus();
 }
 
 // Private methods
@@ -182,12 +258,6 @@ void ParticleEditor::prepAudio(te::Engine &eng)
                                          {{0.0, audioFile.getLength()}, 0.0},
                                          false);
     jassert(newClip);
-
-    // set up transport
-    // NB: not sure these lines are actually needed
-    transport.setLoopRange(newClip->getEditTimeRange());
-    transport.looping = true;
-    transport.position = 0.0;
 
     transportInteractor.setSelectionRange({model.start, model.end});
 }

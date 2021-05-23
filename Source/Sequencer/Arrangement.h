@@ -2,29 +2,41 @@
 
 #include "TracktionThumbnail.h"
 
+#include <memory>
+
 namespace te = tracktion_engine;
 
-struct TrackHeightCoOrds {
-    float top;
-    float bottom;
-};
+struct PositionableThumbnail {
+    PositionableThumbnail(te::TransportControl &tc,
+                          te::AudioFile file,
+                          double editLength,
+                          double clipStart,
+                          double clipEnd,
+                          double offset,
+                          int trackIndex);
 
-struct ClipWidthCoOrds {
-    float start;
-    float end;
-};
+    TracktionThumbnail thumbnail;
 
-struct ClipCoOrds {
-    TrackHeightCoOrds yAxis;
-    ClipWidthCoOrds xAxis;
+    float getTop(float trackHeight);
+    float getBottom(float trackHeight);
+    float getStart(int containerWidth);
+    float getEnd(int containerWidth);
+
+  private:
+    int trackIndex;
+    float normalisedStart;
+    float normalisedEnd;
 };
 
 class Arrangement : public juce::Component {
   public:
-    Arrangement(te::Edit &e, te::TransportControl &tc);
+    Arrangement(te::Edit &e,
+                te::TransportControl &tc,
+                float initialTrackHeight);
     ~Arrangement();
 
     void paint(juce::Graphics &) override;
+    void resized() override;
     void prepare(int noOfTracksToMake);
     void clear();
     void
@@ -34,25 +46,16 @@ class Arrangement : public juce::Component {
             const double &clipStart,
             const double &clipEnd,
             const double &offset);
+    void setTrackHeight(float newHeight);
 
   private:
     te::Edit &edit;
     te::TransportControl &transport;
-
+    float trackHeight;
     int noOfTracks;
+    std::vector<std::unique_ptr<PositionableThumbnail>> thumbnails;
+
     void drawTrackDividers(juce::Graphics &g);
-    TrackHeightCoOrds getTrackHeightCoOrds(const int trackIndex);
-    ClipWidthCoOrds getClipWidthCoOrds(const double clipStart,
-                                       const double clipEnd);
-    ClipCoOrds getClipCoOrds(const int trackIndex,
-                             const double clipStart,
-                             const double clipEnd);
-    std::vector<std::shared_ptr<TracktionThumbnail>> thumbnails;
-    void addThumbnail(juce::ReferenceCountedObjectPtr<
-                          tracktion_engine::WaveAudioClip> newClip,
-                      ClipCoOrds clipCoOrds,
-                      double offset,
-                      double clipLength);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Arrangement)
 };

@@ -1,6 +1,23 @@
 #include "ErrorTypes.h"
 
 // Generic data object types ==================================================
+ValueTreeInvalidType::ValueTreeInvalidType(std::string identifier)
+: std::invalid_argument("Received ValueTree type must be " + identifier)
+{}
+
+ValueTreeCompulsoryPropertyMissing::ValueTreeCompulsoryPropertyMissing(
+    std::string vtType, std::string vtProp)
+: std::invalid_argument("Received ValueTree of type: " + vtType +
+                        ", does not have the property: " + vtProp +
+                        ". This property is compulsory.")
+{}
+
+ValueTreeUnexpectedPropertyReceived::ValueTreeUnexpectedPropertyReceived(
+    std::string vtType, std::string vtProp)
+: std::invalid_argument("Received ValueTree of type: " + vtType +
+                        " has unexpected property: " + vtProp)
+{}
+
 ObjectNotFound::ObjectNotFound()
 : std::invalid_argument("Object not found in project state")
 {}
@@ -15,17 +32,17 @@ ObjectAlreadyExists::ObjectAlreadyExists()
 
 ObjectDependencyNotFound::ObjectDependencyNotFound(
     std::string object, std::string objectItDependsOn)
-: std::invalid_argument("The " + objectItDependsOn + "being used by this " +
+: std::invalid_argument("The " + objectItDependsOn + " being used by this " +
                         object +
-                        "does not exist in the "
-                        "project state. Add the" +
-                        objectItDependsOn + "to project state first")
+                        " does not exist in the "
+                        "project state. Add the " +
+                        objectItDependsOn + " to project state first")
 {}
 
 ObjectDependencyInvalid::ObjectDependencyInvalid(std::string object,
                                                  std::string objectItDependsOn)
 : std::invalid_argument("The " + objectItDependsOn +
-                        "provided does not match the one expected by this " +
+                        " provided does not match the one expected by this " +
                         object)
 {}
 
@@ -72,6 +89,12 @@ ParticleStartInvalid::ParticleStartInvalid()
 ParticleEndInvalid::ParticleEndInvalid()
 : std::invalid_argument("end must be greater than start and must not exceed "
                         "the length of the source file")
+{}
+
+// NB: if other entities start having a name, this error type should be made
+// more general so it can be reused by them
+ParticleNameInvalid::ParticleNameInvalid()
+: std::invalid_argument("name must not be empty")
 {}
 
 // Event specific types ======================================================

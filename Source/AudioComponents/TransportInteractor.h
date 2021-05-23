@@ -23,6 +23,8 @@ class TransportInteractor : public juce::Component {
     SelectionRange getSelectionRange();
     void setSelectionRange(SelectionRange newRange);
     void clearSelectionRange();
+    std::function<void(const juce::MouseEvent event)>
+        onSelectionChangeInProgress;
     std::function<void()> onSelectionChange;
 
   private:
@@ -31,10 +33,17 @@ class TransportInteractor : public juce::Component {
     InteractionState interactionState;
     double rangeStart;
     double rangeEnd;
+    int mouseDownPosition; // NB: this is a variable for temporarily holding
+                           // on to the mouse down position when user is
+                           // making a range selection. Note that this was
+                           // introduced because the value of
+                           // MouseEvent.getMouseDownPosition().x doesnt seem
+                           // to be accurate when used in the context of a
+                           // scrolling viewport
 
     double calculateAudioPosition(float mousePosition);
     float calculateUIPosition(double rangePosition);
-    void handleMouseMovement(int mousePositionA, int mousePositionB);
+    void handleMouseMovement(int mousePosition);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportInteractor)
 };

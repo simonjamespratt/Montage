@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Icons.h"
 #include "ParticleEditor.h"
 #include "ParticleView.h"
 #include "ProjectState.h"
@@ -27,8 +26,6 @@ class ParticlesManager : public juce::Component {
     juce::Viewport particlesViewport;
 
     juce::Label heading;
-    Icons icons;
-    juce::DrawablePath crossIcon;
     juce::DrawableButton addParticleButton;
     SourceSelector sourceSelector;
     std::unique_ptr<ParticleEditor> particleEditor;
