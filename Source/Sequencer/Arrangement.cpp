@@ -1,7 +1,7 @@
 #include "Arrangement.h"
 
 Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc)
-: edit(e), transport(tc)
+: edit(e), transport(tc), trackHeight(75)
 {
     noOfTracks = 0;
 }
@@ -11,20 +11,22 @@ Arrangement::~Arrangement()
 
 void Arrangement::paint(juce::Graphics &g)
 {
-    if(noOfTracks == 0) {
-        g.setColour(juce::Colours::white);
-        g.drawText("No figure selected at present",
-                   getBounds(),
-                   juce::Justification(36));
-    } else {
+    if(noOfTracks > 0) {
         drawTrackDividers(g);
     }
+}
+
+void Arrangement::resized()
+{
+    auto requiredHeight = trackHeight * noOfTracks;
+    setSize(getWidth(), requiredHeight);
 }
 
 void Arrangement::prepare(int noOfTracksToMake)
 {
     thumbnails.clear();
     noOfTracks = noOfTracksToMake;
+    resized();
     repaint();
 }
 
@@ -32,20 +34,18 @@ void Arrangement::clear()
 {
     thumbnails.clear();
     noOfTracks = 0;
+    resized();
     repaint();
 }
 
 void Arrangement::drawTrackDividers(juce::Graphics &g)
 {
-    // divide component height by number of tracks
-    auto distanceBetweenDividers = getHeight() / noOfTracks;
-    double currentHeight = 0.0;
-    // draw line offset from top for noOfTracks - 1
-    for(int i = 0; i < noOfTracks - 1; i++) {
-        currentHeight += distanceBetweenDividers;
-        // draw line
-        g.setColour(juce::Colours::darkred);
-        g.fillRect(0.0, currentHeight, getWidth(), 1.0);
+    g.setColour(juce::Colours::cornflowerblue);
+
+    float currentPosition = 0;
+    for(int i = 0; i < noOfTracks; i++) {
+        currentPosition += trackHeight;
+        g.fillRect(0.0, (currentPosition - 0.5), float(getWidth()), 0.5f);
     }
 }
 
@@ -63,12 +63,9 @@ void Arrangement::addClip(
 
 TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
 {
-    auto containerHeight = getHeight();
-    float trackHeight = containerHeight / noOfTracks;
     // NB: trackIndices must start at 0 otherwise the next line won't work
     auto trackTop = trackHeight * trackIndex;
     auto trackBottom = trackTop + trackHeight;
-    // return top and bottom
     return TrackHeightCoOrds {trackTop, trackBottom};
 }
 

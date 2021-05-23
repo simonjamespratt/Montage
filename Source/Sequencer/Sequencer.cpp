@@ -20,10 +20,13 @@ Sequencer::Sequencer(te::Engine &eng)
     noOfTracks = 0;
 
     addAndMakeVisible(&timeline);
-    addAndMakeVisible(&arrangement);
     addAndMakeVisible(&cursor);
     addAndMakeVisible(&transportInteractor);
     addAndMakeVisible(&transportController);
+
+    arrangementViewport.setViewedComponent(&arrangement, false);
+    arrangementViewport.setScrollBarsShown(true, false);
+    addAndMakeVisible(&arrangementViewport);
 }
 
 Sequencer::~Sequencer()
@@ -33,17 +36,15 @@ Sequencer::~Sequencer()
 
 void Sequencer::resized()
 {
-    auto area = getLocalBounds();
-    area.removeFromTop(10);
-    area.removeFromRight(10);
-    area.removeFromBottom(10);
-    area.removeFromLeft(10);
+    auto margin = 10;
+    auto area = getLocalBounds().reduced(margin);
     auto transportArea = area.removeFromBottom(50);
     auto timelineArea = area.removeFromTop(20);
     auto arrangementArea = area;
 
     timeline.setBounds(timelineArea);
     arrangement.setBounds(arrangementArea);
+    arrangementViewport.setBounds(arrangementArea);
     cursor.setBounds(arrangementArea);
     transportInteractor.setBounds(arrangementArea);
     transportController.setBounds(transportArea);

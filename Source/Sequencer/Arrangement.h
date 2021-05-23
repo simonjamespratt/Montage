@@ -25,6 +25,7 @@ class Arrangement : public juce::Component {
     ~Arrangement();
 
     void paint(juce::Graphics &) override;
+    void resized() override;
     void prepare(int noOfTracksToMake);
     void clear();
     void
@@ -39,15 +40,21 @@ class Arrangement : public juce::Component {
     te::Edit &edit;
     te::TransportControl &transport;
 
+    float trackHeight;
     int noOfTracks;
+    std::vector<std::shared_ptr<TracktionThumbnail>> thumbnails;
+
     void drawTrackDividers(juce::Graphics &g);
+
     TrackHeightCoOrds getTrackHeightCoOrds(const int trackIndex);
+
     ClipWidthCoOrds getClipWidthCoOrds(const double clipStart,
                                        const double clipEnd);
+
     ClipCoOrds getClipCoOrds(const int trackIndex,
                              const double clipStart,
                              const double clipEnd);
-    std::vector<std::shared_ptr<TracktionThumbnail>> thumbnails;
+
     void addThumbnail(juce::ReferenceCountedObjectPtr<
                           tracktion_engine::WaveAudioClip> newClip,
                       ClipCoOrds clipCoOrds,

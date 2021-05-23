@@ -40,6 +40,7 @@ class Sequencer : public juce::Component {
     te::TransportControl &transport;
 
     Timeline timeline;
+    juce::Viewport arrangementViewport;
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
