@@ -9,6 +9,7 @@
 #include "TransportController.h"
 #include "TransportInteractor.h"
 
+#include <functional>
 #include <tracktion_engine/tracktion_engine.h>
 
 namespace te = tracktion_engine;
@@ -19,6 +20,16 @@ struct ClipData {
     double clipStart;
     double clipEnd;
     double offset;
+};
+
+// NB: Provides solution for keeping two viewports aligned as per
+// https://forum.juce.com/t/how-to-fix-a-region-in-viewport/36095/11
+class ViewportWithCallback : public juce::Viewport {
+  public:
+    void
+    visibleAreaChanged(const juce::Rectangle<int> &newVisibleArea) override;
+    std::function<void(const juce::Rectangle<int> &newVisibleArea)>
+        onVisibleAreaChanged;
 };
 
 class Sequencer : public juce::Component {
@@ -32,6 +43,10 @@ class Sequencer : public juce::Component {
     void clear();
 
   private:
+    int noOfTracks;
+    int timeScalingFactor;
+    float trackHeight;
+
     te::Engine &engine;
     // NB: note that the edit is set up with en empty edit rather than by
     // referencing a file to write to when the sequencer is working seriously,
@@ -40,12 +55,15 @@ class Sequencer : public juce::Component {
     te::TransportControl &transport;
 
     Timeline timeline;
-    juce::Viewport arrangementViewport;
+    ViewportWithCallback timelineViewport;
+
+    ViewportWithCallback arrangementContainerViewport;
+    juce::Component arrangementContainer;
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
     TransportController transportController;
-    int noOfTracks;
+
     void prepareForNewFigure(int noOfParticles);
     void clearTracks();
     void prepareTracks();

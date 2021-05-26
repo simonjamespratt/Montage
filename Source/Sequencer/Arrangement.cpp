@@ -1,7 +1,9 @@
 #include "Arrangement.h"
 
-Arrangement::Arrangement(te::Edit &e, te::TransportControl &tc)
-: edit(e), transport(tc), trackHeight(75)
+Arrangement::Arrangement(te::Edit &e,
+                         te::TransportControl &tc,
+                         float initialTrackHeight)
+: edit(e), transport(tc), trackHeight(initialTrackHeight)
 {
     noOfTracks = 0;
 }
@@ -14,12 +16,6 @@ void Arrangement::paint(juce::Graphics &g)
     if(noOfTracks > 0) {
         drawTrackDividers(g);
     }
-}
-
-void Arrangement::resized()
-{
-    auto requiredHeight = trackHeight * noOfTracks;
-    setSize(getWidth(), requiredHeight);
 }
 
 void Arrangement::prepare(int noOfTracksToMake)
@@ -72,7 +68,7 @@ TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
 ClipWidthCoOrds Arrangement::getClipWidthCoOrds(const double clipStart,
                                                 const double clipEnd)
 {
-    double editLength = edit.getLength();
+    auto editLength = edit.getLength();
     auto containerWidth = getWidth();
     float start = (clipStart / editLength) * containerWidth;
     float end = (clipEnd / editLength) * containerWidth;
@@ -96,8 +92,6 @@ void Arrangement::addThumbnail(
 {
     std::shared_ptr<TracktionThumbnail> thumbnail =
         std::make_shared<TracktionThumbnail>(transport);
-    // NB: not sure it's worth putting these in a vector as the items in the
-    // array are never accessed
     thumbnails.emplace_back(thumbnail);
     addAndMakeVisible(*thumbnail);
     thumbnail->setBounds(clipCoOrds.xAxis.start,

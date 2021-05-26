@@ -1,5 +1,13 @@
 #include "Sequencer.h"
 
+void ViewportWithCallback::visibleAreaChanged(
+    const juce::Rectangle<int> &newVisibleArea)
+{
+    if(onVisibleAreaChanged) {
+        onVisibleAreaChanged(newVisibleArea);
+    }
+}
+
 Sequencer::Sequencer(te::Engine &eng)
 : engine(eng),
   edit(engine,
@@ -12,21 +20,39 @@ Sequencer::Sequencer(te::Engine &eng)
        0),
   transport(edit.getTransport()),
   timeline(edit),
-  arrangement(edit, transport),
+  noOfTracks(0),
+  timeScalingFactor(100),
+  trackHeight(300.0), // TODO: set to 75 as default
+  arrangement(edit, transport, trackHeight),
   cursor(transport, edit),
   transportInteractor(transport, edit),
   transportController(transport)
 {
-    noOfTracks = 0;
-
-    addAndMakeVisible(&timeline);
-    addAndMakeVisible(&cursor);
-    addAndMakeVisible(&transportInteractor);
     addAndMakeVisible(&transportController);
 
-    arrangementViewport.setViewedComponent(&arrangement, false);
-    arrangementViewport.setScrollBarsShown(true, false);
-    addAndMakeVisible(&arrangementViewport);
+    timelineViewport.setViewedComponent(&timeline, false);
+    addAndMakeVisible(&timelineViewport);
+    timelineViewport.setScrollBarsShown(false, false, false, true);
+    timelineViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            arrangementContainerViewport.setViewPosition(
+                newVisibleArea.getX(),
+                arrangementContainerViewport.getViewPositionY());
+        };
+
+    arrangementContainerViewport.setViewedComponent(&arrangementContainer,
+                                                    false);
+    addAndMakeVisible(&arrangementContainerViewport);
+    arrangementContainerViewport.setScrollBarsShown(true, true);
+    arrangementContainerViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            timelineViewport.setViewPosition(newVisibleArea.getX(),
+                                             newVisibleArea.getY());
+        };
+
+    arrangementContainer.addAndMakeVisible(&arrangement);
+    arrangementContainer.addAndMakeVisible(&cursor);
+    arrangementContainer.addAndMakeVisible(&transportInteractor);
 }
 
 Sequencer::~Sequencer()
@@ -36,17 +62,28 @@ Sequencer::~Sequencer()
 
 void Sequencer::resized()
 {
-    auto margin = 10;
-    auto area = getLocalBounds().reduced(margin);
+    auto area = getLocalBounds();
     auto transportArea = area.removeFromBottom(50);
-    auto timelineArea = area.removeFromTop(20);
-    auto arrangementArea = area;
+    auto timelineViewportArea = area.removeFromTop(25);
+    auto containerViewportArea = area;
+    auto editWidth = edit.getLength() * timeScalingFactor;
+    auto totalTrackHeight = noOfTracks * trackHeight;
+    auto arrangementHeight =
+        totalTrackHeight > containerViewportArea.getHeight()
+            ? totalTrackHeight
+            : containerViewportArea.getHeight();
 
-    timeline.setBounds(timelineArea);
-    arrangement.setBounds(arrangementArea);
-    arrangementViewport.setBounds(arrangementArea);
+    timelineViewport.setBounds(timelineViewportArea);
+    arrangementContainerViewport.setBounds(containerViewportArea);
+
+    timeline.setSize(editWidth, timelineViewportArea.getHeight());
+    arrangementContainer.setSize(editWidth, arrangementHeight);
+
+    auto arrangementArea = arrangementContainer.getBounds();
     cursor.setBounds(arrangementArea);
     transportInteractor.setBounds(arrangementArea);
+    arrangement.setBounds(arrangementArea);
+
     transportController.setBounds(transportArea);
 }
 
@@ -77,6 +114,10 @@ void Sequencer::readFigure(const Figure &figure,
         clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
     }
 
+    // do this after we know the edit length but before adding clips to the
+    // arrangement as arrangement needs to be resized first which this will do
+    resized();
+
     for(auto &&entry : clips) {
         arrangement.addClip(entry.clip,
                             entry.trackIndex,
@@ -94,6 +135,7 @@ void Sequencer::clear()
     transport.position = 0.0;
     clearTracks();
     arrangement.clear();
+    resized();
 }
 
 // Private methods

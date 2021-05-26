@@ -21,11 +21,12 @@ struct ClipCoOrds {
 
 class Arrangement : public juce::Component {
   public:
-    Arrangement(te::Edit &e, te::TransportControl &tc);
+    Arrangement(te::Edit &e,
+                te::TransportControl &tc,
+                float initialTrackHeight);
     ~Arrangement();
 
     void paint(juce::Graphics &) override;
-    void resized() override;
     void prepare(int noOfTracksToMake);
     void clear();
     void
