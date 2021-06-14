@@ -44,7 +44,7 @@ class Sequencer : public juce::Component {
 
   private:
     int noOfTracks;
-    int timeScalingFactor;
+    float timeScalingFactor;
     float trackHeight;
 
     te::Engine &engine;
@@ -62,7 +62,11 @@ class Sequencer : public juce::Component {
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
+
     TransportController transportController;
+
+    juce::Slider xZoom;
+    juce::Slider yZoom;
 
     void prepareForNewFigure(int noOfParticles);
     void clearTracks();

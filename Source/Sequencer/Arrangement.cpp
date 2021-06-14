@@ -1,5 +1,46 @@
 #include "Arrangement.h"
 
+PositionableThumbnail::PositionableThumbnail(te::TransportControl &tc,
+                                             te::AudioFile file,
+                                             double editLength,
+                                             double clipStart,
+                                             double clipEnd,
+                                             double offset,
+                                             int trackIndex)
+: thumbnail(tc), trackIndex(trackIndex)
+{
+    auto clipLength = clipEnd - clipStart;
+    thumbnail.setFile(file, offset, clipLength);
+
+    // TODO: note that converting doubles to float is going to create precision
+    // issues. This issue may be why accuracy is drifting off when changing zoom
+    // level in sequencer
+    normalisedStart = clipStart / editLength;
+    normalisedEnd = clipEnd / editLength;
+}
+
+float PositionableThumbnail::getTop(float trackHeight)
+{
+    return trackHeight * trackIndex;
+}
+
+float PositionableThumbnail::getBottom(float trackHeight)
+{
+    return getTop(trackHeight) + trackHeight;
+}
+
+float PositionableThumbnail::getStart(int containerWidth)
+{
+    return normalisedStart * containerWidth;
+}
+
+float PositionableThumbnail::getEnd(int containerWidth)
+{
+    return normalisedEnd * containerWidth;
+}
+
+// ==========================================================
+
 Arrangement::Arrangement(te::Edit &e,
                          te::TransportControl &tc,
                          float initialTrackHeight)
@@ -15,6 +56,18 @@ void Arrangement::paint(juce::Graphics &g)
 {
     if(noOfTracks > 0) {
         drawTrackDividers(g);
+    }
+}
+
+void Arrangement::resized()
+{
+    for(auto &&t : thumbnails) {
+        auto start = t->getStart(getWidth());
+        auto end = t->getEnd(getWidth());
+        auto top = t->getTop(trackHeight);
+        auto bottom = t->getBottom(trackHeight);
+
+        t->thumbnail.setBounds(start, top, (end - start), (bottom - top));
     }
 }
 
@@ -34,6 +87,33 @@ void Arrangement::clear()
     repaint();
 }
 
+void Arrangement::addClip(
+    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
+    const int trackIndex,
+    const double &clipStart,
+    const double &clipEnd,
+    const double &offset)
+{
+    auto thumbnail =
+        std::make_unique<PositionableThumbnail>(transport,
+                                                newClip->getPlaybackFile(),
+                                                edit.getLength(),
+                                                clipStart,
+                                                clipEnd,
+                                                offset,
+                                                trackIndex);
+
+    addAndMakeVisible(thumbnail->thumbnail);
+    thumbnails.emplace_back(std::move(thumbnail));
+    resized();
+}
+
+void Arrangement::setTrackHeight(float newHeight)
+{
+    trackHeight = newHeight;
+}
+
+// Private methods
 void Arrangement::drawTrackDividers(juce::Graphics &g)
 {
     g.setColour(juce::Colours::cornflowerblue);
@@ -43,60 +123,4 @@ void Arrangement::drawTrackDividers(juce::Graphics &g)
         currentPosition += trackHeight;
         g.fillRect(0.0, (currentPosition - 0.5), float(getWidth()), 0.5f);
     }
-}
-
-void Arrangement::addClip(
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
-    const int trackIndex,
-    const double &clipStart,
-    const double &clipEnd,
-    const double &offset)
-{
-    ClipCoOrds clipCoOrds = getClipCoOrds(trackIndex, clipStart, clipEnd);
-
-    addThumbnail(newClip, clipCoOrds, offset, (clipEnd - clipStart));
-}
-
-TrackHeightCoOrds Arrangement::getTrackHeightCoOrds(const int trackIndex)
-{
-    // NB: trackIndices must start at 0 otherwise the next line won't work
-    auto trackTop = trackHeight * trackIndex;
-    auto trackBottom = trackTop + trackHeight;
-    return TrackHeightCoOrds {trackTop, trackBottom};
-}
-
-ClipWidthCoOrds Arrangement::getClipWidthCoOrds(const double clipStart,
-                                                const double clipEnd)
-{
-    auto editLength = edit.getLength();
-    auto containerWidth = getWidth();
-    float start = (clipStart / editLength) * containerWidth;
-    float end = (clipEnd / editLength) * containerWidth;
-    return ClipWidthCoOrds {start, end};
-}
-
-ClipCoOrds Arrangement::getClipCoOrds(const int trackIndex,
-                                      const double clipStart,
-                                      const double clipEnd)
-{
-    auto yAxis = getTrackHeightCoOrds(trackIndex);
-    auto xAxis = getClipWidthCoOrds(clipStart, clipEnd);
-    return ClipCoOrds {yAxis, xAxis};
-}
-
-void Arrangement::addThumbnail(
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
-    ClipCoOrds clipCoOrds,
-    double offset,
-    double clipLength)
-{
-    std::shared_ptr<TracktionThumbnail> thumbnail =
-        std::make_shared<TracktionThumbnail>(transport);
-    thumbnails.emplace_back(thumbnail);
-    addAndMakeVisible(*thumbnail);
-    thumbnail->setBounds(clipCoOrds.xAxis.start,
-                         clipCoOrds.yAxis.top,
-                         (clipCoOrds.xAxis.end - clipCoOrds.xAxis.start),
-                         (clipCoOrds.yAxis.bottom - clipCoOrds.yAxis.top));
-    thumbnail->setFile(newClip->getPlaybackFile(), offset, clipLength);
 }
