@@ -121,7 +121,7 @@ void Figures::resized()
     figuresTable.setBounds(
         managerArea.removeFromLeft(managerArea.getWidth() / 2));
     eventsTable.setBounds(managerArea);
-    sequencer.setBounds(sequencerArea);
+    sequencer.setBounds(sequencerArea.reduced(margin));
 }
 
 void Figures::arrangeFigure(Figure f)

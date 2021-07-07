@@ -1,5 +1,13 @@
 #include "Sequencer.h"
 
+void ViewportWithCallback::visibleAreaChanged(
+    const juce::Rectangle<int> &newVisibleArea)
+{
+    if(onVisibleAreaChanged) {
+        onVisibleAreaChanged(newVisibleArea);
+    }
+}
+
 Sequencer::Sequencer(te::Engine &eng)
 : engine(eng),
   edit(engine,
@@ -12,18 +20,61 @@ Sequencer::Sequencer(te::Engine &eng)
        0),
   transport(edit.getTransport()),
   timeline(edit),
-  arrangement(edit, transport),
+  noOfTracks(0),
+  timeScalingFactor(100),
+  trackHeight(75),
+  arrangement(edit, transport, trackHeight),
   cursor(transport, edit),
   transportInteractor(transport, edit),
-  transportController(transport)
+  transportController(transport),
+  xZoom(juce::Slider::SliderStyle::LinearHorizontal,
+        juce::Slider::TextEntryBoxPosition::NoTextBox),
+  yZoom(juce::Slider::SliderStyle::LinearVertical,
+        juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    noOfTracks = 0;
-
-    addAndMakeVisible(&timeline);
-    addAndMakeVisible(&arrangement);
-    addAndMakeVisible(&cursor);
-    addAndMakeVisible(&transportInteractor);
     addAndMakeVisible(&transportController);
+
+    timelineViewport.setViewedComponent(&timeline, false);
+    addAndMakeVisible(&timelineViewport);
+    timelineViewport.setScrollBarsShown(false, false, false, true);
+    timelineViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            arrangementContainerViewport.setViewPosition(
+                newVisibleArea.getX(),
+                arrangementContainerViewport.getViewPositionY());
+        };
+
+    arrangementContainerViewport.setViewedComponent(&arrangementContainer,
+                                                    false);
+    addAndMakeVisible(&arrangementContainerViewport);
+    arrangementContainerViewport.setScrollBarsShown(true, true);
+    arrangementContainerViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            timelineViewport.setViewPosition(newVisibleArea.getX(),
+                                             newVisibleArea.getY());
+        };
+
+    arrangementContainer.addAndMakeVisible(&arrangement);
+    arrangementContainer.addAndMakeVisible(&cursor);
+    arrangementContainer.addAndMakeVisible(&transportInteractor);
+
+    xZoom.setRange(100, 1000); // TODO: change min to lower value and update
+                               // timeline rendering logic
+    xZoom.setValue(100);
+    xZoom.onValueChange = [this] {
+        timeScalingFactor = xZoom.getValue();
+        resized();
+    };
+    addAndMakeVisible(xZoom);
+
+    yZoom.setRange(20, 300);
+    yZoom.setValue(trackHeight);
+    yZoom.onValueChange = [this] {
+        trackHeight = yZoom.getValue();
+        arrangement.setTrackHeight(trackHeight);
+        resized();
+    };
+    addAndMakeVisible(yZoom);
 }
 
 Sequencer::~Sequencer()
@@ -34,19 +85,35 @@ Sequencer::~Sequencer()
 void Sequencer::resized()
 {
     auto area = getLocalBounds();
-    area.removeFromTop(10);
-    area.removeFromRight(10);
-    area.removeFromBottom(10);
-    area.removeFromLeft(10);
-    auto transportArea = area.removeFromBottom(50);
-    auto timelineArea = area.removeFromTop(20);
-    auto arrangementArea = area;
+    auto controlsArea = area.removeFromBottom(50);
+    auto transportArea = controlsArea.reduced(200, 0);
+    auto zoomControlsArea = controlsArea.removeFromRight(200);
+    auto timelineViewportArea = area.removeFromTop(25);
+    auto containerViewportArea = area;
+    auto editWidth = edit.getLength() * timeScalingFactor;
+    auto totalTrackHeight = noOfTracks * trackHeight;
+    auto bottomMargin = 8; // avoids vertical scrollbar when arrangement is
+                           // shorter than viewport
+    auto arrangementHeight =
+        totalTrackHeight > containerViewportArea.getHeight()
+            ? totalTrackHeight
+            : containerViewportArea.getHeight() - bottomMargin;
 
-    timeline.setBounds(timelineArea);
-    arrangement.setBounds(arrangementArea);
+    timelineViewport.setBounds(timelineViewportArea);
+    arrangementContainerViewport.setBounds(containerViewportArea);
+
+    timeline.setSize(editWidth, timelineViewportArea.getHeight());
+    arrangementContainer.setSize(editWidth, arrangementHeight);
+
+    auto arrangementArea = arrangementContainer.getBounds();
     cursor.setBounds(arrangementArea);
     transportInteractor.setBounds(arrangementArea);
+    arrangement.setSize(editWidth, totalTrackHeight);
+
     transportController.setBounds(transportArea);
+    xZoom.setBounds(
+        zoomControlsArea.removeFromLeft(zoomControlsArea.getWidth() / 2));
+    yZoom.setBounds(zoomControlsArea);
 }
 
 void Sequencer::readFigure(const Figure &figure,
@@ -76,6 +143,10 @@ void Sequencer::readFigure(const Figure &figure,
         clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
     }
 
+    // do this after we know the edit length but before adding clips to the
+    // arrangement as arrangement needs to be resized first which this will do
+    resized();
+
     for(auto &&entry : clips) {
         arrangement.addClip(entry.clip,
                             entry.trackIndex,
@@ -93,6 +164,7 @@ void Sequencer::clear()
     transport.position = 0.0;
     clearTracks();
     arrangement.clear();
+    resized();
 }
 
 // Private methods
