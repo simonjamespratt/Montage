@@ -106,8 +106,9 @@ void Sequencer::resized()
     arrangementContainer.setSize(editWidth, arrangementHeight);
 
     auto arrangementArea = arrangementContainer.getBounds();
-    cursor.setBounds(arrangementArea);
-    transportInteractor.setBounds(arrangementArea);
+    cursor.setSize(arrangementArea.getWidth(), arrangementArea.getHeight());
+    transportInteractor.setSize(arrangementArea.getWidth(),
+                                arrangementArea.getHeight());
     arrangement.setSize(editWidth, totalTrackHeight);
 
     transportController.setBounds(transportArea);
