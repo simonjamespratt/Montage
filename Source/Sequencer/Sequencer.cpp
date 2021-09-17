@@ -64,6 +64,17 @@ Sequencer::Sequencer(te::Engine &eng)
     xZoom.onValueChange = [this] {
         timeScalingFactor = xZoom.getValue();
         resized();
+
+        // set the arrangement position within the viewport to be centered
+        // around the current transport position NB: do this AFTER resized()
+        // where component sizes are set to correct new values
+        auto normalisedTransportPosition =
+            transport.getCurrentPosition() / edit.getLength();
+        auto centreOfViewport = arrangementContainerViewport.getWidth() * 0.5;
+        auto arrangementXOffset =
+            (normalisedTransportPosition * arrangementContainer.getWidth()) -
+            centreOfViewport;
+        arrangementContainerViewport.setViewPosition(arrangementXOffset, 0);
     };
     addAndMakeVisible(xZoom);
 
