@@ -53,7 +53,7 @@ class Sequencer : public juce::Component {
     // probably need to change this
     te::Edit edit;
     te::TransportControl &transport;
-    te::LambdaTimer transportReporter; // TODO: this is duplication with cursor
+    te::LambdaTimer transportReporter;
 
     Timeline timeline;
     ViewportWithCallback timelineViewport;

@@ -17,10 +17,14 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
        0),
   transport(edit.getTransport()),
   thumbnail(transport),
-  cursor(transport, edit),
   transportController(transport),
   transportInteractor(transport, edit)
 {
+    transportReporter.setCallback([this] {
+        cursor.updatePosition(edit.getLength(), transport.getCurrentPosition());
+    });
+    transportReporter.startTimerHz(25);
+
     name.setText(particle.getId().toString(), juce::dontSendNotification);
     addAndMakeVisible(name);
 
@@ -109,6 +113,11 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
         }
     };
     addAndMakeVisible(cancelButton);
+}
+
+ParticleEditor::~ParticleEditor()
+{
+    transportReporter.stopTimer();
 }
 
 void ParticleEditor::paint(juce::Graphics &g)

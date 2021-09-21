@@ -24,7 +24,6 @@ Sequencer::Sequencer(te::Engine &eng)
   timeScalingFactor(100),
   trackHeight(75),
   arrangement(edit, transport, trackHeight),
-  cursor(transport, edit),
   transportInteractor(transport, edit),
   transportController(transport),
   xZoom(juce::Slider::SliderStyle::LinearHorizontal,
@@ -33,6 +32,7 @@ Sequencer::Sequencer(te::Engine &eng)
         juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
     transportReporter.setCallback([this] {
+        cursor.updatePosition(edit.getLength(), transport.getCurrentPosition());
         if(transport.isPlaying()) {
             syncViewportToTransportPosition();
         }

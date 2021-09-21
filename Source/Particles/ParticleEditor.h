@@ -14,6 +14,7 @@ namespace te = tracktion_engine;
 class ParticleEditor : public juce::Component {
   public:
     ParticleEditor(const Particle &p, te::Engine &eng);
+    ~ParticleEditor();
     void resized() override;
     void paint(juce::Graphics &g) override;
     std::function<void()> onDoneEditing;
@@ -34,6 +35,7 @@ class ParticleEditor : public juce::Component {
 
     te::Edit edit;
     te::TransportControl &transport;
+    te::LambdaTimer transportReporter;
     TracktionThumbnail thumbnail;
     Cursor cursor;
     TransportController transportController;
