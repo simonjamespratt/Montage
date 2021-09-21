@@ -32,6 +32,13 @@ Sequencer::Sequencer(te::Engine &eng)
   yZoom(juce::Slider::SliderStyle::LinearVertical,
         juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
+    transportReporter.setCallback([this] {
+        if(transport.isPlaying()) {
+            syncViewportToTransportPosition();
+        }
+    });
+    transportReporter.startTimerHz(25);
+
     addAndMakeVisible(&transportController);
 
     timelineViewport.setViewedComponent(&timeline, false);
@@ -68,13 +75,15 @@ Sequencer::Sequencer(te::Engine &eng)
         // set the arrangement position within the viewport to be centered
         // around the current transport position NB: do this AFTER resized()
         // where component sizes are set to correct new values
-        auto normalisedTransportPosition =
-            transport.getCurrentPosition() / edit.getLength();
         auto centreOfViewport = arrangementContainerViewport.getWidth() * 0.5;
         auto arrangementXOffset =
-            (normalisedTransportPosition * arrangementContainer.getWidth()) -
+            getTransportPositionWithinComponent(arrangementContainer) -
             centreOfViewport;
-        arrangementContainerViewport.setViewPosition(arrangementXOffset, 0);
+        auto existingYOffset =
+            arrangementContainerViewport.getViewArea().getY();
+
+        arrangementContainerViewport.setViewPosition(arrangementXOffset,
+                                                     existingYOffset);
     };
     addAndMakeVisible(xZoom);
 
@@ -91,6 +100,7 @@ Sequencer::Sequencer(te::Engine &eng)
 Sequencer::~Sequencer()
 {
     edit.getTempDirectory(false).deleteRecursively();
+    transportReporter.stopTimer();
 }
 
 void Sequencer::resized()
@@ -248,4 +258,31 @@ Sequencer::addClipToTrack(const juce::File &file,
                                          false);
 
     return newClip;
+}
+
+double
+Sequencer::getTransportPositionWithinComponent(const juce::Component &component)
+{
+    auto normalisedTransportPosition =
+        transport.getCurrentPosition() / edit.getLength();
+    return normalisedTransportPosition * component.getWidth();
+}
+
+void Sequencer::syncViewportToTransportPosition()
+{
+    auto viewAreaOfArrangement = arrangementContainerViewport.getViewArea();
+    auto horizontalRangeOfViewArea = viewAreaOfArrangement.getHorizontalRange();
+
+    auto transportPositionAsPointInArrangement =
+        getTransportPositionWithinComponent(arrangementContainer);
+
+    if(transport.getCurrentPosition() >= 1 &&
+       !horizontalRangeOfViewArea.contains(
+           transportPositionAsPointInArrangement)) {
+        auto existingYOffset = viewAreaOfArrangement.getY();
+
+        arrangementContainerViewport.setViewPosition(
+            horizontalRangeOfViewArea.getEnd(),
+            existingYOffset);
+    }
 }

@@ -53,6 +53,7 @@ class Sequencer : public juce::Component {
     // probably need to change this
     te::Edit edit;
     te::TransportControl &transport;
+    te::LambdaTimer transportReporter; // TODO: this is duplication with cursor
 
     Timeline timeline;
     ViewportWithCallback timelineViewport;
@@ -77,6 +78,9 @@ class Sequencer : public juce::Component {
                    const double &clipStart,
                    const double &clipEnd,
                    const double &offset);
+    double
+    getTransportPositionWithinComponent(const juce::Component &component);
+    void syncViewportToTransportPosition();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };
