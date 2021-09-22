@@ -84,4 +84,7 @@ void TransportController::stop()
 {
     transport.stop(false, false);
     transport.setCurrentPosition(0.0);
+    if(onTransportStopped) {
+        onTransportStopped();
+    }
 }

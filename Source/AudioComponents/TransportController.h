@@ -1,32 +1,21 @@
-/*
-  ==============================================================================
-
-    TransportController.h
-    Created: 7 May 2019 7:20:07pm
-    Author:  Simon Pratt
-
-  ==============================================================================
-*/
-
 #pragma once
-
 #include "Icons.h"
 #include "TimeDisplay.h"
 
+#include <functional>
+
 namespace te = tracktion_engine;
 
-//==============================================================================
-/*
- */
-class TransportController :
-public juce::Component,
-    public juce::ChangeListener {
+class TransportController : public juce::Component,
+                            public juce::ChangeListener {
   public:
     TransportController(te::TransportControl &tc);
     ~TransportController();
 
     void paint(juce::Graphics &) override;
     void resized() override;
+
+    std::function<void()> onTransportStopped;
 
   private:
     te::TransportControl &transport;

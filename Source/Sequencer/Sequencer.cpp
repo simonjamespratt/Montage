@@ -39,6 +39,10 @@ Sequencer::Sequencer(te::Engine &eng)
     });
     transportReporter.startTimerHz(25);
 
+    transportController.onTransportStopped = [this] {
+        moveViewportToArrangementStart();
+    };
+
     addAndMakeVisible(&transportController);
 
     timelineViewport.setViewedComponent(&timeline, false);
@@ -285,4 +289,11 @@ void Sequencer::syncViewportToTransportPosition()
             horizontalRangeOfViewArea.getEnd(),
             existingYOffset);
     }
+}
+
+void Sequencer::moveViewportToArrangementStart()
+{
+    auto viewAreaOfArrangement = arrangementContainerViewport.getViewArea();
+    auto existingYOffset = viewAreaOfArrangement.getY();
+    arrangementContainerViewport.setViewPosition(0, existingYOffset);
 }
