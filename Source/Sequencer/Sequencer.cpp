@@ -35,6 +35,14 @@ Sequencer::Sequencer(te::Engine &eng)
         cursor.updatePosition(edit.getLength(), transport.getCurrentPosition());
         if(transport.isPlaying()) {
             syncViewportToTransportPosition();
+
+            auto editLength = edit.getLength();
+            auto transportPosition = transport.getCurrentPosition();
+            if(transportPosition >= editLength) {
+                transport.stop(false, false);
+                transport.setCurrentPosition(0);
+                moveViewportToArrangementStart();
+            }
         }
     });
     transportReporter.startTimerHz(25);
