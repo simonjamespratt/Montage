@@ -81,7 +81,6 @@ class Sequencer : public juce::Component {
     double
     getTransportPositionWithinComponent(const juce::Component &component);
     void syncViewportToTransportPosition();
-    void moveViewportToArrangementStart();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };

@@ -83,7 +83,13 @@ void TransportController::togglePlayPause()
 void TransportController::stop()
 {
     transport.stop(false, false);
-    transport.setCurrentPosition(0.0);
+    auto loopRange = transport.getLoopRange();
+    if(loopRange.isEmpty()) {
+        transport.setCurrentPosition(0.0);
+    } else {
+        transport.setCurrentPosition(loopRange.getStart());
+    }
+
     if(onTransportStopped) {
         onTransportStopped();
     }

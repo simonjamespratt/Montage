@@ -34,21 +34,19 @@ Sequencer::Sequencer(te::Engine &eng)
     transportReporter.setCallback([this] {
         cursor.updatePosition(edit.getLength(), transport.getCurrentPosition());
         if(transport.isPlaying()) {
-            syncViewportToTransportPosition();
-
             auto editLength = edit.getLength();
             auto transportPosition = transport.getCurrentPosition();
             if(transportPosition >= editLength) {
                 transport.stop(false, false);
                 transport.setCurrentPosition(0);
-                moveViewportToArrangementStart();
             }
+            syncViewportToTransportPosition();
         }
     });
     transportReporter.startTimerHz(25);
 
     transportController.onTransportStopped = [this] {
-        moveViewportToArrangementStart();
+        syncViewportToTransportPosition();
     };
 
     addAndMakeVisible(&transportController);
@@ -288,20 +286,13 @@ void Sequencer::syncViewportToTransportPosition()
     auto transportPositionAsPointInArrangement =
         getTransportPositionWithinComponent(arrangementContainer);
 
-    if(transport.getCurrentPosition() >= 1 &&
+    if(transportPositionAsPointInArrangement >= 0 &&
        !horizontalRangeOfViewArea.contains(
            transportPositionAsPointInArrangement)) {
         auto existingYOffset = viewAreaOfArrangement.getY();
+        auto newXOffset = transportPositionAsPointInArrangement;
 
-        arrangementContainerViewport.setViewPosition(
-            horizontalRangeOfViewArea.getEnd(),
-            existingYOffset);
+        arrangementContainerViewport.setViewPosition(newXOffset,
+                                                     existingYOffset);
     }
-}
-
-void Sequencer::moveViewportToArrangementStart()
-{
-    auto viewAreaOfArrangement = arrangementContainerViewport.getViewArea();
-    auto existingYOffset = viewAreaOfArrangement.getY();
-    arrangementContainerViewport.setViewPosition(0, existingYOffset);
 }
