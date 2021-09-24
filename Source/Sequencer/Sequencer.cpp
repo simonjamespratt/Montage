@@ -49,6 +49,11 @@ Sequencer::Sequencer(te::Engine &eng)
         syncViewportToTransportPosition();
     };
 
+    transportInteractor.onSelectionChangeInProgress =
+        [this](const juce::MouseEvent event) {
+            syncViewportToMousePosition(event);
+        };
+
     addAndMakeVisible(&transportController);
 
     timelineViewport.setViewedComponent(&timeline, false);
@@ -294,5 +299,39 @@ void Sequencer::syncViewportToTransportPosition()
 
         arrangementContainerViewport.setViewPosition(newXOffset,
                                                      existingYOffset);
+    }
+}
+
+void Sequencer::syncViewportToMousePosition(const juce::MouseEvent event)
+{
+    auto mousePosition = event.getPosition().getX();
+    auto viewAreaOfArrangement = arrangementContainerViewport.getViewArea();
+    auto horizontalRangeOfViewArea = viewAreaOfArrangement.getHorizontalRange();
+    auto rangeStart = horizontalRangeOfViewArea.getStart();
+    auto rangeEnd = horizontalRangeOfViewArea.getEnd();
+    int tolerance = 20;
+
+    if(mousePosition > (rangeEnd - tolerance)) {
+        auto nudgeValue = mousePosition - (rangeEnd - tolerance);
+        auto newXOffset = rangeStart + nudgeValue;
+
+        auto existingYOffset = viewAreaOfArrangement.getY();
+
+        arrangementContainerViewport.setViewPosition(newXOffset,
+                                                     existingYOffset);
+
+        return;
+    }
+
+    if(mousePosition < (rangeStart + tolerance)) {
+        auto nudgeValue = (rangeStart + tolerance) - mousePosition;
+        auto newXOffset = rangeStart - nudgeValue;
+
+        auto existingYOffset = viewAreaOfArrangement.getY();
+
+        arrangementContainerViewport.setViewPosition(newXOffset,
+                                                     existingYOffset);
+
+        return;
     }
 }
