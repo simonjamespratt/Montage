@@ -127,7 +127,9 @@ void Sequencer::resized()
     auto timelineViewportArea = area.removeFromTop(25);
     auto containerViewportArea = area;
     auto editWidth = edit.getLength() * timeScalingFactor;
-    auto totalTrackHeight = noOfTracks * trackHeight;
+    auto totalTrackHeight =
+        (noOfTracks * trackHeight) +
+        1; // add 1 to avoid bottom divider in arrangement being cut off
     auto bottomMargin = 8; // avoids vertical scrollbar when arrangement is
                            // shorter than viewport
     auto arrangementHeight =

@@ -12,9 +12,8 @@ PositionableThumbnail::PositionableThumbnail(te::TransportControl &tc,
     auto clipLength = clipEnd - clipStart;
     thumbnail.setFile(file, offset, clipLength);
 
-    // TODO: note that converting doubles to float is going to create precision
-    // issues. This issue may be why accuracy is drifting off when changing zoom
-    // level in sequencer
+    // Note that converting doubles to float may create precision
+    // issues. Doesn't seem to be an issue at the moment
     normalisedStart = clipStart / editLength;
     normalisedEnd = clipEnd / editLength;
 }
