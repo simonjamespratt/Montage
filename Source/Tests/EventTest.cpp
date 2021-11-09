@@ -1,5 +1,6 @@
-#include "ErrorTypes.h"
 #include "Event.h"
+
+#include "ErrorTypes.h"
 #include "Identifiers.h"
 #include "TestHelpers.h"
 
@@ -15,7 +16,7 @@ SCENARIO("Event: receive existing invalid state")
     {
         juce::ValueTree state(IDs::SOURCE);
         REQUIRE_THROWS_AS(Event(state, Figure(), Particle(Source(sourceState))),
-                          std::invalid_argument);
+                          ValueTreeInvalidType);
     }
 
     SECTION("Missing properties")
@@ -31,7 +32,7 @@ SCENARIO("Event: receive existing invalid state")
             state.setProperty(IDs::figure_id, juce::Uuid().toString(), nullptr);
             REQUIRE_THROWS_AS(
                 Event(state, Figure(), Particle(Source(sourceState))),
-                std::invalid_argument);
+                ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No onset")
@@ -43,7 +44,7 @@ SCENARIO("Event: receive existing invalid state")
             state.setProperty(IDs::figure_id, juce::Uuid().toString(), nullptr);
             REQUIRE_THROWS_AS(
                 Event(state, Figure(), Particle(Source(sourceState))),
-                std::invalid_argument);
+                ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No particle id")
@@ -53,7 +54,7 @@ SCENARIO("Event: receive existing invalid state")
             state.setProperty(IDs::figure_id, juce::Uuid().toString(), nullptr);
             REQUIRE_THROWS_AS(
                 Event(state, Figure(), Particle(Source(sourceState))),
-                std::invalid_argument);
+                ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No figure id")
@@ -65,7 +66,7 @@ SCENARIO("Event: receive existing invalid state")
                               nullptr);
             REQUIRE_THROWS_AS(
                 Event(state, Figure(), Particle(Source(sourceState))),
-                std::invalid_argument);
+                ValueTreeCompulsoryPropertyMissing);
         }
     }
 
@@ -74,7 +75,7 @@ SCENARIO("Event: receive existing invalid state")
         auto state = StateHelpers::createEventState();
         state.setProperty(IDs::SOURCE, "Unexpected prop", nullptr);
         REQUIRE_THROWS_AS(Event(state, Figure(), Particle(Source(sourceState))),
-                          std::invalid_argument);
+                          ValueTreeUnexpectedPropertyReceived);
     }
 
     SECTION("Invalid data")

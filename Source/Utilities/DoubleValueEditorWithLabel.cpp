@@ -14,6 +14,9 @@ DoubleValueEditorWithLabel::DoubleValueEditorWithLabel(double &editableValue,
             onChange();
         }
     };
+    input.onReturnKey = [this] {
+        getTopLevelComponent()->grabKeyboardFocus();
+    };
 
     label.setText(labelText + ": ", juce::dontSendNotification);
     label.attachToComponent(&input, true);

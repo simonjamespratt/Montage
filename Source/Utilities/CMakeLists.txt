@@ -12,6 +12,8 @@ target_sources(Montage PRIVATE
     NumericValueEditorWithLabel.h
     SliderWithLabel.cpp
     SliderWithLabel.h
+    StringEditorWithLabel.cpp
+    StringEditorWithLabel.h
 )
 
 target_include_directories(Montage

@@ -1,11 +1,11 @@
 #include "ParticlesManager.h"
 
 #include "ErrorMessageModal.h"
+#include "Icons.h"
 
 ParticlesManager::ParticlesManager(const ProjectState &ps, te::Engine &eng)
 : projectState(ps),
   particleList(ps.getParticleList()),
-  crossIcon(icons.getIcon(Icons::IconType::Cross)),
   addParticleButton("Add particle button",
                     juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   sourceSelector(ps.getSourceList()),
@@ -21,13 +21,13 @@ ParticlesManager::ParticlesManager(const ProjectState &ps, te::Engine &eng)
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
 
-    addParticleButton.setImages(&crossIcon);
-    addAndMakeVisible(&addParticleButton);
+    addParticleButton.setImages(Icons::getIcon(Icons::IconType::Cross).get());
     addParticleButton.onClick = [this] {
         addAndMakeVisible(sourceSelector);
         allowInteractionInViews(false);
         resized();
     };
+    addAndMakeVisible(addParticleButton);
 
     sourceSelector.onSourceChosen = [this](Source s) {
         try {
@@ -153,6 +153,7 @@ void ParticlesManager::openEditor(Particle p)
         closeEditor();
     };
     addAndMakeVisible(*particleEditor);
+    particleEditor->setFocus();
     resized();
 
     allowInteractionInViews(false);

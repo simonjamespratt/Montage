@@ -5,9 +5,50 @@
   <SOURCE id="b6580bafb7f54dd6bf74a6ccbd43f71c" file_path="/Users/simonpratt/Projects/Montage/assets/audio/click.wav"/>
   <SOURCE id="dc0f754963ca41f5b8e36434cc9ee422" file_path="/Users/simonpratt/Projects/Montage/assets/audio/glass.wav"/>
   <PARTICLE id="9045faf52620401593c0d119c636aa2c" source_id="acbae40869df4f0f904d99c11cf4a62a"
-            start="0.16" end="0.55"/>
+            start="0.16" end="0.55" name="Brick"/>
   <PARTICLE id="4d628c0cebd94123b06f7b91b03eaf0b" source_id="b6580bafb7f54dd6bf74a6ccbd43f71c"
-            start="0" end="0.2"/>
+            start="0" end="0.2" name="Click"/>
   <PARTICLE id="81f93a6a89384099a10da21575f643e7" source_id="dc0f754963ca41f5b8e36434cc9ee422"
-            start="0.125" end="0.29"/>
+            start="0.125" end="0.29" name="Glass"/>
+  <FIGURE id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="f03f32f1694a4926864f81093ab148d8" onset="0.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="2a6e5ded5afc45dcaf2eeb1f254ef378" onset="1000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="7426d8431a6346a78c38c8f9317be728" onset="3000.0" particle_id="81f93a6a89384099a10da21575f643e7"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="5762f7e457e84aee8593bde8668ffcd9" onset="5000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="e1f78aa586964dbd92056a885876dcc2" onset="6000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="d88bc2224ab14602936eb1b5a50cf98a" onset="7000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="4f358facccd946799f6e3644f96f18f1" onset="8000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="85c317d0acca44f6b487f3dac6b28104" onset="10000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="fab51cc08e6048ad886355fbe719e53f" onset="11000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="735736a884824b0b9010c1ef2ecde917" onset="12000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="55ca9b3356834c66a2b6441f66f11f22" onset="14000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="8a720af7dd444c27a895cd7c136ad794" onset="16000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="ce1c40b4de9347a6adf67796a7d3fad4" onset="18000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="194387d1cfb64c629aa65308eefe1524" onset="20000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="7c029a98db7f4182bb3cd6a5b37c3b34" onset="22000.0" particle_id="81f93a6a89384099a10da21575f643e7"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="c96d1e2f71e94f1bbf494d62db36a9b2" onset="24000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="bbeee5048cda4dafba5a07c2799b9e5b" onset="26000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="71c9a76e9a534028bf6ac61bc3bb5ef6" onset="27000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="f97ef10d52dd4ca0be299468e82954cc" onset="28000.0" particle_id="9045faf52620401593c0d119c636aa2c"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <EVENT id="0fb8cd66da974cb3b5c5c7317d29ed66" onset="30000.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
+         figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
 </PROJECT_STATE>

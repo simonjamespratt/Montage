@@ -1,7 +1,7 @@
 #pragma once
-
-#include "Icons.h"
 #include "SourceList.h"
+
+#include <juce_gui_basics/juce_gui_basics.h>
 
 class SourceManager : public juce::Component, public juce::TableListBoxModel {
   public:
@@ -33,9 +33,6 @@ class SourceManager : public juce::Component, public juce::TableListBoxModel {
     int numRows = 0;
 
     juce::Label heading;
-    Icons icons;
-    juce::DrawablePath crossIcon;
-    juce::DrawablePath dashIcon;
     juce::DrawableButton addSourceButton;
     juce::DrawableButton deleteSourceButton;
 

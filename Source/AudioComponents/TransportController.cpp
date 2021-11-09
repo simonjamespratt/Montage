@@ -1,31 +1,57 @@
 #include "TransportController.h"
 
+#include "Icons.h"
+
 TransportController::TransportController(te::TransportControl &tc)
 : transport(tc),
-  stopIcon(icons.getIcon(Icons::IconType::Stop)),
   stopButton("Stop button",
              juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
-  playIcon(icons.getIcon(Icons::IconType::Play)),
-  pauseIcon(icons.getIcon(Icons::IconType::Pause)),
   playPauseButton("Play pause button",
                   juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
+  loopButton("Loop button",
+             juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   transportPosition(transport)
 {
     transport.addChangeListener(this);
 
-    addAndMakeVisible(&playPauseButton);
+    playPauseButton.setImages(Icons::getIcon(Icons::IconType::Play).get(),
+                              nullptr,
+                              nullptr,
+                              nullptr,
+                              Icons::getIcon(Icons::IconType::Pause).get());
+    playPauseButton.setClickingTogglesState(true);
+    playPauseButton.addShortcut(juce::KeyPress(juce::KeyPress::spaceKey));
     updatePlayPauseButtonIcon();
     playPauseButton.onClick = [this] {
         togglePlayPause();
     };
+    addAndMakeVisible(playPauseButton);
 
-    addAndMakeVisible(&stopButton);
-    stopButton.setImages(&stopIcon);
+    stopButton.setImages(Icons::getIcon(Icons::IconType::Stop).get());
+    stopButton.addShortcut(juce::KeyPress(juce::KeyPress::returnKey));
     stopButton.onClick = [this] {
         stop();
     };
+    addAndMakeVisible(stopButton);
+
+    loopButton.setImages(Icons::getIcon(Icons::IconType::Loop).get());
+    loopButton.setClickingTogglesState(true);
+    loopButton.addShortcut(
+        juce::KeyPress('l', juce::ModifierKeys::altModifier, 0));
+    loopButton.setColour(juce::TextButton::ColourIds::buttonOnColourId,
+                         juce::Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
+    loopButton.onClick = [this] {
+        auto loopingIsOn = loopButton.getToggleState();
+        transport.looping = loopingIsOn;
+    };
+    addAndMakeVisible(loopButton);
 
     addAndMakeVisible(&transportPosition);
+
+    for(auto &c : getChildren()) {
+        c->setWantsKeyboardFocus(false);
+    }
+    setWantsKeyboardFocus(true);
 }
 
 TransportController::~TransportController()
@@ -50,6 +76,10 @@ void TransportController::resized()
                                      .withHeight(30.0f)
                                      .withWidth(30.0f)
                                      .withMargin(juce::FlexItem::Margin(5.0f)));
+    transportContainer.items.add(juce::FlexItem(loopButton)
+                                     .withHeight(30.0f)
+                                     .withWidth(30.0f)
+                                     .withMargin(juce::FlexItem::Margin(5.0f)));
     transportContainer.items.add(juce::FlexItem(transportPosition)
                                      .withHeight(30.0f)
                                      .withWidth(100.0f)
@@ -60,14 +90,15 @@ void TransportController::resized()
 void TransportController::changeListenerCallback(juce::ChangeBroadcaster *)
 {
     updatePlayPauseButtonIcon();
+    loopButton.setToggleState(transport.looping, juce::dontSendNotification);
 }
 
 void TransportController::updatePlayPauseButtonIcon()
 {
     if(transport.isPlaying()) {
-        playPauseButton.setImages(&pauseIcon);
+        playPauseButton.setToggleState(true, juce::dontSendNotification);
     } else {
-        playPauseButton.setImages(&playIcon);
+        playPauseButton.setToggleState(false, juce::dontSendNotification);
     }
 }
 
@@ -83,5 +114,30 @@ void TransportController::togglePlayPause()
 void TransportController::stop()
 {
     transport.stop(false, false);
-    transport.setCurrentPosition(0.0);
+    auto loopRange = transport.getLoopRange();
+    if(loopRange.isEmpty()) {
+        transport.setCurrentPosition(0.0);
+    } else {
+        transport.setCurrentPosition(loopRange.getStart());
+    }
+
+    if(onTransportStopped) {
+        onTransportStopped();
+    }
+}
+
+bool TransportController::handleKeyPress(const juce::KeyPress &key)
+{
+    if(!key.getModifiers().isAltDown()) {
+        return false;
+    }
+
+    if(key.getKeyCode() == key.spaceKey) {
+        togglePlayPause();
+    }
+    if(key.getKeyCode() == key.returnKey) {
+        stop();
+    }
+
+    return true;
 }

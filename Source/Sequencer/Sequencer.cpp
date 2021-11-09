@@ -11,19 +11,110 @@ Sequencer::Sequencer(te::Engine &eng)
        nullptr,
        0),
   transport(edit.getTransport()),
+  transportManager(edit, cursor),
   timeline(edit),
-  arrangement(edit, transport),
-  cursor(transport, edit),
+  timeScalingFactor {100, 100, 0, 1000},
+  trackHeight(75),
+  arrangement(edit, transport, trackHeight),
+  trackControlPanel(trackHeight),
   transportInteractor(transport, edit),
-  transportController(transport)
+  transportController(transport),
+  xZoom(juce::Slider::SliderStyle::LinearHorizontal,
+        juce::Slider::TextEntryBoxPosition::NoTextBox),
+  yZoom(juce::Slider::SliderStyle::LinearVertical,
+        juce::Slider::TextEntryBoxPosition::NoTextBox),
+  trackControlPanelWidth(0.1),
+  trackControlPanelWidthAdjuster(juce::Slider::SliderStyle::LinearHorizontal,
+                                 juce::Slider::TextEntryBoxPosition::NoTextBox)
 {
-    noOfTracks = 0;
+    transportManager.onChange = [this] {
+        arrangementContainerViewport.syncToTransportPositionWhenPlaying(
+            transport.getCurrentPosition(),
+            edit.getLength());
+    };
+    transportManager.startManager();
 
-    addAndMakeVisible(&timeline);
-    addAndMakeVisible(&arrangement);
-    addAndMakeVisible(&cursor);
-    addAndMakeVisible(&transportInteractor);
+    transportController.onTransportStopped = [this] {
+        arrangementContainerViewport.syncToTransportPositionWhenPlaying(
+            transport.getCurrentPosition(),
+            edit.getLength());
+    };
+
+    transportInteractor.onSelectionChangeInProgress =
+        [this](const juce::MouseEvent event) {
+            arrangementContainerViewport.syncToMouseDrag(event);
+        };
+
     addAndMakeVisible(&transportController);
+
+    timelineViewport.setViewedComponent(&timeline, false);
+    addAndMakeVisible(&timelineViewport);
+    timelineViewport.setScrollBarsShown(false, false, false, true);
+    timelineViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            arrangementContainerViewport.setViewPosition(
+                newVisibleArea.getX(),
+                arrangementContainerViewport.getViewPositionY());
+        };
+
+    arrangementContainerViewport.setViewedComponent(&arrangementContainer,
+                                                    false);
+    addAndMakeVisible(&arrangementContainerViewport);
+    arrangementContainerViewport.setScrollBarsShown(true, true);
+    arrangementContainerViewport.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            timelineViewport.setViewPosition(newVisibleArea.getX(),
+                                             newVisibleArea.getY());
+
+            trackControlPanelViewPort.setViewPosition(newVisibleArea.getX(),
+                                                      newVisibleArea.getY());
+        };
+
+    arrangementContainer.addAndMakeVisible(&arrangement);
+    arrangementContainer.addAndMakeVisible(&cursor);
+    arrangementContainer.addAndMakeVisible(&transportInteractor);
+
+    trackControlPanelViewPort.setViewedComponent(&trackControlPanel, false);
+    addAndMakeVisible(&trackControlPanelViewPort);
+    trackControlPanelViewPort.setScrollBarsShown(false, false, true, false);
+    trackControlPanelViewPort.onVisibleAreaChanged =
+        [this](const juce::Rectangle<int> &newVisibleArea) {
+            arrangementContainerViewport.setViewPosition(
+                arrangementContainerViewport.getViewPositionX(),
+                newVisibleArea.getY());
+        };
+
+    xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
+    xZoom.setValue(timeScalingFactor.current);
+    xZoom.onValueChange = [this] {
+        timeScalingFactor.current = xZoom.getValue();
+        resized();
+
+        // NB: do this AFTER resized() where component sizes are set to correct
+        // new values
+        arrangementContainerViewport.syncToTransportPositionOnResize(
+            transport.getCurrentPosition(),
+            edit.getLength());
+    };
+    addAndMakeVisible(xZoom);
+
+    yZoom.setRange(20, 300);
+    yZoom.setValue(trackHeight);
+    yZoom.onValueChange = [this] {
+        trackHeight = yZoom.getValue();
+        arrangement.setTrackHeight(trackHeight);
+        trackControlPanel.setTrackHeight(trackHeight);
+        resized();
+    };
+    addAndMakeVisible(yZoom);
+
+    trackControlPanelWidthAdjuster.setRange(0.05, 0.4);
+    trackControlPanelWidthAdjuster.setValue(trackControlPanelWidth);
+    trackControlPanelWidthAdjuster.onValueChange = [this] {
+        trackControlPanelWidth = trackControlPanelWidthAdjuster.getValue();
+        resized();
+    };
+    addAndMakeVisible(trackControlPanelWidthAdjuster);
 }
 
 Sequencer::~Sequencer()
@@ -34,19 +125,59 @@ Sequencer::~Sequencer()
 void Sequencer::resized()
 {
     auto area = getLocalBounds();
-    area.removeFromTop(10);
-    area.removeFromRight(10);
-    area.removeFromBottom(10);
-    area.removeFromLeft(10);
-    auto transportArea = area.removeFromBottom(50);
-    auto timelineArea = area.removeFromTop(20);
-    auto arrangementArea = area;
 
-    timeline.setBounds(timelineArea);
-    arrangement.setBounds(arrangementArea);
-    cursor.setBounds(arrangementArea);
-    transportInteractor.setBounds(arrangementArea);
+    auto controlsArea = area.removeFromBottom(50);
+    auto transportArea = controlsArea.reduced(200, 0);
+    auto zoomControlsArea = controlsArea.removeFromRight(200);
+    auto tcpWidthAdjusterArea = controlsArea.removeFromLeft(100);
+
+    auto trackControlPanelArea =
+        area.removeFromLeft(area.getWidth() * trackControlPanelWidth);
+    trackControlPanelArea.removeFromTop(25); // timeline height removed
+
+    auto timelineViewportArea = area.removeFromTop(25);
+    auto containerViewportArea = area;
+
+    if(edit.getLength() > 0) {
+        timeScalingFactor.min =
+            containerViewportArea.getWidth() / edit.getLength();
+        xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
+    }
+
+    auto editWidth = edit.getLength() * timeScalingFactor.current;
+    auto totalTrackHeight =
+        (te::getAudioTracks(edit).size() * trackHeight) +
+        1; // add 1 to avoid bottom divider in arrangement being cut off
+    auto bottomMargin = 8; // avoids vertical scrollbar when arrangement is
+                           // shorter than viewport
+    auto arrangementHeight =
+        totalTrackHeight > containerViewportArea.getHeight()
+            ? totalTrackHeight
+            : containerViewportArea.getHeight() - bottomMargin;
+
+    timelineViewport.setBounds(timelineViewportArea);
+    arrangementContainerViewport.setBounds(containerViewportArea);
+
+    timeline.setSize(editWidth, timelineViewportArea.getHeight());
+    arrangementContainer.setSize(editWidth, arrangementHeight);
+
+    auto arrangementArea = arrangementContainer.getBounds();
+    cursor.setSize(arrangementArea.getWidth(), arrangementArea.getHeight());
+    transportInteractor.setSize(arrangementArea.getWidth(),
+                                arrangementArea.getHeight());
+    arrangement.setSize(editWidth, totalTrackHeight);
+
+    trackControlPanelArea.removeFromBottom(bottomMargin);
+    trackControlPanelViewPort.setBounds(
+        trackControlPanelArea); // this will become area of viewport
+    trackControlPanel.setSize(trackControlPanelArea.getWidth(),
+                              totalTrackHeight);
+
     transportController.setBounds(transportArea);
+    xZoom.setBounds(
+        zoomControlsArea.removeFromLeft(zoomControlsArea.getWidth() / 2));
+    yZoom.setBounds(zoomControlsArea);
+    trackControlPanelWidthAdjuster.setBounds(tcpWidthAdjusterArea);
 }
 
 void Sequencer::readFigure(const Figure &figure,
@@ -59,7 +190,7 @@ void Sequencer::readFigure(const Figure &figure,
     auto eventList = projectState.getEventList(figure);
     auto particleList = projectState.getParticleList();
 
-    prepareForNewFigure(particleList.getObjects().size());
+    prepareForNewFigure(particleList);
 
     for(auto &event : eventList.getObjects()) {
         auto particle = event.getParticle();
@@ -76,6 +207,10 @@ void Sequencer::readFigure(const Figure &figure,
         clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
     }
 
+    // do this after we know the edit length but before adding clips to the
+    // arrangement as arrangement needs to be resized first which this will do
+    resized();
+
     for(auto &&entry : clips) {
         arrangement.addClip(entry.clip,
                             entry.trackIndex,
@@ -85,6 +220,7 @@ void Sequencer::readFigure(const Figure &figure,
     }
 
     timeline.recalculate();
+    transportController.grabKeyboardFocus();
 }
 
 void Sequencer::clear()
@@ -93,37 +229,34 @@ void Sequencer::clear()
     transport.position = 0.0;
     clearTracks();
     arrangement.clear();
+    trackControlPanel.clear();
+    timeScalingFactor.current = timeScalingFactor.initial;
+    resized();
 }
 
 // Private methods
-void Sequencer::prepareForNewFigure(int noOfParticles)
+void Sequencer::prepareForNewFigure(ParticleList particleList)
 {
-    // set the no of tracks required for the incoming figure
-    noOfTracks = noOfParticles;
-    // prepare the new tracks
-    prepareTracks();
+    auto noOfTracks = particleList.getObjects().size();
+    prepareTracks(noOfTracks);
     arrangement.prepare(noOfTracks);
-
-    // NB: find a way to delete audio tracks from edit: cannot see a good way to
-    // this at the moment, which means there will be empty unused tracks in the
-    // ether these unused tracks will not have clips on them because clips will
-    // be cleared from all previously used tracks in this method they will also
-    // not be displayed as display is the result of the noOfTracks member of
-    // this class but they will still just be hanging around
+    trackControlPanel.createPanels(particleList);
 }
+
 void Sequencer::clearTracks()
 {
-    // for each track in use from the last figure, remove all clips
+    // remove all clips from each track and delete the track
     auto tracks = te::getAudioTracks(edit);
-    for(auto &&track : tracks) {
+    for(auto &track : tracks) {
         auto clipsToRemove = track->getClips();
         for(int i = clipsToRemove.size(); --i >= 0;) {
             clipsToRemove.getUnchecked(i)->removeFromParentTrack();
         }
+        edit.deleteTrack(track);
     }
 }
 
-void Sequencer::prepareTracks()
+void Sequencer::prepareTracks(int noOfTracks)
 {
     edit.ensureNumberOfAudioTracks(noOfTracks);
     repaint();

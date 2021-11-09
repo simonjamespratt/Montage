@@ -14,71 +14,88 @@ SCENARIO("Particle: receive existing invalid state")
     {
         juce::ValueTree state(IDs::SOURCE);
         Source source(StateHelpers::createSourceState(juce::Uuid()));
-        REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+        REQUIRE_THROWS_AS(Particle(state, source), ValueTreeInvalidType);
     }
 
     SECTION("Missing properties")
     {
         juce::ValueTree state(IDs::PARTICLE);
+        juce::Uuid sourceId;
+        Source source(StateHelpers::createSourceState(sourceId));
+        double start = 0;
+        double end = source.getFileLengthInSeconds();
+        juce::String name("name");
 
         SECTION("No id")
         {
-            state.setProperty(IDs::source_id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::start, 100, nullptr);
-            state.setProperty(IDs::end, 200, nullptr);
+            state.setProperty(IDs::source_id, sourceId.toString(), nullptr);
+            state.setProperty(IDs::start, start, nullptr);
+            state.setProperty(IDs::end, end, nullptr);
+            state.setProperty(IDs::name, name, nullptr);
 
-            Source source(StateHelpers::createSourceState(juce::Uuid()));
-
-            REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+            REQUIRE_THROWS_AS(Particle(state, source),
+                              ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No source id")
         {
             state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::start, 100, nullptr);
-            state.setProperty(IDs::end, 200, nullptr);
+            state.setProperty(IDs::start, start, nullptr);
+            state.setProperty(IDs::end, end, nullptr);
+            state.setProperty(IDs::name, name, nullptr);
 
-            Source source(StateHelpers::createSourceState(juce::Uuid()));
-
-            REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+            REQUIRE_THROWS_AS(Particle(state, source),
+                              ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No start")
         {
             state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::source_id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::end, 200, nullptr);
+            state.setProperty(IDs::source_id, sourceId.toString(), nullptr);
+            state.setProperty(IDs::end, end, nullptr);
+            state.setProperty(IDs::name, name, nullptr);
 
-            Source source(StateHelpers::createSourceState(juce::Uuid()));
-
-            REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+            REQUIRE_THROWS_AS(Particle(state, source),
+                              ValueTreeCompulsoryPropertyMissing);
         }
 
         SECTION("No end")
         {
             state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::source_id, juce::Uuid().toString(), nullptr);
-            state.setProperty(IDs::start, 100, nullptr);
+            state.setProperty(IDs::source_id, sourceId.toString(), nullptr);
+            state.setProperty(IDs::start, start, nullptr);
+            state.setProperty(IDs::name, name, nullptr);
 
-            Source source(StateHelpers::createSourceState(juce::Uuid()));
+            REQUIRE_THROWS_AS(Particle(state, source),
+                              ValueTreeCompulsoryPropertyMissing);
+        }
 
-            REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+        SECTION("No name")
+        {
+            state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
+            state.setProperty(IDs::source_id, sourceId.toString(), nullptr);
+            state.setProperty(IDs::start, start, nullptr);
+            state.setProperty(IDs::end, end, nullptr);
+
+            REQUIRE_THROWS_AS(Particle(state, source),
+                              ValueTreeCompulsoryPropertyMissing);
         }
     }
 
     SECTION("Unexpected props present")
     {
+        Source source(StateHelpers::createSourceState(juce::Uuid()));
         juce::ValueTree state(IDs::PARTICLE);
         state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
-        state.setProperty(IDs::source_id, juce::Uuid().toString(), nullptr);
-        state.setProperty(IDs::start, 100, nullptr);
-        state.setProperty(IDs::end, 200, nullptr);
+        state.setProperty(IDs::source_id, source.getId().toString(), nullptr);
+        state.setProperty(IDs::start, 0, nullptr);
+        state.setProperty(IDs::end, source.getFileLengthInSeconds(), nullptr);
+        state.setProperty(IDs::name, juce::String("name"), nullptr);
 
         state.setProperty(IDs::SOURCE, "Unexpected prop", nullptr);
 
-        Source source(StateHelpers::createSourceState(juce::Uuid()));
-
-        REQUIRE_THROWS_AS(Particle(state, source), std::invalid_argument);
+        REQUIRE_THROWS_AS(Particle(state, source),
+                          ValueTreeUnexpectedPropertyReceived);
     }
 
     SECTION("Invalid data")
@@ -135,6 +152,18 @@ SCENARIO("Particle: receive existing invalid state")
                          source),
                 ParticleEndInvalid);
         }
+
+        SECTION("Name is empty")
+        {
+            REQUIRE_THROWS_AS(Particle(StateHelpers::createParticleState(
+                                           juce::Uuid(),
+                                           sourceId,
+                                           0.0,
+                                           source.getFileLengthInSeconds(),
+                                           juce::String("")),
+                                       source),
+                              ParticleNameInvalid);
+        }
     }
 }
 
@@ -142,7 +171,11 @@ SCENARIO("Particle: receive existing state: get data")
 {
     juce::Uuid id;
     juce::Uuid sourceId;
-    auto state = StateHelpers::createParticleState(id, sourceId, 0.0, 1.0);
+    auto state = StateHelpers::createParticleState(id,
+                                                   sourceId,
+                                                   0.0,
+                                                   1.0,
+                                                   juce::String("test-name"));
 
     Source source(StateHelpers::createSourceState(sourceId));
 
@@ -153,17 +186,20 @@ SCENARIO("Particle: receive existing state: get data")
     REQUIRE(particle.getStart() == 0.0);
     REQUIRE(particle.getEnd() == 1.0);
     REQUIRE(particle.getSource().getState() == source.getState());
+    REQUIRE(particle.getName() == "test-name");
 
     auto returnedState = particle.getState();
     juce::Uuid returnedId(returnedState[IDs::id]);
     juce::Uuid returnedSourceId(returnedState[IDs::source_id]);
     double start {returnedState[IDs::start]};
     double end {returnedState[IDs::end]};
+    juce::String name = returnedState[IDs::name];
 
     REQUIRE(returnedId == id);
     REQUIRE(returnedSourceId == sourceId);
     REQUIRE(start == 0.0);
     REQUIRE(end == 1.0);
+    REQUIRE(name == "test-name");
 }
 
 SCENARIO("Particle: create state")
@@ -193,6 +229,11 @@ SCENARIO("Particle: create state")
         REQUIRE_FALSE(particle.getId().isNull());
     }
 
+    THEN("name should be set to untitled")
+    {
+        REQUIRE(particle.getName() == "untitled");
+    }
+
     THEN("Underlying state is as expected")
     {
         auto returnedState = particle.getState();
@@ -200,11 +241,13 @@ SCENARIO("Particle: create state")
         juce::Uuid sourceId(returnedState[IDs::source_id]);
         double start {returnedState[IDs::start]};
         double end {returnedState[IDs::end]};
+        juce::String name = returnedState[IDs::name];
 
         REQUIRE_FALSE(id.isNull());
         REQUIRE(sourceId == source.getId());
         REQUIRE(start == 0.0);
         REQUIRE(end == source.getFileLengthInSeconds());
+        REQUIRE(name == "untitled");
     }
 }
 
@@ -488,5 +531,55 @@ SCENARIO("Particle: setStartAndEnd")
                 particle.setStartAndEnd(newLowStart, newLowEnd);
             }
         }
+    }
+}
+
+SCENARIO("Particle: set name")
+{
+    juce::Uuid sourceId;
+    Source source(StateHelpers::createSourceState(sourceId));
+    double sourceFileLength = source.getFileLengthInSeconds();
+
+    auto particleState =
+        StateHelpers::createParticleState(juce::Uuid(),
+                                          sourceId,
+                                          1.0,
+                                          sourceFileLength,
+                                          juce::String("initial name"));
+
+    Particle particle(particleState, source);
+    REQUIRE(particle.getName() == "initial name");
+
+    bool callbackHasBeenCalled;
+    juce::Identifier propChanged;
+    particle.onUpdated = [&callbackHasBeenCalled,
+                          &propChanged](juce::Identifier propertyChanged) {
+        callbackHasBeenCalled = true;
+        propChanged = propertyChanged;
+    };
+
+    Particle otherParticle(particleState, source);
+    bool otherCallbackHasBeenCalled;
+    juce::Identifier otherPropChanged;
+    otherParticle.onUpdated = [&otherCallbackHasBeenCalled, &otherPropChanged](
+                                  juce::Identifier propertyChanged) {
+        otherCallbackHasBeenCalled = true;
+        otherPropChanged = propertyChanged;
+    };
+
+    SECTION("where new name is an empty string")
+    {
+        REQUIRE_THROWS_AS(particle.setName(""), ParticleNameInvalid);
+    }
+
+    SECTION("where new name is valid")
+    {
+        juce::String newName = "new name";
+        particle.setName(newName);
+        REQUIRE(particle.getName() == newName);
+        REQUIRE(callbackHasBeenCalled);
+        REQUIRE(propChanged == IDs::name);
+        REQUIRE(otherCallbackHasBeenCalled);
+        REQUIRE(otherPropChanged == IDs::name);
     }
 }

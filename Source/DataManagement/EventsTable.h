@@ -36,9 +36,10 @@ class EventsTable : public juce::Component, public juce::TableListBoxModel {
         eventNum = 1,
         id = 2,
         onset = 3,
-        particleStart = 4,
-        particleEnd = 5,
-        fileName = 6
+        particleName = 4,
+        particleStart = 5,
+        particleEnd = 6,
+        fileName = 7
     };
 
     std::unique_ptr<EventList> eventList;

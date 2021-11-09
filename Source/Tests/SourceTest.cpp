@@ -13,7 +13,7 @@ SCENARIO("Source: receive existing state")
         SECTION("Incorrect type")
         {
             juce::ValueTree state(IDs::PARTICLE);
-            REQUIRE_THROWS_AS(Source(state), std::invalid_argument);
+            REQUIRE_THROWS_AS(Source(state), ValueTreeInvalidType);
         }
 
         SECTION("Missing properties")
@@ -23,13 +23,15 @@ SCENARIO("Source: receive existing state")
             SECTION("No id")
             {
                 state.setProperty(IDs::file_path, "filepath", nullptr);
-                REQUIRE_THROWS_AS(Source(state), std::invalid_argument);
+                REQUIRE_THROWS_AS(Source(state),
+                                  ValueTreeCompulsoryPropertyMissing);
             }
 
             SECTION("No file path")
             {
                 state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
-                REQUIRE_THROWS_AS(Source(state), std::invalid_argument);
+                REQUIRE_THROWS_AS(Source(state),
+                                  ValueTreeCompulsoryPropertyMissing);
             }
         }
 
@@ -37,7 +39,8 @@ SCENARIO("Source: receive existing state")
         {
             auto state = StateHelpers::createSourceState(juce::Uuid());
             state.setProperty(IDs::PARTICLE, "Unexpected prop", nullptr);
-            REQUIRE_THROWS_AS(Source(state), std::invalid_argument);
+            REQUIRE_THROWS_AS(Source(state),
+                              ValueTreeUnexpectedPropertyReceived);
         }
 
         SECTION("Invalid file data")

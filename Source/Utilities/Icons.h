@@ -3,32 +3,10 @@
 
 class Icons {
   public:
-    Icons();
-    ~Icons();
+    enum IconType { Cross, Dash, Stop, Play, Pause, Loop };
 
-    enum IconType { Cross, Dash, Stop, Play, Pause };
-
-    juce::DrawablePath getIcon(IconType iconType);
+    static std::unique_ptr<juce::Drawable> getIcon(IconType type);
 
   private:
-    // ICONS
-    juce::Path crossPath;
-    juce::DrawablePath cross;
-    juce::Path dashPath;
-    juce::DrawablePath dash;
-    juce::Path stopPath;
-    juce::DrawablePath stop;
-    juce::Path playPath;
-    juce::DrawablePath play;
-    juce::Path pausePath;
-    juce::DrawablePath pause;
-
-    // DRAWING FUNCTIONS
-    void drawCross();
-    void drawDash();
-    void drawStop();
-    void drawPlay();
-    void drawPause();
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Icons)
 };

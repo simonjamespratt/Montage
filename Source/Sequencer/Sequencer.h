@@ -1,13 +1,17 @@
 #pragma once
 
 #include "Arrangement.h"
+#include "AudioEditViewport.h"
 #include "Cursor.h"
 #include "Figure.h"
 #include "Identifiers.h"
 #include "ProjectState.h"
+#include "TimeScalingFactor.h"
 #include "Timeline.h"
+#include "TrackControlPanel.h"
 #include "TransportController.h"
 #include "TransportInteractor.h"
+#include "TransportManager.h"
 
 #include <tracktion_engine/tracktion_engine.h>
 
@@ -23,7 +27,7 @@ struct ClipData {
 
 class Sequencer : public juce::Component {
   public:
-    Sequencer(te::Engine &eng);
+    explicit Sequencer(te::Engine &eng);
     ~Sequencer();
 
     void resized() override;
@@ -32,22 +36,40 @@ class Sequencer : public juce::Component {
     void clear();
 
   private:
+    TimeScalingFactor timeScalingFactor;
+    float trackHeight;
+
     te::Engine &engine;
     // NB: note that the edit is set up with en empty edit rather than by
     // referencing a file to write to when the sequencer is working seriously,
     // probably need to change this
     te::Edit edit;
     te::TransportControl &transport;
+    TransportManager transportManager;
 
     Timeline timeline;
+    AudioEditViewport timelineViewport;
+
+    AudioEditViewport arrangementContainerViewport;
+    juce::Component arrangementContainer;
     Arrangement arrangement;
     Cursor cursor;
     TransportInteractor transportInteractor;
+
+    AudioEditViewport trackControlPanelViewPort;
+    TrackControlPanel trackControlPanel;
+
     TransportController transportController;
-    int noOfTracks;
-    void prepareForNewFigure(int noOfParticles);
+
+    juce::Slider xZoom;
+    juce::Slider yZoom;
+
+    double trackControlPanelWidth;
+    juce::Slider trackControlPanelWidthAdjuster;
+
+    void prepareForNewFigure(ParticleList particleList);
     void clearTracks();
-    void prepareTracks();
+    void prepareTracks(int noOfTracks);
     juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
     addClipToTrack(const juce::File &file,
                    const int trackIndex,

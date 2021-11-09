@@ -34,14 +34,31 @@ void TransportInteractor::mouseDown(const juce::MouseEvent &event)
     transport.setUserDragging(true);
 
     if(interactionState == ControlCursor) {
+        auto wasPlaying = transport.isPlaying();
+
+        rangeStart = 0;
+        rangeEnd = 0;
+        if(onSelectionChange) {
+            onSelectionChange();
+        }
+
+        transport.looping = false;
+        transport.stop(false, false);
+        transport.setLoopRange({});
+
+        if(wasPlaying) {
+            transport.play(false);
+        }
+
         repaint();
         mouseDrag(event);
     }
 
     if(interactionState == ControlRangeSelection) {
         transport.stop(false, false);
-        rangeStart = calculateAudioPosition(event.position.x);
-        transport.position = rangeStart;
+        mouseDownPosition = event.getPosition().getX();
+        rangeStart = calculateAudioPosition(mouseDownPosition);
+        transport.setCurrentPosition(rangeStart);
     }
 }
 
@@ -52,10 +69,11 @@ void TransportInteractor::mouseDrag(const juce::MouseEvent &event)
     }
 
     if(interactionState == ControlRangeSelection) {
-        auto mousePositionA = event.getMouseDownPosition().x;
-        auto mousePositionB = event.position.x;
+        handleMouseMovement(event.getPosition().getX());
 
-        handleMouseMovement(mousePositionA, mousePositionB);
+        if(onSelectionChangeInProgress) {
+            onSelectionChangeInProgress(event);
+        }
     }
 }
 
@@ -64,15 +82,10 @@ void TransportInteractor::mouseUp(const juce::MouseEvent &event)
     transport.setUserDragging(false);
 
     if(interactionState == ControlRangeSelection) {
-        auto mousePositionA = event.getMouseDownPosition().x;
-        auto mousePositionB = event.position.x;
+        handleMouseMovement(event.getPosition().getX());
 
-        handleMouseMovement(mousePositionA, mousePositionB);
-
-        transport.position = rangeStart;
-        transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
-        transport.looping = true;
-        transport.play(false);
+        transport.setCurrentPosition(rangeStart);
+        transport.setLoopRange({rangeStart, rangeEnd});
 
         if(onSelectionChange) {
             onSelectionChange();
@@ -89,9 +102,8 @@ void TransportInteractor::setSelectionRange(SelectionRange newRange)
 {
     rangeStart = newRange.rangeStart;
     rangeEnd = newRange.rangeEnd;
-    transport.position = rangeStart;
-    transport.setLoopRange(te::EditTimeRange(rangeStart, rangeEnd));
-    transport.looping = true;
+    transport.setCurrentPosition(rangeStart);
+    transport.setLoopRange({rangeStart, rangeEnd});
     repaint();
 }
 
@@ -121,23 +133,22 @@ float TransportInteractor::calculateUIPosition(double rangePosition)
     return getWidth() * proportion;
 }
 
-void TransportInteractor::handleMouseMovement(int mousePositionA,
-                                              int mousePositionB)
+void TransportInteractor::handleMouseMovement(int mousePosition)
 {
-    if(mousePositionB > mousePositionA && mousePositionB > getWidth()) {
-        mousePositionB = getWidth();
-    } else if(mousePositionB < mousePositionA && mousePositionB < 0) {
-        mousePositionB = 0;
+    if(mousePosition > mouseDownPosition && mousePosition > getWidth()) {
+        mousePosition = getWidth();
+    } else if(mousePosition < mouseDownPosition && mousePosition < 0) {
+        mousePosition = 0;
     }
 
-    if(mousePositionB >= mousePositionA) {
+    if(mousePosition >= mouseDownPosition) {
         // set the audio segment params
-        rangeStart = calculateAudioPosition(mousePositionA);
-        rangeEnd = calculateAudioPosition(mousePositionB);
+        rangeStart = calculateAudioPosition(mouseDownPosition);
+        rangeEnd = calculateAudioPosition(mousePosition);
     } else {
         // set the audio segment params
-        rangeStart = calculateAudioPosition(mousePositionB);
-        rangeEnd = calculateAudioPosition(mousePositionA);
+        rangeStart = calculateAudioPosition(mousePosition);
+        rangeEnd = calculateAudioPosition(mouseDownPosition);
     }
 
     repaint();

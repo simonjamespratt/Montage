@@ -1,13 +1,13 @@
 #include "Figures.h"
 
+#include "Icons.h"
+
 Figures::Figures(te::Engine &e, ProjectState &ps)
 : engine(e),
   projectState(ps),
   sequencer(engine),
   figureGenerator(ps),
   figuresTable(ps),
-  crossIcon(icons.getIcon(Icons::IconType::Cross)),
-  dashIcon(icons.getIcon(Icons::IconType::Dash)),
   addFigureButton("Add figure",
                   juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   deleteFigureButton("Delete figure",
@@ -20,14 +20,14 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
         }
     };
 
-    addFigureButton.setImages(&crossIcon);
-    addChildComponent(&addFigureButton);
+    addFigureButton.setImages(Icons::getIcon(Icons::IconType::Cross).get());
+    addChildComponent(addFigureButton);
     addFigureButton.onClick = [this] {
         toggleGenerateManagerState();
     };
 
-    deleteFigureButton.setImages(&dashIcon);
-    addChildComponent(&deleteFigureButton);
+    deleteFigureButton.setImages(Icons::getIcon(Icons::IconType::Dash).get());
+    addChildComponent(deleteFigureButton);
     deleteFigureButton.onClick = [this] {
         sequencer.clear();
         eventsTable.clear();
@@ -121,7 +121,7 @@ void Figures::resized()
     figuresTable.setBounds(
         managerArea.removeFromLeft(managerArea.getWidth() / 2));
     eventsTable.setBounds(managerArea);
-    sequencer.setBounds(sequencerArea);
+    sequencer.setBounds(sequencerArea.reduced(margin));
 }
 
 void Figures::arrangeFigure(Figure f)

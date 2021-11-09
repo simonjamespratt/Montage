@@ -1,5 +1,6 @@
 #include "Figure.h"
 
+#include "ErrorTypes.h"
 #include "Identifiers.h"
 #include "TestHelpers.h"
 
@@ -14,7 +15,7 @@ SCENARIO("Figure: receive existing state")
         SECTION("Incorrect type")
         {
             juce::ValueTree state(IDs::SOURCE);
-            REQUIRE_THROWS_AS(Figure(state), std::invalid_argument);
+            REQUIRE_THROWS_AS(Figure(state), ValueTreeInvalidType);
         }
 
         SECTION("Missing properties")
@@ -23,7 +24,8 @@ SCENARIO("Figure: receive existing state")
 
             SECTION("No id")
             {
-                REQUIRE_THROWS_AS(Figure(state), std::invalid_argument);
+                REQUIRE_THROWS_AS(Figure(state),
+                                  ValueTreeCompulsoryPropertyMissing);
             }
         }
 
@@ -31,7 +33,8 @@ SCENARIO("Figure: receive existing state")
         {
             auto state = StateHelpers::createFigureState();
             state.setProperty(IDs::SOURCE, "Unexpected prop", nullptr);
-            REQUIRE_THROWS_AS(Figure(state), std::invalid_argument);
+            REQUIRE_THROWS_AS(Figure(state),
+                              ValueTreeUnexpectedPropertyReceived);
         }
     }
 

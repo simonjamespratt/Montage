@@ -5,6 +5,8 @@ target_sources(Montage PRIVATE
     Sequencer.h
     Timeline.cpp
     Timeline.h
+    TrackControlPanel.cpp
+    TrackControlPanel.h
 )
 
 target_include_directories(Montage

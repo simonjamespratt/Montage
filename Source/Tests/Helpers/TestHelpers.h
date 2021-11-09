@@ -10,7 +10,8 @@ class StateHelpers {
     static juce::ValueTree createParticleState(juce::Uuid id,
                                                juce::Uuid sourceId,
                                                double start = 0.0,
-                                               double end = 1.0);
+                                               double end = 1.0,
+                                               juce::String name = "name");
 
     // Source
     static juce::ValueTree createSourceState();

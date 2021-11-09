@@ -15,6 +15,7 @@ DECLARE_ID(action)
 
 // Reused types
 DECLARE_ID(id) // source, particle, figure and event all have ids
+DECLARE_ID(name)
 
 // SOURCES
 DECLARE_ID(SOURCE)

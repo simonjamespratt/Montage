@@ -3,7 +3,6 @@
 #include "EventsTable.h"
 #include "FigureGenerator.h"
 #include "FiguresTable.h"
-#include "Icons.h"
 #include "ProjectState.h"
 #include "Sequencer.h"
 
@@ -28,9 +27,6 @@ class Figures : public juce::Component {
     void arrangeFigure(Figure f);
 
     juce::Label heading;
-    Icons icons;
-    juce::DrawablePath crossIcon;
-    juce::DrawablePath dashIcon;
     juce::DrawableButton addFigureButton;
     juce::DrawableButton deleteFigureButton;
     bool showGenerator {false};
