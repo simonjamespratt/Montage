@@ -126,8 +126,8 @@ void Figures::resized()
 
 void Figures::arrangeFigure(Figure f)
 {
-    figuresTable.setSelectedFigure(f);
     toggleGenerateManagerState();
+    figuresTable.setSelectedFigure(f);
 }
 
 // Private methods

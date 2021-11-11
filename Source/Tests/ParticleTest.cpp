@@ -162,7 +162,7 @@ SCENARIO("Particle: receive existing invalid state")
                                            source.getFileLengthInSeconds(),
                                            juce::String("")),
                                        source),
-                              ParticleNameInvalid);
+                              ObjectNameInvalid);
         }
     }
 }
@@ -569,7 +569,7 @@ SCENARIO("Particle: set name")
 
     SECTION("where new name is an empty string")
     {
-        REQUIRE_THROWS_AS(particle.setName(""), ParticleNameInvalid);
+        REQUIRE_THROWS_AS(particle.setName(""), ObjectNameInvalid);
     }
 
     SECTION("where new name is valid")

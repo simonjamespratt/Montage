@@ -1,7 +1,11 @@
 #include "ContentContainer.h"
 
+#include "MontageTracktionUIBehaviour.h"
+
 ContentContainer::ContentContainer(ProjectState &ps)
-: engine(JUCE_APPLICATION_NAME_STRING),
+: engine(JUCE_APPLICATION_NAME_STRING,
+         std::make_unique<MontageTracktionUIBehaviour>(),
+         nullptr),
   mainHeader(engine, ps),
   pages(juce::TabbedButtonBar::Orientation::TabsAtTop),
   figures(engine, ps),

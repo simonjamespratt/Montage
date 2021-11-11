@@ -1,13 +1,22 @@
 #pragma once
 
+#include <functional>
 #include <juce_data_structures/juce_data_structures.h>
 
-class Figure {
+class Figure : public juce::ValueTree::Listener {
   public:
     Figure();
     Figure(const juce::ValueTree &v);
+    ~Figure();
+
     juce::Uuid getId() const;
+    juce::String getName() const;
+    void setName(juce::String newName);
     juce::ValueTree getState() const;
+
+    std::function<void(juce::Identifier propertyChanged)> onUpdated;
+    void valueTreePropertyChanged(juce::ValueTree &vt,
+                                  const juce::Identifier &property) override;
 
   private:
     juce::ValueTree state;

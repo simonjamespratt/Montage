@@ -10,7 +10,7 @@
             start="0" end="0.2" name="Click"/>
   <PARTICLE id="81f93a6a89384099a10da21575f643e7" source_id="dc0f754963ca41f5b8e36434cc9ee422"
             start="0.125" end="0.29" name="Glass"/>
-  <FIGURE id="26bc0eb2523b415bbc2e4624112a0826"/>
+  <FIGURE id="26bc0eb2523b415bbc2e4624112a0826" name="Sample figure"/>
   <EVENT id="f03f32f1694a4926864f81093ab148d8" onset="0.0" particle_id="4d628c0cebd94123b06f7b91b03eaf0b"
          figure_id="26bc0eb2523b415bbc2e4624112a0826"/>
   <EVENT id="2a6e5ded5afc45dcaf2eeb1f254ef378" onset="1000.0" particle_id="9045faf52620401593c0d119c636aa2c"

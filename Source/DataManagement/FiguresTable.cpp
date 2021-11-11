@@ -26,6 +26,7 @@ FiguresTable::FiguresTable(const ProjectState &ps)
                                 100,
                                 50,
                                 400);
+    table.getHeader().addColumn("Name", Columns::name, 100, 50, 400);
     table.getHeader().addColumn("ID", Columns::id, 100, 50, 400);
 }
 
@@ -91,6 +92,9 @@ void FiguresTable::paintCell(juce::Graphics &g,
     switch(columnId) {
     case Columns::figureNum:
         cellText = juce::String(rowNumber + 1);
+        break;
+    case Columns::name:
+        cellText = figure.getName();
         break;
     case Columns::id:
         cellText = figure.getId().toString();
@@ -159,10 +163,86 @@ void FiguresTable::removeFigure()
     }
 }
 
+juce::Component *FiguresTable::refreshComponentForCell(
+    int rowNumber,
+    int columnId,
+    bool /*isRowSelected*/,
+    juce::Component *existingComponentToUpdate)
+{
+    if(columnId == Columns::name) {
+        auto *textLabel =
+            static_cast<EditableCell *>(existingComponentToUpdate);
+
+        if(textLabel == nullptr) {
+            textLabel = new EditableCell(*this);
+        }
+
+        textLabel->setRowAndColumn(rowNumber, columnId);
+        return textLabel;
+    }
+
+    jassert(existingComponentToUpdate == nullptr);
+    return nullptr;
+}
+
+void FiguresTable::setText(const int columnNumber,
+                           const int rowNumber,
+                           const juce::String &newText)
+{
+    // NB: access the figure by index in vector returned from
+    // figureList.getObjects(). This is not ideal as potentially the order of
+    // figures in table may not match that of the order in the vector (for
+    // example if sorting had been done in the table), but I cannot see a way to
+    // access the data in a cell by row and column within juce. If it turns out
+    // this is possible, then a better way would be to get a figure by id (which
+    // would need a new method on the ObjectList class to do so)
+    if(columnNumber == Columns::name && !newText.isEmpty()) {
+        auto figure = figureList.getObjects()[rowNumber];
+        figure.setName(newText);
+    }
+}
+
+juce::String FiguresTable::getText(const int columnNumber,
+                                   const int rowNumber) const
+{
+    if(columnNumber == Columns::name) {
+        // see above in setText() re. why access via vector index is not ideal
+        auto figure = figureList.getObjects()[rowNumber];
+        return figure.getName();
+    }
+
+    return juce::String("");
+}
+
 // Private methods
 void FiguresTable::refreshTable()
 {
     auto figures = figureList.getObjects();
     numRows = figures.size();
     table.updateContent();
+}
+
+// ======================================================
+EditableCell::EditableCell(FiguresTable &ft) : owner(ft)
+{
+    setEditable(false, true);
+}
+
+void EditableCell::mouseDown(const juce::MouseEvent &event)
+{
+    owner.table.selectRowsBasedOnModifierKeys(row, event.mods, false);
+
+    Label::mouseDown(event);
+}
+
+void EditableCell::textWasEdited()
+{
+    owner.setText(columnId, row, getText());
+}
+
+void EditableCell::setRowAndColumn(const int newRow, const int newColumn)
+{
+    row = newRow;
+    columnId = newColumn;
+    setText(owner.getText(columnId, row), juce::dontSendNotification);
 }

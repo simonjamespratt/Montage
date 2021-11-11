@@ -7,7 +7,8 @@ MainComponent::MainComponent() : contentContainer(projectState)
 {
     if(PRE_POPULATE_DUMMY_DATA) {
         auto filepath = juce::String(ASSETS_DIR) + "/presets/preset1.xml";
-        projectState.load(filepath);
+        juce::File file(filepath);
+        projectState.load(file);
     }
 
     auto screenSize =

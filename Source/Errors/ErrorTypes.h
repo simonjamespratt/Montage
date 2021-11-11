@@ -44,6 +44,11 @@ class ObjectDependencyInvalid : public std::invalid_argument {
     ObjectDependencyInvalid(std::string object, std::string objectItDependsOn);
 };
 
+class ObjectNameInvalid : public std::invalid_argument {
+  public:
+    ObjectNameInvalid(std::string object);
+};
+
 // File management types ======================================================
 class InvalidFilePath : public std::invalid_argument {
   public:
@@ -85,13 +90,6 @@ class ParticleStartInvalid : public std::invalid_argument {
 class ParticleEndInvalid : public std::invalid_argument {
   public:
     ParticleEndInvalid();
-};
-
-// NB: if other entities start having a name, this error type should be made
-// more general so it can be reused by them
-class ParticleNameInvalid : public std::invalid_argument {
-  public:
-    ParticleNameInvalid();
 };
 
 // Event specific types ======================================================

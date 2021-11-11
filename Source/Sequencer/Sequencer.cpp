@@ -1,5 +1,8 @@
 #include "Sequencer.h"
 
+#include "AudioRenderer.h"
+#include "ErrorMessageModal.h"
+
 Sequencer::Sequencer(te::Engine &eng)
 : engine(eng),
   edit(engine,
@@ -115,6 +118,18 @@ Sequencer::Sequencer(te::Engine &eng)
         resized();
     };
     addAndMakeVisible(trackControlPanelWidthAdjuster);
+
+    renderButton.setButtonText("Render");
+    renderButton.onClick = [this] {
+        if(currentFigure == nullptr) {
+            std::make_shared<ErrorMessageModal>(
+                "Cannot render because no figure is currently selected.");
+            return;
+        }
+
+        AudioRenderer::renderFigureToFile(edit, currentFigure->getName());
+    };
+    addAndMakeVisible(renderButton);
 }
 
 Sequencer::~Sequencer()
@@ -130,6 +145,7 @@ void Sequencer::resized()
     auto transportArea = controlsArea.reduced(200, 0);
     auto zoomControlsArea = controlsArea.removeFromRight(200);
     auto tcpWidthAdjusterArea = controlsArea.removeFromLeft(100);
+    auto renderArea = controlsArea.removeFromRight(100);
 
     auto trackControlPanelArea =
         area.removeFromLeft(area.getWidth() * trackControlPanelWidth);
@@ -177,13 +193,18 @@ void Sequencer::resized()
     xZoom.setBounds(
         zoomControlsArea.removeFromLeft(zoomControlsArea.getWidth() / 2));
     yZoom.setBounds(zoomControlsArea);
+
     trackControlPanelWidthAdjuster.setBounds(tcpWidthAdjusterArea);
+
+    renderButton.setBounds(renderArea.reduced(10));
 }
 
 void Sequencer::readFigure(const Figure &figure,
                            const ProjectState &projectState)
 {
     clear();
+
+    currentFigure = std::make_unique<Figure>(figure);
 
     std::vector<ClipData> clips;
 
@@ -225,8 +246,11 @@ void Sequencer::readFigure(const Figure &figure,
 
 void Sequencer::clear()
 {
+    currentFigure = nullptr;
     transport.stop(false, false);
     transport.position = 0.0;
+    transport.setLoopRange({});
+    transportInteractor.clearSelectionRange();
     clearTracks();
     arrangement.clear();
     trackControlPanel.clear();
