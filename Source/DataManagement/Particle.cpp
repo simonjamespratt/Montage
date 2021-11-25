@@ -34,7 +34,7 @@ Particle::Particle(const juce::ValueTree &v, const Source &s)
     validateEnd(start, end, sourceFileLength);
 
     if(name.isEmpty()) {
-        throw ParticleNameInvalid();
+        throw ObjectNameInvalid("Particle");
     }
 }
 
@@ -163,7 +163,7 @@ juce::String Particle::getName() const
 void Particle::setName(juce::String newName)
 {
     if(newName.isEmpty()) {
-        throw ParticleNameInvalid();
+        throw ObjectNameInvalid("Particle");
     }
 
     state.setProperty(IDs::name, newName, nullptr);

@@ -23,7 +23,8 @@ class StateHelpers {
 
     // Figure
     static juce::ValueTree createFigureState();
-    static juce::ValueTree createFigureState(juce::Uuid id);
+    static juce::ValueTree createFigureState(juce::Uuid id,
+                                             juce::String name = "name");
 
     // Event
     static juce::ValueTree createEventState();

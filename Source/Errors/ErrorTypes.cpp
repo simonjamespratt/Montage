@@ -46,6 +46,10 @@ ObjectDependencyInvalid::ObjectDependencyInvalid(std::string object,
                         object)
 {}
 
+ObjectNameInvalid::ObjectNameInvalid(std::string object)
+: std::invalid_argument("The " + object + " name must not be empty")
+{}
+
 // File management types ======================================================
 InvalidFilePath::InvalidFilePath()
 : std::invalid_argument(
@@ -89,12 +93,6 @@ ParticleStartInvalid::ParticleStartInvalid()
 ParticleEndInvalid::ParticleEndInvalid()
 : std::invalid_argument("end must be greater than start and must not exceed "
                         "the length of the source file")
-{}
-
-// NB: if other entities start having a name, this error type should be made
-// more general so it can be reused by them
-ParticleNameInvalid::ParticleNameInvalid()
-: std::invalid_argument("name must not be empty")
 {}
 
 // Event specific types ======================================================

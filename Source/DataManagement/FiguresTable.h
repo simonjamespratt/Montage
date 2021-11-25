@@ -31,13 +31,25 @@ class FiguresTable : public juce::Component, public juce::TableListBoxModel {
                    bool rowIsSelected) override;
     void backgroundClicked(const juce::MouseEvent &) override;
     void selectedRowsChanged(int lastRowSelected) override;
+    juce::Component *
+    refreshComponentForCell(int rowNumber,
+                            int columnId,
+                            bool /*isRowSelected*/,
+                            Component *existingComponentToUpdate) override;
+
+    void setText(const int columnNumber,
+                 const int rowNumber,
+                 const juce::String &newText);
+
+    juce::String getText(const int columnNumber, const int rowNumber) const;
+
+    juce::TableListBox table;
 
   private:
-    enum Columns : int { figureNum = 1, id = 2 };
+    enum Columns : int { figureNum = 1, name = 2, id = 3 };
 
     juce::Label heading;
 
-    juce::TableListBox table;
     int numRows = 0;
 
     ProjectState projectState;
@@ -46,4 +58,18 @@ class FiguresTable : public juce::Component, public juce::TableListBoxModel {
     void refreshTable();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FiguresTable)
+};
+
+class EditableCell : public juce::Label {
+  public:
+    EditableCell(FiguresTable &ft);
+    void mouseDown(const juce::MouseEvent &event) override;
+    void textWasEdited() override;
+    void setRowAndColumn(const int newRow, const int newColumn);
+
+  private:
+    FiguresTable &owner;
+    int row;
+    int columnId;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EditableCell)
 };

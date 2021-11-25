@@ -36,6 +36,7 @@ class Sequencer : public juce::Component {
     void clear();
 
   private:
+    std::unique_ptr<Figure> currentFigure;
     TimeScalingFactor timeScalingFactor;
     float trackHeight;
 
@@ -66,6 +67,8 @@ class Sequencer : public juce::Component {
 
     double trackControlPanelWidth;
     juce::Slider trackControlPanelWidthAdjuster;
+
+    juce::TextButton renderButton;
 
     void prepareForNewFigure(ParticleList particleList);
     void clearTracks();
