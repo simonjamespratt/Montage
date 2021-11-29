@@ -1,3 +1,7 @@
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 juce_add_gui_app(Montage)
 juce_add_console_app(Tests)
 
@@ -30,6 +34,7 @@ target_compile_definitions(Montage PRIVATE
     JUCE_USE_CURL=0     # If you remove this, add `NEEDS_CURL TRUE` to the `juce_add_gui_app` call
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:Montage,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:Montage,JUCE_VERSION>"
+    JUCE_MODAL_LOOPS_PERMITTED=1
     ASSETS_DIR="${montage_SOURCE_DIR}/assets"
     PRE_POPULATE_DUMMY_DATA=1 # TODO: CMAKE: this should probably be in a gen expression
 )
