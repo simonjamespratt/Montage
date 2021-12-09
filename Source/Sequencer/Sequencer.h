@@ -40,11 +40,7 @@ class Sequencer : public juce::Component {
     TimeScalingFactor timeScalingFactor;
     float trackHeight;
 
-    te::Engine &engine;
-    // NB: note that the edit is set up with en empty edit rather than by
-    // referencing a file to write to when the sequencer is working seriously,
-    // probably need to change this
-    te::Edit edit;
+    std::unique_ptr<te::Edit> edit;
     te::TransportControl &transport;
     TransportManager transportManager;
 
