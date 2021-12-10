@@ -4,23 +4,15 @@
 #include "ErrorMessageModal.h"
 
 Sequencer::Sequencer(te::Engine &eng)
-: engine(eng),
-  edit(engine,
-       /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
-          legacy signature. Update to newer version. See
-          tracktion_EditFileOperations.h */
-       te::createEmptyEdit(engine),
-       te::Edit::forEditing,
-       nullptr,
-       0),
-  transport(edit.getTransport()),
-  transportManager(edit, cursor),
-  timeline(edit),
+: edit(te::createEmptyEdit(eng, juce::File())),
+  transport(edit->getTransport()),
+  transportManager(*edit, cursor),
+  timeline(*edit),
   timeScalingFactor {100, 100, 0, 1000},
   trackHeight(75),
-  arrangement(edit, transport, trackHeight),
+  arrangement(*edit, transport, trackHeight),
   trackControlPanel(trackHeight),
-  transportInteractor(transport, edit),
+  transportInteractor(transport, *edit),
   transportController(transport),
   xZoom(juce::Slider::SliderStyle::LinearHorizontal,
         juce::Slider::TextEntryBoxPosition::NoTextBox),
@@ -33,14 +25,14 @@ Sequencer::Sequencer(te::Engine &eng)
     transportManager.onChange = [this] {
         arrangementContainerViewport.syncToTransportPositionWhenPlaying(
             transport.getCurrentPosition(),
-            edit.getLength());
+            edit->getLength());
     };
     transportManager.startManager();
 
     transportController.onTransportStopped = [this] {
         arrangementContainerViewport.syncToTransportPositionWhenPlaying(
             transport.getCurrentPosition(),
-            edit.getLength());
+            edit->getLength());
     };
 
     transportInteractor.onSelectionChangeInProgress =
@@ -97,7 +89,7 @@ Sequencer::Sequencer(te::Engine &eng)
         // new values
         arrangementContainerViewport.syncToTransportPositionOnResize(
             transport.getCurrentPosition(),
-            edit.getLength());
+            edit->getLength());
     };
     addAndMakeVisible(xZoom);
 
@@ -127,14 +119,14 @@ Sequencer::Sequencer(te::Engine &eng)
             return;
         }
 
-        AudioRenderer::renderFigureToFile(edit, currentFigure->getName());
+        AudioRenderer::renderFigureToFile(*edit, currentFigure->getName());
     };
     addAndMakeVisible(renderButton);
 }
 
 Sequencer::~Sequencer()
 {
-    edit.getTempDirectory(false).deleteRecursively();
+    edit->getTempDirectory(false).deleteRecursively();
 }
 
 void Sequencer::resized()
@@ -153,16 +145,15 @@ void Sequencer::resized()
 
     auto timelineViewportArea = area.removeFromTop(25);
     auto containerViewportArea = area;
-
-    if(edit.getLength() > 0) {
-        timeScalingFactor.min =
-            containerViewportArea.getWidth() / edit.getLength();
+    auto editLength = edit->getLength();
+    if(editLength > 0) {
+        timeScalingFactor.min = containerViewportArea.getWidth() / editLength;
         xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
     }
 
-    auto editWidth = edit.getLength() * timeScalingFactor.current;
+    auto editWidth = editLength * timeScalingFactor.current;
     auto totalTrackHeight =
-        (te::getAudioTracks(edit).size() * trackHeight) +
+        (te::getAudioTracks(*edit).size() * trackHeight) +
         1; // add 1 to avoid bottom divider in arrangement being cut off
     auto bottomMargin = 8; // avoids vertical scrollbar when arrangement is
                            // shorter than viewport
@@ -270,19 +261,19 @@ void Sequencer::prepareForNewFigure(ParticleList particleList)
 void Sequencer::clearTracks()
 {
     // remove all clips from each track and delete the track
-    auto tracks = te::getAudioTracks(edit);
+    auto tracks = te::getAudioTracks(*edit);
     for(auto &track : tracks) {
         auto clipsToRemove = track->getClips();
         for(int i = clipsToRemove.size(); --i >= 0;) {
             clipsToRemove.getUnchecked(i)->removeFromParentTrack();
         }
-        edit.deleteTrack(track);
+        edit->deleteTrack(track);
     }
 }
 
 void Sequencer::prepareTracks(int noOfTracks)
 {
-    edit.ensureNumberOfAudioTracks(noOfTracks);
+    edit->ensureNumberOfAudioTracks(noOfTracks);
     repaint();
 }
 
@@ -312,8 +303,8 @@ Sequencer::addClipToTrack(const juce::File &file,
        ClipPosition.clipEnd
     */
 
-    edit.ensureNumberOfAudioTracks(trackIndex + 1);
-    auto track = te::getAudioTracks(edit)[trackIndex];
+    edit->ensureNumberOfAudioTracks(trackIndex + 1);
+    auto track = te::getAudioTracks(*edit)[trackIndex];
 
     auto newClip = track->insertWaveClip(file.getFileNameWithoutExtension(),
                                          file,

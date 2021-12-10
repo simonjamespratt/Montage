@@ -8,19 +8,14 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
   startEditor(model.start, "Start"),
   endEditor(model.end, "End"),
   nameEditor(model.name, "Name"),
-  edit(eng,
-       /* TODO: TRACKTION: method signature for te::createEmptyEdit() is a
-          legacy signature. Update to newer version. See
-          tracktion_EditFileOperations.h */
-       te::createEmptyEdit(eng),
-       te::Edit::forEditing,
-       nullptr,
-       0),
-  transport(edit.getTransport()),
-  transportManager(edit, cursor),
+  edit(te::createEmptyEdit(
+      eng, juce::File())), // NB: We're not saving edits in ParticleEditor so
+                           // just provide an empty (unvalid) juce::File
+  transport(edit->getTransport()),
+  transportManager(*edit, cursor),
   thumbnail(transport),
   transportController(transport),
-  transportInteractor(transport, edit),
+  transportInteractor(transport, *edit),
   timeScalingFactor {100, 100, 0, 1000},
   xZoom(juce::Slider::SliderStyle::LinearHorizontal,
         juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -28,14 +23,14 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
     transportManager.onChange = [this] {
         thumbnailViewport.syncToTransportPositionWhenPlaying(
             transport.getCurrentPosition(),
-            edit.getLength());
+            edit->getLength());
     };
     transportManager.startManager();
 
     transportController.onTransportStopped = [this] {
         thumbnailViewport.syncToTransportPositionWhenPlaying(
             transport.getCurrentPosition(),
-            edit.getLength());
+            edit->getLength());
     };
 
     transportInteractor.onSelectionChangeInProgress =
@@ -201,15 +196,16 @@ void ParticleEditor::resized()
 
     // layout waveform ========================================
     thumbnailViewport.setBounds(waveformArea);
+    auto editLength = edit->getLength();
 
-    if(edit.getLength() > 0) {
-        timeScalingFactor.min = thumbnailViewport.getWidth() / edit.getLength();
+    if(editLength > 0) {
+        timeScalingFactor.min = thumbnailViewport.getWidth() / editLength;
         timeScalingFactor.max =
-            (thumbnailViewport.getWidth() / edit.getLength()) * 10;
+            (thumbnailViewport.getWidth() / editLength) * 10;
         xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
     }
 
-    auto thumbnailWidth = edit.getLength() * timeScalingFactor.current;
+    auto thumbnailWidth = editLength * timeScalingFactor.current;
     auto thumbnailHeight = waveformArea.getHeight();
 
     thumbnailContainer.setSize(thumbnailWidth, thumbnailHeight);
@@ -244,7 +240,7 @@ void ParticleEditor::prepAudio(te::Engine &eng)
 
     // prep edit:
     // clear clips from track
-    auto track = te::getAudioTracks(edit)[0];
+    auto track = te::getAudioTracks(*edit)[0];
     jassert(track);
 
     auto clipsToRemove = track->getClips();

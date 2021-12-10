@@ -37,7 +37,7 @@ class ParticleEditor : public juce::Component {
     DoubleValueEditorWithLabel endEditor;
     StringEditorWithLabel nameEditor;
 
-    te::Edit edit;
+    std::unique_ptr<te::Edit> edit;
     te::TransportControl &transport;
     TransportManager transportManager;
 
