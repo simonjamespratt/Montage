@@ -7,6 +7,8 @@ target_sources(Montage PRIVATE
     MainHeader.h
     ParticlesPage.cpp
     ParticlesPage.h
+    ProjectInitialiser.cpp
+    ProjectInitialiser.h
 )
 
 target_include_directories(Montage

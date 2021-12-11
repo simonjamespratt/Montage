@@ -2,20 +2,25 @@
 
 #include "Identifiers.h"
 
-// constructor
-MainComponent::MainComponent() : contentContainer(projectState)
+MainComponent::MainComponent()
+: projectInitialiser(projectState), contentContainer(projectState)
 {
-    if(PRE_POPULATE_DUMMY_DATA) {
-        auto filepath = juce::String(ASSETS_DIR) + "/presets/preset1.xml";
-        juce::File file(filepath);
-        projectState.load(file);
-    }
+    addChildComponent(projectInitialiser);
+    addChildComponent(contentContainer);
+    auto s = projectState.getStatus();
+    projectInitialiser.setVisible(!s.hasProjectDirectory);
+    contentContainer.setVisible(s.hasProjectDirectory);
 
-    auto screenSize =
-        juce::Desktop::getInstance().getDisplays().getMainDisplay().userArea;
-    addAndMakeVisible(&contentContainer);
+    projectState.onStatusChanged = [this](auto status, auto action) {
+        projectInitialiser.setVisible(!status.hasProjectDirectory);
+        contentContainer.setVisible(status.hasProjectDirectory);
+    };
 
     // Set the size of the component after you add any child components
+    auto screenSize = juce::Desktop::getInstance()
+                          .getDisplays()
+                          .getPrimaryDisplay()
+                          ->userArea;
     setSize(screenSize.getWidth(), screenSize.getHeight());
 }
 
@@ -24,5 +29,6 @@ MainComponent::~MainComponent()
 
 void MainComponent::resized()
 {
+    projectInitialiser.setBounds(getLocalBounds());
     contentContainer.setBounds(getLocalBounds());
 }

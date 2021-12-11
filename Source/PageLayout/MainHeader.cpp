@@ -19,7 +19,7 @@ MainHeader::MainHeader(te::Engine &e, const ProjectState &ps)
     saveButton.setButtonText("Save");
     saveButton.onClick = [this] {
         try {
-            state.getStatus().hasFile ? state.save() : saveAs();
+            state.save();
         } catch(const std::exception &e) {
             std::make_shared<ErrorMessageModal>(juce::String(e.what()));
             return;
@@ -27,18 +27,12 @@ MainHeader::MainHeader(te::Engine &e, const ProjectState &ps)
     };
     addChildComponent(saveButton);
 
-    saveAsButton.setButtonText("Save as");
-    saveAsButton.onClick = [this] {
-        saveAs();
-    };
-    addChildComponent(saveAsButton);
-
-    loadButton.setButtonText("Load");
+    loadButton.setButtonText("Load project");
     loadButton.onClick = [this] {
         if(state.getStatus().hasUnsavedChanges) {
             std::make_shared<DecisionModal>(
-                "The project has unsaved changes. Loading a new file will mean "
-                "these changes will be lost. Do you wish to proceed?",
+                "The project has unsaved changes. Loading a new project will "
+                "mean these changes will be lost. Do you wish to proceed?",
                 [this](bool decision) {
                     if(decision) {
                         load();
@@ -49,6 +43,23 @@ MainHeader::MainHeader(te::Engine &e, const ProjectState &ps)
         load();
     };
     addAndMakeVisible(loadButton);
+
+    createButton.setButtonText("New project");
+    createButton.onClick = [this] {
+        if(state.getStatus().hasUnsavedChanges) {
+            std::make_shared<DecisionModal>(
+                "The project has unsaved changes. Creating a new project will "
+                "mean these changes will be lost. Do you wish to proceed?",
+                [this](bool decision) {
+                    if(decision) {
+                        create();
+                    }
+                });
+            return;
+        }
+        create();
+    };
+    addAndMakeVisible(createButton);
 
     refreshView(state.getStatus());
 }
@@ -64,21 +75,19 @@ void MainHeader::resized()
     fb.justifyContent = juce::FlexBox::JustifyContent::flexEnd;
     fb.alignContent = juce::FlexBox::AlignContent::flexStart;
 
-    if(showSaveButton) {
+    if(saveButton.isVisible()) {
         fb.items.add(juce::FlexItem(saveButton)
                          .withHeight(20.0f)
                          .withWidth(100.0f)
                          .withMargin(juce::FlexItem::Margin(0, 10, 0, 0)));
     }
 
-    if(showSaveAsButton) {
-        fb.items.add(juce::FlexItem(saveAsButton)
-                         .withHeight(20.0f)
-                         .withWidth(100.0f)
-                         .withMargin(juce::FlexItem::Margin(0, 10, 0, 0)));
-    }
-
     fb.items.add(juce::FlexItem(loadButton)
+                     .withHeight(20.0f)
+                     .withWidth(100.0f)
+                     .withMargin(juce::FlexItem::Margin(0, 10, 0, 0)));
+
+    fb.items.add(juce::FlexItem(createButton)
                      .withHeight(20.0f)
                      .withWidth(100.0f)
                      .withMargin(juce::FlexItem::Margin(0, 10, 0, 0)));
@@ -112,52 +121,42 @@ void MainHeader::showAudioDeviceSettings(te::Engine &engine)
 
 void MainHeader::refreshView(ProjectState::Status status)
 {
-    showSaveButton = status.hasUnsavedChanges;
-    showSaveAsButton = status.hasUnsavedChanges && status.hasFile;
-
-    saveButton.setVisible(showSaveButton);
-    saveAsButton.setVisible(showSaveAsButton);
-
+    saveButton.setVisible(status.hasUnsavedChanges &&
+                          status.hasProjectDirectory);
     resized();
 }
 
-void MainHeader::saveAs()
+void MainHeader::load()
 {
     juce::FileChooser fc(
-        "Choose a file",
-        juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-        "*.xml");
+        "Load a project",
+        juce::File::getSpecialLocation(juce::File::userHomeDirectory));
 
-    if(fc.browseForFileToSave(true)) {
-        auto selectedFile = fc.getResult();
-
-        if(!selectedFile.existsAsFile()) {
-            selectedFile.create();
-        }
+    if(fc.browseForDirectory()) {
+        auto selectedDirectory = fc.getResult();
+        jassert(selectedDirectory.isDirectory());
 
         try {
-            state.save(selectedFile);
+            state.load(selectedDirectory);
         } catch(const std::exception &e) {
-            selectedFile.deleteFile();
             std::make_shared<ErrorMessageModal>(juce::String(e.what()));
             return;
         }
     }
 }
 
-void MainHeader::load()
+void MainHeader::create()
 {
     juce::FileChooser fc(
-        "Load a file",
-        juce::File::getSpecialLocation(juce::File::userHomeDirectory),
-        "*.xml");
+        "Create a new project",
+        juce::File::getSpecialLocation(juce::File::userHomeDirectory));
 
-    if(fc.browseForFileToOpen()) {
-        auto selectedFile = fc.getResult();
-        jassert(selectedFile.existsAsFile());
+    if(fc.browseForDirectory()) {
+        auto selectedDirectory = fc.getResult();
+        jassert(selectedDirectory.isDirectory());
 
         try {
-            state.load(selectedFile);
+            state.create(selectedDirectory);
         } catch(const std::exception &e) {
             std::make_shared<ErrorMessageModal>(juce::String(e.what()));
             return;

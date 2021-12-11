@@ -17,6 +17,158 @@ halting the code process and thus files won't be cleaned up
 3. use uniquely named file names to avoid one test case deleting a file the next
 case is relying on because test cases run concurrently
 */
+SCENARIO("Project state: create")
+{
+    juce::String filepath(CURRENT_BINARY_DIRECTORY);
+    ProjectState projectState;
+
+    bool cbCalled = false;
+    std::unique_ptr<ProjectState::Status> cbStatus;
+    std::unique_ptr<ProjectState::Action> cbAction;
+    projectState.onStatusChanged = [&cbCalled, &cbStatus, &cbAction](auto s,
+                                                                     auto a) {
+        cbCalled = true;
+        cbStatus = std::make_unique<ProjectState::Status>(s);
+        cbAction = std::make_unique<ProjectState::Action>(a);
+    };
+
+    // Initial values
+    CHECK(projectState.getProjectDirectory() == nullptr);
+    CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+    CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+
+    WHEN("The directory param does not exist")
+    {
+        juce::File directory;
+        CHECK_THROWS_AS(projectState.create(directory), InvalidDirectoryPath);
+
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+        CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+        CHECK_FALSE(cbCalled);
+        CHECK(cbStatus == nullptr);
+        CHECK(cbAction == nullptr);
+    }
+
+    WHEN("The directory param is a file (not a directory")
+    {
+        filepath += FileHelpers::getTestFileName() + ".txt";
+        juce::File file(filepath);
+        file.create();
+        CHECK_THROWS_AS(projectState.create(file), InvalidDirectoryPath);
+
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+        CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+        CHECK_FALSE(cbCalled);
+        CHECK(cbStatus == nullptr);
+        CHECK(cbAction == nullptr);
+
+        file.deleteFile(); // clean up
+    }
+
+    WHEN("The directory exists but has existing files in it")
+    {
+        auto projectName = FileHelpers::getTestFileName();
+        filepath += projectName;
+        juce::File directory(filepath);
+        directory.createDirectory();
+        directory.getChildFile("foo.txt").create();
+        CHECK_THROWS_AS(projectState.create(directory),
+                        InvalidDirectoryForProjectCreation);
+
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+        CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+        CHECK_FALSE(cbCalled);
+        CHECK(cbStatus == nullptr);
+        CHECK(cbAction == nullptr);
+
+        directory.deleteRecursively(); // clean up
+    }
+
+    WHEN("The directory exists but has existing sub directories in it")
+    {
+        auto projectName = FileHelpers::getTestFileName();
+        filepath += projectName;
+        juce::File directory(filepath);
+        directory.createDirectory();
+        directory.getChildFile("foo").createDirectory();
+        CHECK_THROWS_AS(projectState.create(directory),
+                        InvalidDirectoryForProjectCreation);
+
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+        CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+        CHECK_FALSE(cbCalled);
+        CHECK(cbStatus == nullptr);
+        CHECK(cbAction == nullptr);
+
+        directory.deleteRecursively(); // clean up
+    }
+
+    WHEN("The directory param points to a valid directory")
+    {
+        auto projectName = FileHelpers::getTestFileName();
+        filepath += projectName;
+        juce::File directory(filepath);
+        directory.createDirectory();
+
+        // add some existing state
+        auto fl = projectState.getFigureList();
+        fl.addObject(Figure());
+        CHECK(fl.getObjects().size() == 1);
+
+        // reset callbacks
+        cbCalled = false;
+        cbStatus = nullptr;
+        cbAction = nullptr;
+
+        projectState.create(directory);
+
+        THEN("The directory is stored in project state")
+        {
+            CHECK(*projectState.getProjectDirectory() == directory);
+        }
+
+        THEN("The required files and directories are created for a project")
+        {
+            auto projectDirectory = projectState.getProjectDirectory();
+            CHECK(projectDirectory->getChildFile("project-state.xml")
+                      .existsAsFile());
+            CHECK(projectDirectory->getChildFile("figures").isDirectory());
+            CHECK(projectDirectory->getChildFile("renders").isDirectory());
+        }
+
+        THEN("The main project state file has a valid xml representation of an "
+             "empty project, discarding pre-existing state in the process")
+        {
+            auto projectStateFile =
+                projectState.getProjectDirectory()->getChildFile(
+                    "project-state.xml");
+            CHECK(projectStateFile.existsAsFile());
+
+            auto tempState =
+                juce::ValueTree::fromXml(*juce::parseXML(projectStateFile));
+
+            CHECK(tempState.hasType(IDs::PROJECT_STATE));
+            CHECK(tempState.getNumProperties() == 0);
+            CHECK(tempState.getNumChildren() == 0);
+        }
+
+        THEN("Status is updated and callback is called with correct action")
+        {
+            CHECK(projectState.getStatus().hasProjectDirectory);
+            CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+            CHECK(cbCalled);
+            CHECK(cbStatus->hasProjectDirectory);
+            CHECK_FALSE(cbStatus->hasUnsavedChanges);
+            CHECK(*cbAction == ProjectState::Action::CreateProject);
+        }
+
+        directory.deleteRecursively(); // clean up
+    }
+}
 
 SCENARIO("Project state: save")
 {
@@ -26,7 +178,7 @@ SCENARIO("Project state: save")
     juce::ValueTree state(IDs::PROJECT_STATE);
     ProjectState projectState(state);
 
-    WHEN("project state does not have a file")
+    WHEN("project state does not have a project directory")
     {
         // fill state
         auto fl = projectState.getFigureList();
@@ -44,115 +196,37 @@ SCENARIO("Project state: save")
             };
 
         // Initial values
-        CHECK(projectState.getFile() == nullptr);
-        CHECK_FALSE(projectState.getStatus().hasFile);
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK(projectState.getStatus().hasUnsavedChanges);
 
-        AND_WHEN("no file is provided")
-        {
-            CHECK_THROWS_AS(projectState.save(), ProjectFileNotFound);
-            CHECK(projectState.getFile() == nullptr);
-            CHECK_FALSE(projectState.getStatus().hasFile);
-            CHECK(projectState.getStatus().hasUnsavedChanges);
-            CHECK_FALSE(cbCalled);
-            CHECK(cbStatus == nullptr);
-            CHECK(cbAction == nullptr);
-        }
+        CHECK_THROWS_AS(projectState.save(), ProjectDirectoryNotFound);
 
-        AND_WHEN("an invalid file is provided")
-        {
-            SECTION("File provided does not exist")
-            {
-                juce::File file;
-                CHECK_THROWS_AS(projectState.save(file), InvalidFilePath);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-            }
-
-            SECTION("File provided has a path to a directory")
-            {
-                juce::File file(filepath);
-                CHECK_THROWS_AS(projectState.save(file), InvalidFilePath);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-            }
-
-            SECTION("File provided is not xml")
-            {
-                filepath += FileHelpers::getTestFileName() + ".txt";
-                juce::File file(filepath);
-                file.create();
-
-                CHECK_THROWS_AS(projectState.save(file), InvalidProjectFile);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-        }
-
-        AND_WHEN("a valid file is provided")
-        {
-            filepath += FileHelpers::getTestFileName() + ".xml";
-            juce::File file(filepath);
-            file.create();
-
-            CHECK_FALSE(projectState.getStatus().hasFile);
-
-            projectState.save(file);
-
-            THEN("the provided file is stored in project state")
-            {
-                CHECK(*projectState.getFile() == file);
-            }
-
-            THEN("status hasFile is set to true")
-            {
-                CHECK(projectState.getStatus().hasFile);
-            }
-
-            THEN("hasUnsavedChanges is false")
-            {
-                CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            }
-
-            THEN("callback is called")
-            {
-                CHECK(cbCalled);
-                CHECK_FALSE(cbStatus->hasUnsavedChanges);
-                CHECK(cbStatus->hasFile);
-                CHECK(*cbAction == ProjectState::Action::SaveToNewFile);
-            }
-
-            file.deleteFile(); // clean up
-        }
+        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+        CHECK(projectState.getStatus().hasUnsavedChanges);
+        CHECK_FALSE(cbCalled);
+        CHECK(cbStatus == nullptr);
+        CHECK(cbAction == nullptr);
     }
 
-    WHEN("project state does have a file")
+    WHEN("project state does have a project directory")
     {
-        auto originalFilepath =
-            filepath + FileHelpers::getTestFileName() + ".xml";
-        juce::File originalFile(originalFilepath);
-        originalFile.create();
+        auto projectName = FileHelpers::getTestFileName();
+        filepath += projectName;
+        juce::File directory(filepath);
+        directory.createDirectory();
 
-        // save by providing file so project state has file
-        projectState.save(originalFile);
+        projectState.create(directory);
+
+        CHECK_FALSE(projectState.getProjectDirectory() == nullptr);
+        CHECK(projectState.getStatus().hasProjectDirectory);
 
         // fill state
         auto fl = projectState.getFigureList();
         fl.addObject(Figure());
+
+        CHECK(projectState.getStatus().hasUnsavedChanges);
 
         // NB: register listener after adding to state
         bool cbCalled = false;
@@ -165,123 +239,43 @@ SCENARIO("Project state: save")
                 cbAction = std::make_unique<ProjectState::Action>(a);
             };
 
-        // Initial values
-        CHECK_FALSE(projectState.getFile() == nullptr);
-        CHECK(projectState.getStatus().hasFile);
-        CHECK(projectState.getStatus().hasUnsavedChanges);
+        projectState.save();
 
-        WHEN("An invalid file is provided")
+        THEN("state is saved to the file in the project directory")
         {
-            juce::File newFile;
+            auto projectStateFile =
+                projectState.getProjectDirectory()->getChildFile(
+                    "project-state.xml");
+            CHECK(projectStateFile.existsAsFile());
 
-            THEN("throws exception and does not change object state")
-            {
-                CHECK_THROWS_AS(projectState.save(newFile), InvalidFilePath);
-                CHECK(*projectState.getFile() == originalFile);
-                CHECK(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-            }
+            auto tempState =
+                juce::ValueTree::fromXml(*juce::parseXML(projectStateFile));
+
+            CHECK(tempState.hasType(IDs::PROJECT_STATE));
+            CHECK(tempState.getNumProperties() == 0);
+            CHECK(tempState.getNumChildren() == 1);
+            CHECK(tempState.getChild(0).hasType(IDs::FIGURE));
         }
 
-        WHEN("An valid file is provided")
+        THEN("status hasUnsavedChanges is false")
         {
-            auto newFilepath =
-                filepath + FileHelpers::getTestFileName() + ".xml";
-            juce::File newFile(newFilepath);
-            newFile.create();
-
-            projectState.save(newFile);
-
-            THEN("the provided file is stored in project state")
-            {
-                CHECK(*projectState.getFile() == newFile);
-            }
-
-            THEN("status hasFile is set to true")
-            {
-                CHECK(projectState.getStatus().hasFile);
-            }
-
-            THEN("hasUnsavedChanges is false")
-            {
-                CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            }
-
-            THEN("callback is called")
-            {
-                CHECK(cbCalled);
-                CHECK_FALSE(cbStatus->hasUnsavedChanges);
-                CHECK(cbStatus->hasFile);
-                CHECK(*cbAction == ProjectState::Action::SaveToNewFile);
-            }
-
-            newFile.deleteFile(); // clean up
+            CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         }
 
-        WHEN("no file is provided")
+        THEN("callback is called")
         {
-            CHECK_FALSE(cbCalled);
-
-            projectState.save();
-
-            THEN("state is saved to the file stored in project state")
-            {
-                // NB: scope here is important as load() will affect the tests
-                // below
-
-                // empty state
-                state.removeAllChildren(nullptr);
-                CHECK(fl.getObjects().size() == 0);
-                // load state
-                projectState.load(originalFile);
-                CHECK(fl.getObjects().size() == 1);
-            }
-
-            THEN("file stored in project state is unchanged")
-            {
-                CHECK(*projectState.getFile() == originalFile);
-            }
-
-            THEN("status hasFile is still true")
-            {
-                CHECK(projectState.getStatus().hasFile);
-            }
-
-            THEN("status hasUnsavedChanges is false")
-            {
-                CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            }
-
-            THEN("callback is called")
-            {
-                CHECK(cbCalled);
-                CHECK_FALSE(cbStatus->hasUnsavedChanges);
-                CHECK(cbStatus->hasFile);
-                CHECK(*cbAction == ProjectState::Action::SaveToExistingFile);
-            }
+            CHECK(cbCalled);
+            CHECK_FALSE(cbStatus->hasUnsavedChanges);
+            CHECK(*cbAction == ProjectState::Action::SaveProject);
         }
 
-        originalFile.deleteFile(); // clean up
+        directory.deleteRecursively(); // clean up
     }
 }
 
 SCENARIO("Project state: load")
 {
     juce::String filepath(CURRENT_BINARY_DIRECTORY);
-    juce::File newFile(filepath + FileHelpers::getTestFileName() + ".xml");
-    newFile.create();
-
-    // populate file
-    {
-        // temp - empty - project state used to save to a file
-        juce::ValueTree tempState(IDs::PROJECT_STATE);
-        ProjectState tempProjectState(tempState);
-        tempProjectState.save(newFile);
-    }
-
     juce::ValueTree state(IDs::PROJECT_STATE);
     ProjectState projectState(state);
 
@@ -289,508 +283,419 @@ SCENARIO("Project state: load")
     auto fl = projectState.getFigureList();
     fl.addObject(Figure());
 
-    WHEN("project state does not have a file")
+    CHECK(state.getNumChildren() == 1);
+    CHECK(projectState.getProjectDirectory() == nullptr);
+    CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+    CHECK(projectState.getStatus().hasUnsavedChanges);
+
+    // NB: register listener after set up
+    bool cbCalled = false;
+    std::unique_ptr<ProjectState::Status> cbStatus;
+    std::unique_ptr<ProjectState::Action> cbAction;
+    projectState.onStatusChanged = [&cbCalled, &cbStatus, &cbAction](auto s,
+                                                                     auto a) {
+        cbCalled = true;
+        cbStatus = std::make_unique<ProjectState::Status>(s);
+        cbAction = std::make_unique<ProjectState::Action>(a);
+    };
+
+    WHEN("An invalid project directory is provided")
     {
-        CHECK(state.getNumChildren() == 1);
-        CHECK(projectState.getFile() == nullptr);
-        CHECK_FALSE(projectState.getStatus().hasFile);
-        CHECK(projectState.getStatus().hasUnsavedChanges);
-
-        // NB: register listener after set up
-        bool cbCalled = false;
-        std::unique_ptr<ProjectState::Status> cbStatus;
-        std::unique_ptr<ProjectState::Action> cbAction;
-        projectState.onStatusChanged =
-            [&cbCalled, &cbStatus, &cbAction](auto s, auto a) {
-                cbCalled = true;
-                cbStatus = std::make_unique<ProjectState::Status>(s);
-                cbAction = std::make_unique<ProjectState::Action>(a);
-            };
-
-        AND_WHEN("an invalid file is provided")
+        SECTION("The path does not exist")
         {
-            SECTION("File provided does not exist")
-            {
-                juce::File file;
-                CHECK_THROWS_AS(projectState.load(file), InvalidFilePath);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-            }
-
-            SECTION("File provided has a path to a directory")
-            {
-                juce::File file(filepath);
-                CHECK_THROWS_AS(projectState.load(file), InvalidFilePath);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-            }
-
-            SECTION("File provided is not xml")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".txt");
-                file.create();
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file is empty")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file contains invalid xml")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-                juce::FileOutputStream os(file);
-                os.writeText("<foo>", false, false, nullptr); // no end tag
-                os.flush();
-
-                auto fileContent = file.createInputStream()->readString();
-                CHECK(fileContent == "<foo>");
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file has a top level value tree of the wrong type")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-                juce::FileOutputStream os(file);
-                os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
-                             "\"?><foo></foo>",
-                             false,
-                             false,
-                             nullptr);
-                os.flush();
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file has top level value tree with props")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-                juce::FileOutputStream os(file);
-                os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
-                             "\"?><PROJECT_STATE foo=\"bar\" />",
-                             false,
-                             false,
-                             nullptr);
-                os.flush();
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file has invalid children (wrong type)")
-            {
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-                juce::FileOutputStream os(file);
-                os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
-                             "\"?><PROJECT_STATE><FOO></FOO></PROJECT_STATE>",
-                             false,
-                             false,
-                             nullptr);
-                os.flush();
-
-                CHECK_THROWS_AS(projectState.load(file), InvalidProjectFile);
-                CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getFile() == nullptr);
-                CHECK_FALSE(projectState.getStatus().hasFile);
-                CHECK(projectState.getStatus().hasUnsavedChanges);
-                CHECK_FALSE(cbCalled);
-                CHECK(cbStatus == nullptr);
-                CHECK(cbAction == nullptr);
-
-                file.deleteFile(); // clean up
-            }
-
-            SECTION("The file has invalid representations of objects")
-            {
-                // Easiest way to check this is to include children with valid
-                // types but no props. That ensures that something will throw an
-                // error somewhere. There is no point checking all reasons that
-                // there might be invalid representations of data as this is
-                // just a repeat of the object and list tests. Just need to know
-                // that before replacing the state with the one loaded from
-                // file, that we have tried to create object lists for each
-                // object type.
-
-                juce::File file(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-                file.create();
-                juce::FileOutputStream os(file);
-                juce::String textContent =
-                    "<?xml version=\" 1.0 \" encoding=\" UTF - 8 \"?>";
-
-                SECTION("Event")
-                {
-                    textContent += "<PROJECT_STATE><EVENT/></PROJECT_STATE>";
-                    os.writeText(textContent, false, false, nullptr);
-                    os.flush();
-
-                    CHECK_THROWS_AS(projectState.load(file),
-                                    InvalidProjectFile);
-                    CHECK(state.getNumChildren() == 1);
-                    CHECK(projectState.getFile() == nullptr);
-                    CHECK_FALSE(projectState.getStatus().hasFile);
-                    CHECK(projectState.getStatus().hasUnsavedChanges);
-                    CHECK_FALSE(cbCalled);
-                    CHECK(cbStatus == nullptr);
-                    CHECK(cbAction == nullptr);
-                }
-
-                SECTION("Figure")
-                {
-                    textContent += "<PROJECT_STATE><FIGURE/></PROJECT_STATE>";
-                    os.writeText(textContent, false, false, nullptr);
-                    os.flush();
-
-                    CHECK_THROWS_AS(projectState.load(file),
-                                    InvalidProjectFile);
-                    CHECK(projectState.getFile() == nullptr);
-                    CHECK_FALSE(projectState.getStatus().hasFile);
-                    CHECK(projectState.getStatus().hasUnsavedChanges);
-                    CHECK_FALSE(cbCalled);
-                    CHECK(cbStatus == nullptr);
-                    CHECK(cbAction == nullptr);
-                }
-
-                SECTION("Particle")
-                {
-                    textContent += "<PROJECT_STATE><PARTICLE/></PROJECT_STATE>";
-                    os.writeText(textContent, false, false, nullptr);
-                    os.flush();
-
-                    CHECK_THROWS_AS(projectState.load(file),
-                                    InvalidProjectFile);
-                    CHECK(projectState.getFile() == nullptr);
-                    CHECK_FALSE(projectState.getStatus().hasFile);
-                    CHECK(projectState.getStatus().hasUnsavedChanges);
-                    CHECK_FALSE(cbCalled);
-                    CHECK(cbStatus == nullptr);
-                    CHECK(cbAction == nullptr);
-                }
-
-                SECTION("Source")
-                {
-                    textContent += "<PROJECT_STATE><SOURCE/></PROJECT_STATE>";
-                    os.writeText(textContent, false, false, nullptr);
-                    os.flush();
-
-                    CHECK_THROWS_AS(projectState.load(file),
-                                    InvalidProjectFile);
-                    CHECK(projectState.getFile() == nullptr);
-                    CHECK_FALSE(projectState.getStatus().hasFile);
-                    CHECK(projectState.getStatus().hasUnsavedChanges);
-                    CHECK_FALSE(cbCalled);
-                    CHECK(cbStatus == nullptr);
-                    CHECK(cbAction == nullptr);
-                }
-
-                file.deleteFile(); // clean up
-            }
-        }
-
-        AND_WHEN("a valid file is provided")
-        {
-            projectState.load(newFile);
-
-            THEN("state should be changed")
-            {
-                CHECK(state.getNumChildren() == 0);
-            }
-
-            THEN("the provided file is stored in project state")
-            {
-                CHECK(*projectState.getFile() == newFile);
-            }
-
-            THEN("status hasFile is set to true")
-            {
-                CHECK(projectState.getStatus().hasFile);
-            }
-
-            THEN("hasUnsavedChanges is false")
-            {
-                CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            }
-
-            THEN("callback is called")
-            {
-                CHECK(cbCalled);
-                CHECK_FALSE(cbStatus->hasUnsavedChanges);
-                CHECK(cbStatus->hasFile);
-                CHECK(*cbAction == ProjectState::Action::LoadNewFile);
-            }
-        }
-    }
-
-    WHEN("project state does have a file")
-    {
-        juce::File originalFile(filepath + FileHelpers::getTestFileName() +
-                                ".xml");
-        originalFile.create();
-        projectState.save(originalFile);
-
-        fl.addObject(Figure());
-
-        CHECK(state.getNumChildren() == 2);
-        CHECK_FALSE(projectState.getFile() == nullptr);
-        CHECK(*projectState.getFile() == originalFile);
-        CHECK(projectState.getStatus().hasFile);
-        CHECK(projectState.getStatus().hasUnsavedChanges);
-
-        // NB: register listener after set up
-        bool cbCalled = false;
-        std::unique_ptr<ProjectState::Status> cbStatus;
-        std::unique_ptr<ProjectState::Action> cbAction;
-        projectState.onStatusChanged =
-            [&cbCalled, &cbStatus, &cbAction](auto s, auto a) {
-                cbCalled = true;
-                cbStatus = std::make_unique<ProjectState::Status>(s);
-                cbAction = std::make_unique<ProjectState::Action>(a);
-            };
-
-        AND_WHEN("an new invalid file is provided")
-        {
-            // only one test case here of the possible ones from above
-            juce::File file;
-
-            CHECK_THROWS_AS(projectState.load(file), InvalidFilePath);
-            CHECK(state.getNumChildren() == 2);
-            CHECK_FALSE(projectState.getFile() == nullptr);
-            CHECK(*projectState.getFile() == originalFile);
-            CHECK(projectState.getStatus().hasFile);
+            juce::File directory;
+            CHECK_THROWS_AS(projectState.load(directory), InvalidDirectoryPath);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
             CHECK(cbStatus == nullptr);
             CHECK(cbAction == nullptr);
         }
 
-        AND_WHEN("a new valid file is provided")
+        SECTION("It is a file, not a directory")
         {
-            projectState.load(newFile);
+            filepath += FileHelpers::getTestFileName() + ".txt";
+            juce::File file(filepath);
+            file.create();
 
-            THEN("state is changed to what is in loaded file")
-            {
-                CHECK(state.getNumChildren() == 0);
-            }
+            CHECK_THROWS_AS(projectState.load(file), InvalidDirectoryPath);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
 
-            THEN("provided file replaces file stored in project state")
-            {
-                CHECK_FALSE(projectState.getFile() == nullptr);
-                CHECK(*projectState.getFile() == newFile);
-            }
-
-            THEN("status hasFile is still true")
-            {
-                CHECK(projectState.getStatus().hasFile);
-            }
-
-            THEN("hasUnsavedChanges is false")
-            {
-                CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            }
-
-            THEN("callback is called")
-            {
-                CHECK(cbCalled);
-                CHECK_FALSE(cbStatus->hasUnsavedChanges);
-                CHECK(cbStatus->hasFile);
-                CHECK(*cbAction == ProjectState::Action::LoadNewFile);
-            }
+            file.deleteFile(); // clean up
         }
 
-        originalFile.deleteFile(); // clean up
+        SECTION("Directory does not have a main project state file")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            directory.getChildFile("figures").createDirectory();
+            directory.getChildFile("renders").createDirectory();
+
+            CHECK_THROWS_AS(projectState.load(directory),
+                            InvalidDirectoryForProjectLoad);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Directory does not have a figures sub directory")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            directory.getChildFile("project-state.xml").create();
+            directory.getChildFile("renders").createDirectory();
+
+            CHECK_THROWS_AS(projectState.load(directory),
+                            InvalidDirectoryForProjectLoad);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Directory does not have a renders sub directory")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            directory.getChildFile("project-state.xml").create();
+            directory.getChildFile("figures").createDirectory();
+
+            CHECK_THROWS_AS(projectState.load(directory),
+                            InvalidDirectoryForProjectLoad);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Project state file is empty")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            directory.getChildFile("project-state.xml").create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Project state file contains invalid xml")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            auto file = directory.getChildFile("project-state.xml");
+            file.create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            juce::FileOutputStream os(file);
+            os.writeText("<foo>", false, false, nullptr); // no end tag
+            os.flush();
+
+            auto fileContent = file.createInputStream()->readString();
+            CHECK(fileContent == "<foo>");
+
+            CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION(
+            "Project state file has a top level value tree of the wrong type")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            auto file = directory.getChildFile("project-state.xml");
+            file.create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            juce::FileOutputStream os(file);
+            os.writeText(
+                "<?xml version=\" 1.0 \" encoding=\"UTF - 8 \"?><foo></foo>",
+                false,
+                false,
+                nullptr);
+            os.flush();
+
+            CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Project state file has top level value tree with props")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            auto file = directory.getChildFile("project-state.xml");
+            file.create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            juce::FileOutputStream os(file);
+            os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
+                         "\"?><PROJECT_STATE foo=\"bar\" />",
+                         false,
+                         false,
+                         nullptr);
+            os.flush();
+
+            CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Project state file has invalid children (wrong type)")
+        {
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            auto file = directory.getChildFile("project-state.xml");
+            file.create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            juce::FileOutputStream os(file);
+            os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
+                         "\"?><PROJECT_STATE><FOO></FOO></PROJECT_STATE>",
+                         false,
+                         false,
+                         nullptr);
+            os.flush();
+
+            CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
+            CHECK(state.getNumChildren() == 1);
+            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+            CHECK(projectState.getStatus().hasUnsavedChanges);
+            CHECK_FALSE(cbCalled);
+            CHECK(cbStatus == nullptr);
+            CHECK(cbAction == nullptr);
+
+            directory.deleteRecursively(); // clean up
+        }
+
+        SECTION("Project state file has invalid representations of objects")
+        {
+            // Easiest way to check this is to include children with valid types
+            // but no props. That ensures that something will throw an error
+            // somewhere. There is no point checking all reasons that there
+            // might be invalid representations of data as this is just a repeat
+            // of the object and list tests. Just need to know that before
+            // replacing the state with the one loaded from file, that we have
+            // tried to create object lists for each object type.
+            auto projectName = FileHelpers::getTestFileName();
+            filepath += projectName;
+            juce::File directory(filepath);
+            directory.createDirectory();
+            auto file = directory.getChildFile("project-state.xml");
+            file.create();
+            directory.getChildFile("renders").createDirectory();
+            directory.getChildFile("figures").createDirectory();
+
+            juce::FileOutputStream os(file);
+            juce::String textContent =
+                "<?xml version=\" 1.0 \" encoding=\" UTF - 8 \"?>";
+
+            SECTION("Event")
+            {
+                textContent += "<PROJECT_STATE><EVENT/></PROJECT_STATE>";
+                os.writeText(textContent, false, false, nullptr);
+                os.flush();
+
+                CHECK_THROWS_AS(projectState.load(directory),
+                                InvalidProjectFile);
+                CHECK(state.getNumChildren() == 1);
+                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+                CHECK(projectState.getStatus().hasUnsavedChanges);
+                CHECK_FALSE(cbCalled);
+                CHECK(cbStatus == nullptr);
+                CHECK(cbAction == nullptr);
+            }
+
+            SECTION("Figure")
+            {
+                textContent += "<PROJECT_STATE><FIGURE/></PROJECT_STATE>";
+                os.writeText(textContent, false, false, nullptr);
+                os.flush();
+
+                CHECK_THROWS_AS(projectState.load(directory),
+                                InvalidProjectFile);
+                CHECK(state.getNumChildren() == 1);
+                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+                CHECK(projectState.getStatus().hasUnsavedChanges);
+                CHECK_FALSE(cbCalled);
+                CHECK(cbStatus == nullptr);
+                CHECK(cbAction == nullptr);
+            }
+
+            SECTION("Particle")
+            {
+                textContent += "<PROJECT_STATE><PARTICLE/></PROJECT_STATE>";
+                os.writeText(textContent, false, false, nullptr);
+                os.flush();
+
+                CHECK_THROWS_AS(projectState.load(directory),
+                                InvalidProjectFile);
+                CHECK(state.getNumChildren() == 1);
+                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+                CHECK(projectState.getStatus().hasUnsavedChanges);
+                CHECK_FALSE(cbCalled);
+                CHECK(cbStatus == nullptr);
+                CHECK(cbAction == nullptr);
+            }
+
+            SECTION("Source")
+            {
+                textContent += "<PROJECT_STATE><SOURCE/></PROJECT_STATE>";
+                os.writeText(textContent, false, false, nullptr);
+                os.flush();
+
+                CHECK_THROWS_AS(projectState.load(directory),
+                                InvalidProjectFile);
+                CHECK(state.getNumChildren() == 1);
+                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
+                CHECK(projectState.getStatus().hasUnsavedChanges);
+                CHECK_FALSE(cbCalled);
+                CHECK(cbStatus == nullptr);
+                CHECK(cbAction == nullptr);
+            }
+
+            directory.deleteRecursively(); // clean up
+        }
     }
 
-    newFile.deleteFile(); // clean up
+    WHEN("An valid project directory is provided")
+    {
+        auto projectName = FileHelpers::getTestFileName();
+        filepath += projectName;
+        juce::File directory(filepath);
+        directory.createDirectory();
+        auto file = directory.getChildFile("project-state.xml");
+        file.create();
+        directory.getChildFile("renders").createDirectory();
+        directory.getChildFile("figures").createDirectory();
+
+        juce::FileOutputStream os(file);
+        os.writeText("<?xml version=\" 1.0 \" encoding=\" UTF - 8 "
+                     "\"?><PROJECT_STATE></PROJECT_STATE>",
+                     false,
+                     false,
+                     nullptr);
+        os.flush();
+
+        projectState.load(directory);
+
+        THEN("state should be changed")
+        {
+            CHECK(state.getNumChildren() == 0);
+        }
+
+        THEN("the provided directory is stored in project state")
+        {
+            CHECK(*projectState.getProjectDirectory() == directory);
+        }
+
+        THEN("status is updated and callback is called with correct action")
+        {
+            CHECK(projectState.getStatus().hasProjectDirectory);
+            CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
+            CHECK(cbCalled);
+            CHECK(cbStatus->hasProjectDirectory);
+            CHECK_FALSE(cbStatus->hasUnsavedChanges);
+            CHECK(*cbAction == ProjectState::Action::LoadProject);
+        }
+
+        directory.deleteRecursively(); // clean up
+    }
 }
 
-SCENARIO("Project state: Save and load scenario flows")
-{
-    // NB: Because tests are relying on a flow of events, all actions (method
-    // calls) need to happen at the outer level, not in nested whens / thens
-
-    juce::String filepath(CURRENT_BINARY_DIRECTORY);
-    filepath += FileHelpers::getTestFileName() + ".xml";
-    juce::File file(filepath);
-    file.create();
-
-    // state stage 1: empty
-    juce::ValueTree state(IDs::PROJECT_STATE);
-    ProjectState projectState(state);
-
-    // state stage 2: filled
-    auto pathBase = juce::String(ASSETS_DIR) + "/audio";
-    auto sourcePath = pathBase + "/whitenoise-2000ms.wav";
-    juce::File sourceFile(sourcePath);
-
-    auto sl = projectState.getSourceList();
-    Source s(sourceFile);
-    sl.addObject(s);
-
-    auto pl = projectState.getParticleList();
-    Particle p(s);
-    pl.addObject(p);
-
-    auto fl = projectState.getFigureList();
-    Figure f;
-    fl.addObject(f);
-
-    auto el = projectState.getEventList();
-    Event e(f, p, 0);
-    el.addObject(e);
-
-    CHECK(sl.getObjects().size() == 1);
-    CHECK(pl.getObjects().size() == 1);
-    CHECK(fl.getObjects().size() == 1);
-    CHECK(el.getObjects().size() == 1);
-    CHECK(state.getNumChildren() == 4);
-
-    // state save to file
-    projectState.save(file);
-
-    // state stage 3: empty state
-    state.removeAllChildren(nullptr);
-
-    CHECK(sl.getObjects().size() == 0);
-    CHECK(pl.getObjects().size() == 0);
-    CHECK(fl.getObjects().size() == 0);
-    CHECK(el.getObjects().size() == 0);
-    CHECK(state.getNumChildren() == 0);
-
-    // state load:
-    projectState.load(file);
-
-    WHEN("state is loaded")
-    {
-        THEN("state should be same as at stage 2")
-        {
-            CHECK(sl.getObjects().size() == 1);
-            CHECK(pl.getObjects().size() == 1);
-            CHECK(fl.getObjects().size() == 1);
-            CHECK(el.getObjects().size() == 1);
-            CHECK(state.getNumChildren() == 4);
-        }
-    }
-
-    // state stage 4: change state
-    el.removeObject(el.getObjects()[0]);
-    fl.removeObject(fl.getObjects()[0]);
-
-    CHECK(sl.getObjects().size() == 1);
-    CHECK(pl.getObjects().size() == 1);
-    CHECK(fl.getObjects().size() == 0);
-    CHECK(el.getObjects().size() == 0);
-    CHECK(state.getNumChildren() == 2);
-
-    // overwrite save to file
-    projectState.save();
-
-    // state stage 5: empty state
-    state.removeAllChildren(nullptr);
-
-    CHECK(sl.getObjects().size() == 0);
-    CHECK(pl.getObjects().size() == 0);
-    CHECK(fl.getObjects().size() == 0);
-    CHECK(el.getObjects().size() == 0);
-    CHECK(state.getNumChildren() == 0);
-
-    // state load:  assert state same as stage 4
-    projectState.load(file);
-
-    WHEN("state is loaded, having overwritten previous state (stage 2) on file")
-    {
-        THEN("state should be same as at stage 4")
-        {
-            CHECK(sl.getObjects().size() == 1);
-            CHECK(pl.getObjects().size() == 1);
-            CHECK(fl.getObjects().size() == 0);
-            CHECK(el.getObjects().size() == 0);
-            CHECK(state.getNumChildren() == 2);
-        }
-    }
-
-    file.deleteFile(); // clean up
-}
-
-SCENARIO("Project state: Loading a file notifies list listeners")
+SCENARIO("Project state: loading a project notifies list listeners")
 {
     juce::String filepath(CURRENT_BINARY_DIRECTORY);
-    filepath += FileHelpers::getTestFileName() + ".xml";
-    juce::File file(filepath);
-    file.create();
+    auto projectName = FileHelpers::getTestFileName();
+    filepath += projectName;
+    juce::File directory(filepath);
+    directory.createDirectory();
 
     // state empty
     juce::ValueTree state(IDs::PROJECT_STATE);
     ProjectState projectState(state);
+
+    projectState.create(directory);
 
     auto pathBase = juce::String(ASSETS_DIR) + "/audio";
     auto sourcePath = pathBase + "/whitenoise-2000ms.wav";
@@ -822,7 +727,7 @@ SCENARIO("Project state: Loading a file notifies list listeners")
         CHECK(state.getNumChildren() == 4);
 
         // state save to file
-        projectState.save(file);
+        projectState.save();
 
         // empty state
         state.removeAllChildren(nullptr);
@@ -853,7 +758,7 @@ SCENARIO("Project state: Loading a file notifies list listeners")
         };
 
         // load state from file
-        projectState.load(file);
+        projectState.load(directory);
 
         CHECK(sl.getObjects().size() == 1);
         CHECK(pl.getObjects().size() == 1);
@@ -870,7 +775,7 @@ SCENARIO("Project state: Loading a file notifies list listeners")
     SECTION("onObjectRemoved")
     {
         // save state to file (empty)
-        projectState.save(file);
+        projectState.save();
 
         // fill state
         auto sl = projectState.getSourceList();
@@ -915,7 +820,7 @@ SCENARIO("Project state: Loading a file notifies list listeners")
         };
 
         // load file
-        projectState.load(file);
+        projectState.load(directory);
 
         CHECK(sl.getObjects().size() == 0);
         CHECK(pl.getObjects().size() == 0);
@@ -929,19 +834,23 @@ SCENARIO("Project state: Loading a file notifies list listeners")
         }
     }
 
-    file.deleteFile(); // clean up
+    directory.deleteRecursively(); // clean up
 }
 
 SCENARIO("Project state: changes to state updates status")
 {
     juce::String filepath(CURRENT_BINARY_DIRECTORY);
-    filepath += FileHelpers::getTestFileName() + ".xml";
-    juce::File file(filepath);
-    file.create();
+    auto projectName = FileHelpers::getTestFileName();
+    filepath += projectName;
+    juce::File directory(filepath);
+    directory.createDirectory();
 
     // state empty
     juce::ValueTree state(IDs::PROJECT_STATE);
     ProjectState projectState(state);
+
+    projectState.create(directory);
+
     bool cbCalled = false;
     std::unique_ptr<ProjectState::Status> cbStatus;
     std::unique_ptr<ProjectState::Action> cbAction;
@@ -954,10 +863,10 @@ SCENARIO("Project state: changes to state updates status")
 
     WHEN("project state is initialised (empty)")
     {
-        THEN("status props are false")
+        THEN("check status props")
         {
             CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
-            CHECK_FALSE(projectState.getStatus().hasFile);
+            CHECK(projectState.getStatus().hasProjectDirectory);
         }
     }
 
@@ -987,7 +896,7 @@ SCENARIO("Project state: changes to state updates status")
         CHECK(projectState.getStatus().hasUnsavedChanges);
 
         // forces hasUnsavedChanges to be false
-        projectState.save(file);
+        projectState.save();
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         cbCalled = false; // reset here as addObject will trigger listener
         cbStatus = nullptr;
@@ -1026,7 +935,7 @@ SCENARIO("Project state: changes to state updates status")
         CHECK(projectState.getStatus().hasUnsavedChanges);
 
         // forces hasUnsavedChanges to be false
-        projectState.save(file);
+        projectState.save();
 
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         cbCalled = false; // reset here as addObject will trigger listener
@@ -1049,5 +958,5 @@ SCENARIO("Project state: changes to state updates status")
         }
     }
 
-    file.deleteFile(); // clean up
+    directory.deleteRecursively(); // clean up
 }

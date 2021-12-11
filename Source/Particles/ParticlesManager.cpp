@@ -12,7 +12,8 @@ ParticlesManager::ParticlesManager(const ProjectState &ps, te::Engine &eng)
   engine(eng)
 {
     projectState.onStatusChanged = [this](auto status, auto action) {
-        if(action == ProjectState::Action::LoadNewFile) {
+        if(action == ProjectState::Action::LoadProject ||
+           action == ProjectState::Action::CreateProject) {
             closeEditor();
         }
     };
