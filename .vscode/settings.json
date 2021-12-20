@@ -97,6 +97,9 @@
         "list": "cpp",
         "cfenv": "cpp",
         "*.mm": "cpp",
-        "__functional_03": "cpp"
+        "__functional_03": "cpp",
+        "__bits": "cpp",
+        "typeindex": "cpp",
+        "__availability": "cpp"
     }
 }

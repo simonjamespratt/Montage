@@ -55,6 +55,21 @@ class InvalidFilePath : public std::invalid_argument {
     InvalidFilePath();
 };
 
+class InvalidDirectoryPath : public std::invalid_argument {
+  public:
+    InvalidDirectoryPath();
+};
+
+class InvalidDirectoryForProjectCreation : public std::invalid_argument {
+  public:
+    InvalidDirectoryForProjectCreation();
+};
+
+class InvalidDirectoryForProjectLoad : public std::invalid_argument {
+  public:
+    InvalidDirectoryForProjectLoad();
+};
+
 class InvalidAudioFile : public std::invalid_argument {
   public:
     InvalidAudioFile();
@@ -63,6 +78,11 @@ class InvalidAudioFile : public std::invalid_argument {
 class InvalidProjectFile : public std::invalid_argument {
   public:
     InvalidProjectFile();
+};
+
+class ProjectDirectoryNotFound : public std::invalid_argument {
+  public:
+    ProjectDirectoryNotFound();
 };
 
 class ProjectFileNotFound : public std::invalid_argument {

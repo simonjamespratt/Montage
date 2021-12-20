@@ -14,7 +14,8 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
                      juce::DrawableButton::ButtonStyle::ImageOnButtonBackground)
 {
     projectState.onStatusChanged = [this](auto status, auto action) {
-        if(action == ProjectState::Action::LoadNewFile) {
+        if(action == ProjectState::Action::LoadProject ||
+           action == ProjectState::Action::CreateProject) {
             sequencer.clear();
             eventsTable.clear();
         }

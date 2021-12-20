@@ -56,6 +56,22 @@ InvalidFilePath::InvalidFilePath()
       "File path does not point to a file that exists or it is a directory")
 {}
 
+InvalidDirectoryPath::InvalidDirectoryPath()
+: std::invalid_argument(
+      "File path does not point to a directory that exists or it is a file")
+{}
+
+InvalidDirectoryForProjectCreation::InvalidDirectoryForProjectCreation()
+: std::invalid_argument(
+      "The target directory for creating a new project is not empty. Files or "
+      "directories already exist within it.")
+{}
+
+InvalidDirectoryForProjectLoad::InvalidDirectoryForProjectLoad()
+: std::invalid_argument("The target directory for loading an existing project "
+                        "does not have the required files or sub directories.")
+{}
+
 InvalidAudioFile::InvalidAudioFile()
 : std::invalid_argument(
       "File path points to a file that is not an audio file. Must be of "
@@ -72,6 +88,11 @@ InvalidProjectFile::InvalidProjectFile()
 ProjectFileNotFound::ProjectFileNotFound()
 : std::invalid_argument(
       "Project state does not have a file to save to. Please provide one")
+{}
+
+ProjectDirectoryNotFound::ProjectDirectoryNotFound()
+: std::invalid_argument("Project state does not have a project loaded. "
+                        "Please either load a project or create one.")
 {}
 
 ProjectSaveFailed::ProjectSaveFailed()
