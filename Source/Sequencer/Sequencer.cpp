@@ -1,315 +1,242 @@
 #include "Sequencer.h"
 
-#include "AudioRenderer.h"
-#include "ErrorMessageModal.h"
-
-Sequencer::Sequencer(te::Engine &eng)
-: edit(te::createEmptyEdit(eng, juce::File())),
+Sequencer::Sequencer(std::unique_ptr<te::Edit> e, Figure f, ProjectState &ps)
+: edit(std::move(e)),
+  projectState(ps),
+  sequencerViewState(*edit, f),
   transport(edit->getTransport()),
-  transportManager(*edit, cursor),
+  transportManager(*edit),
   timeline(*edit),
-  timeScalingFactor {100, 100, 0, 1000},
-  trackHeight(75),
-  arrangement(*edit, transport, trackHeight),
-  trackControlPanel(trackHeight),
-  transportInteractor(transport, *edit),
-  transportController(transport),
-  xZoom(juce::Slider::SliderStyle::LinearHorizontal,
-        juce::Slider::TextEntryBoxPosition::NoTextBox),
-  yZoom(juce::Slider::SliderStyle::LinearVertical,
-        juce::Slider::TextEntryBoxPosition::NoTextBox),
-  trackControlPanelWidth(0.1),
-  trackControlPanelWidthAdjuster(juce::Slider::SliderStyle::LinearHorizontal,
-                                 juce::Slider::TextEntryBoxPosition::NoTextBox)
+  arrangement(*edit, sequencerViewState),
+  panels(*edit),
+  controlsView(sequencerViewState, *edit, ps)
 {
+    sequencerViewState.state.addListener(this);
+
+    edit->state.addListener(this);
+
+    projectState.onStatusChanged = [this](auto status, auto action) {
+        if(action == ProjectState::Action::SaveProject) {
+            save();
+        }
+    };
+
     transportManager.onChange = [this] {
-        arrangementContainerViewport.syncToTransportPositionWhenPlaying(
+        arrangementViewport.syncToTransportPositionWhenPlaying(
             transport.getCurrentPosition(),
             edit->getLength());
     };
     transportManager.startManager();
-
-    transportController.onTransportStopped = [this] {
-        arrangementContainerViewport.syncToTransportPositionWhenPlaying(
-            transport.getCurrentPosition(),
-            edit->getLength());
-    };
-
-    transportInteractor.onSelectionChangeInProgress =
-        [this](const juce::MouseEvent event) {
-            arrangementContainerViewport.syncToMouseDrag(event);
-        };
-
-    addAndMakeVisible(&transportController);
 
     timelineViewport.setViewedComponent(&timeline, false);
     addAndMakeVisible(&timelineViewport);
     timelineViewport.setScrollBarsShown(false, false, false, true);
     timelineViewport.onVisibleAreaChanged =
         [this](const juce::Rectangle<int> &newVisibleArea) {
-            arrangementContainerViewport.setViewPosition(
+            arrangementViewport.setViewPosition(
                 newVisibleArea.getX(),
-                arrangementContainerViewport.getViewPositionY());
+                arrangementViewport.getViewPositionY());
         };
 
-    arrangementContainerViewport.setViewedComponent(&arrangementContainer,
-                                                    false);
-    addAndMakeVisible(&arrangementContainerViewport);
-    arrangementContainerViewport.setScrollBarsShown(true, true);
-    arrangementContainerViewport.onVisibleAreaChanged =
+    arrangementViewport.setViewedComponent(&arrangement, false);
+    addAndMakeVisible(&arrangementViewport);
+    arrangementViewport.setScrollBarsShown(true, true);
+    arrangementViewport.onVisibleAreaChanged =
         [this](const juce::Rectangle<int> &newVisibleArea) {
             timelineViewport.setViewPosition(newVisibleArea.getX(),
                                              newVisibleArea.getY());
 
-            trackControlPanelViewPort.setViewPosition(newVisibleArea.getX(),
-                                                      newVisibleArea.getY());
+            panelsViewport.setViewPosition(newVisibleArea.getX(),
+                                           newVisibleArea.getY());
         };
 
-    arrangementContainer.addAndMakeVisible(&arrangement);
-    arrangementContainer.addAndMakeVisible(&cursor);
-    arrangementContainer.addAndMakeVisible(&transportInteractor);
-
-    trackControlPanelViewPort.setViewedComponent(&trackControlPanel, false);
-    addAndMakeVisible(&trackControlPanelViewPort);
-    trackControlPanelViewPort.setScrollBarsShown(false, false, true, false);
-    trackControlPanelViewPort.onVisibleAreaChanged =
+    panelsViewport.setViewedComponent(&panels, false);
+    addAndMakeVisible(&panelsViewport);
+    panelsViewport.setScrollBarsShown(false, false, true, false);
+    panelsViewport.onVisibleAreaChanged =
         [this](const juce::Rectangle<int> &newVisibleArea) {
-            arrangementContainerViewport.setViewPosition(
-                arrangementContainerViewport.getViewPositionX(),
+            arrangementViewport.setViewPosition(
+                arrangementViewport.getViewPositionX(),
                 newVisibleArea.getY());
         };
 
-    xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
-    xZoom.setValue(timeScalingFactor.current);
-    xZoom.onValueChange = [this] {
-        timeScalingFactor.current = xZoom.getValue();
-        resized();
+    addAndMakeVisible(controlsView);
 
-        // NB: do this AFTER resized() where component sizes are set to correct
-        // new values
-        arrangementContainerViewport.syncToTransportPositionOnResize(
-            transport.getCurrentPosition(),
-            edit->getLength());
-    };
-    addAndMakeVisible(xZoom);
-
-    yZoom.setRange(20, 300);
-    yZoom.setValue(trackHeight);
-    yZoom.onValueChange = [this] {
-        trackHeight = yZoom.getValue();
-        arrangement.setTrackHeight(trackHeight);
-        trackControlPanel.setTrackHeight(trackHeight);
-        resized();
-    };
-    addAndMakeVisible(yZoom);
-
-    trackControlPanelWidthAdjuster.setRange(0.05, 0.4);
-    trackControlPanelWidthAdjuster.setValue(trackControlPanelWidth);
-    trackControlPanelWidthAdjuster.onValueChange = [this] {
-        trackControlPanelWidth = trackControlPanelWidthAdjuster.getValue();
-        resized();
-    };
-    addAndMakeVisible(trackControlPanelWidthAdjuster);
-
-    renderButton.setButtonText("Render");
-    renderButton.onClick = [this] {
-        if(currentFigure == nullptr) {
-            std::make_shared<ErrorMessageModal>(
-                "Cannot render because no figure is currently selected.");
-            return;
-        }
-
-        AudioRenderer::renderFigureToFile(*edit, currentFigure->getName());
-    };
-    addAndMakeVisible(renderButton);
+    sequencerViewState.sequencerIsLoaded = true;
 }
 
 Sequencer::~Sequencer()
 {
+    transport.stop(false, false);
     edit->getTempDirectory(false).deleteRecursively();
+    sequencerViewState.state.removeListener(this);
+    edit->state.removeListener(this);
+    jassert(te::EditFileOperations(*edit).save(true, false, true));
+    projectState.setFigureEditHasUnsavedChanges(false);
 }
 
 void Sequencer::resized()
 {
-    auto area = getLocalBounds();
-
-    auto controlsArea = area.removeFromBottom(50);
-    auto transportArea = controlsArea.reduced(200, 0);
-    auto zoomControlsArea = controlsArea.removeFromRight(200);
-    auto tcpWidthAdjusterArea = controlsArea.removeFromLeft(100);
-    auto renderArea = controlsArea.removeFromRight(100);
-
-    auto trackControlPanelArea =
-        area.removeFromLeft(area.getWidth() * trackControlPanelWidth);
-    trackControlPanelArea.removeFromTop(25); // timeline height removed
-
-    auto timelineViewportArea = area.removeFromTop(25);
-    auto containerViewportArea = area;
-    auto editLength = edit->getLength();
-    if(editLength > 0) {
-        timeScalingFactor.min = containerViewportArea.getWidth() / editLength;
-        xZoom.setRange(timeScalingFactor.min, timeScalingFactor.max);
-    }
-
-    auto editWidth = editLength * timeScalingFactor.current;
-    auto totalTrackHeight =
-        (te::getAudioTracks(*edit).size() * trackHeight) +
-        1; // add 1 to avoid bottom divider in arrangement being cut off
     auto bottomMargin = 8; // avoids vertical scrollbar when arrangement is
                            // shorter than viewport
+
+    // areas
+    auto area = getLocalBounds();
+    auto controlsArea = area.removeFromBottom(50);
+    auto panelsViewportArea =
+        area.removeFromLeft(area.getWidth() * sequencerViewState.panelsWidth);
+    panelsViewportArea.removeFromTop(25); // timeline height removed
+    panelsViewportArea.removeFromBottom(bottomMargin);
+    auto timelineViewportArea = area.removeFromTop(25);
+    auto arrangementViewportArea = area;
+
+    // calculations for edit length and no of tracks
+    auto editLength = edit->getLength();
+    auto editWidth = editLength * sequencerViewState.timeScalingFactorCurrent;
+    auto totalTrackHeight =
+        (te::getAudioTracks(*edit).size() * sequencerViewState.trackHeight) +
+        1; // add 1 to avoid bottom divider in arrangement being cut off
     auto arrangementHeight =
-        totalTrackHeight > containerViewportArea.getHeight()
+        totalTrackHeight > arrangementViewportArea.getHeight()
             ? totalTrackHeight
-            : containerViewportArea.getHeight() - bottomMargin;
+            : arrangementViewportArea.getHeight() - bottomMargin;
+
+    // NB: This is a bit wonky since transitioning to SequencerViewState
+    // if(editLength > 0) {
+    //     sequencerViewState.timeScalingFactorMin =
+    //         arrangementViewportArea.getWidth() / editLength;
+    //     DBG("time scaling factor min: "
+    //         << sequencerViewState.timeScalingFactorMin);
+    //     xZoom.setRange(sequencerViewState.timeScalingFactorMin,
+    //                    sequencerViewState.timeScalingFactorMax);
+    // }
 
     timelineViewport.setBounds(timelineViewportArea);
-    arrangementContainerViewport.setBounds(containerViewportArea);
-
     timeline.setSize(editWidth, timelineViewportArea.getHeight());
-    arrangementContainer.setSize(editWidth, arrangementHeight);
 
-    auto arrangementArea = arrangementContainer.getBounds();
-    cursor.setSize(arrangementArea.getWidth(), arrangementArea.getHeight());
-    transportInteractor.setSize(arrangementArea.getWidth(),
-                                arrangementArea.getHeight());
-    arrangement.setSize(editWidth, totalTrackHeight);
+    arrangementViewport.setBounds(arrangementViewportArea);
+    arrangement.setSize(editWidth, arrangementHeight);
 
-    trackControlPanelArea.removeFromBottom(bottomMargin);
-    trackControlPanelViewPort.setBounds(
-        trackControlPanelArea); // this will become area of viewport
-    trackControlPanel.setSize(trackControlPanelArea.getWidth(),
-                              totalTrackHeight);
+    panelsViewport.setBounds(panelsViewportArea);
+    panels.setSize(panelsViewportArea.getWidth(), totalTrackHeight);
 
-    transportController.setBounds(transportArea);
-    xZoom.setBounds(
-        zoomControlsArea.removeFromLeft(zoomControlsArea.getWidth() / 2));
-    yZoom.setBounds(zoomControlsArea);
-
-    trackControlPanelWidthAdjuster.setBounds(tcpWidthAdjusterArea);
-
-    renderButton.setBounds(renderArea.reduced(10));
+    controlsView.setBounds(controlsArea);
 }
 
-void Sequencer::readFigure(const Figure &figure,
-                           const ProjectState &projectState)
+// Static public methods
+std::unique_ptr<te::Edit> Sequencer::createEdit(Figure figure,
+                                                const ProjectState &ps,
+                                                juce::File file,
+                                                te::Engine &e)
 {
-    clear();
+    if(file.getSize() == 0) {
+        auto edit = te::createEmptyEdit(e, file);
 
-    currentFigure = std::make_unique<Figure>(figure);
+        auto eventList = ps.getEventList(figure);
+        auto particleList = ps.getParticleList();
 
-    std::vector<ClipData> clips;
+        // prep tracks
+        auto particles = particleList.getObjects();
+        edit->ensureNumberOfAudioTracks(particles.size());
+        auto tracks = te::getAudioTracks(*edit);
+        for(size_t i = 0; i < particles.size(); i++) {
+            tracks[i]->setName(particles[i].getName());
+        }
 
-    auto eventList = projectState.getEventList(figure);
-    auto particleList = projectState.getParticleList();
+        // add events as clips
+        for(auto &event : eventList.getObjects()) {
+            auto particle = event.getParticle();
 
-    prepareForNewFigure(particleList);
+            int trackIndex = particleList.getIndex(particle);
+            jassert(trackIndex != -1);
+            double clipStart = event.getOnset() * 0.001; // convert from ms to s
+            double clipEnd =
+                (particle.getEnd() - particle.getStart()) + clipStart;
+            double offset = particle.getStart();
+            auto file = particle.getSource().getFile();
 
-    for(auto &event : eventList.getObjects()) {
-        auto particle = event.getParticle();
+            /*
+            NB: ClipPosition has the following structure: { {startClip,
+           endClip}, offset } Where the above mean:
+            - startClip: the start position of the clip as placed on the track,
+           e.g. 1.0 would mean the clip starts at 1 second from the beginning of
+           the transport start
+            - endClip: the end of the clip; the difference between clipEnd and
+           clipStart gives you the length of the clip
+            - offset: the start of the clip in relation to the start of the
+           audio file, e.g. 1.0 would mean the clip start is 1 second from the
+           beginning of the audio file
 
-        int trackIndex = particleList.getIndex(particle);
-        jassert(trackIndex != -1);
-        double clipStart = event.getOnset() * 0.001; // convert from ms to s
-        double clipEnd = (particle.getEnd() - particle.getStart()) + clipStart;
-        double offset = particle.getStart();
-        auto file = particle.getSource().getFile();
+            Mapping figure and particle value trees to a ClipPosition:
+            - particle.rangeStart -> ClipPosition.offset
+            - figure.figureEvent.onset -> ClipPosition.clipStart
+            - (particle.rangeEnd - particle.rangeStart) + ClipPosition.clipStart
+           -> ClipPosition.clipEnd
+           */
 
-        auto clip =
-            addClipToTrack(file, trackIndex, clipStart, clipEnd, offset);
-        clips.push_back({clip, trackIndex, clipStart, clipEnd, offset});
+            edit->ensureNumberOfAudioTracks(trackIndex + 1);
+            auto track = te::getAudioTracks(*edit)[trackIndex];
+
+            track->insertWaveClip(file.getFileNameWithoutExtension(),
+                                  file,
+                                  {{clipStart, clipEnd}, offset},
+                                  false);
+        }
+
+        // this returns a boolean re. success/failure of save so could be used
+        // to make decisions on failure if needed
+        te::EditFileOperations(*edit).save(true, true, false);
+
+        return edit;
     }
 
-    // do this after we know the edit length but before adding clips to the
-    // arrangement as arrangement needs to be resized first which this will do
-    resized();
-
-    for(auto &&entry : clips) {
-        arrangement.addClip(entry.clip,
-                            entry.trackIndex,
-                            entry.clipStart,
-                            entry.clipEnd,
-                            entry.offset);
-    }
-
-    timeline.recalculate();
-    transportController.grabKeyboardFocus();
-}
-
-void Sequencer::clear()
-{
-    currentFigure = nullptr;
-    transport.stop(false, false);
-    transport.position = 0.0;
-    transport.setLoopRange({});
-    transportInteractor.clearSelectionRange();
-    clearTracks();
-    arrangement.clear();
-    trackControlPanel.clear();
-    timeScalingFactor.current = timeScalingFactor.initial;
-    resized();
+    return te::loadEditFromFile(e, file);
 }
 
 // Private methods
-void Sequencer::prepareForNewFigure(ParticleList particleList)
+void Sequencer::valueTreePropertyChanged(juce::ValueTree &tree,
+                                         const juce::Identifier &prop)
 {
-    auto noOfTracks = particleList.getObjects().size();
-    prepareTracks(noOfTracks);
-    arrangement.prepare(noOfTracks);
-    trackControlPanel.createPanels(particleList);
-}
+    if(prop == IDs::trackHeight || prop == IDs::panelsWidth ||
+       prop == IDs::timeScalingFactorCurrent) {
+        resized();
 
-void Sequencer::clearTracks()
-{
-    // remove all clips from each track and delete the track
-    auto tracks = te::getAudioTracks(*edit);
-    for(auto &track : tracks) {
-        auto clipsToRemove = track->getClips();
-        for(int i = clipsToRemove.size(); --i >= 0;) {
-            clipsToRemove.getUnchecked(i)->removeFromParentTrack();
+        // NB: do this AFTER resized() where component sizes are set to correct
+        // new values
+        if(prop == IDs::timeScalingFactorCurrent) {
+            arrangementViewport.syncToTransportPositionOnResize(
+                transport.getCurrentPosition(),
+                edit->getLength());
         }
-        edit->deleteTrack(track);
+    }
+
+    if(prop == IDs::viewportSyncToMouseRequired) {
+        if(sequencerViewState.viewportSyncToMouseRequired) {
+            auto mousePos = arrangement.getMouseXYRelative();
+            arrangementViewport.syncToMouseDrag(mousePos);
+            sequencerViewState.viewportSyncToMouseRequired = false;
+        }
+    }
+
+    if(prop == IDs::viewportSyncToTransportRequired &&
+       sequencerViewState.viewportSyncToTransportRequired) {
+    }
+    {
+        arrangementViewport.syncToTransportPositionWhenPlaying(
+            transport.getCurrentPosition(),
+            edit->getLength());
+        sequencerViewState.viewportSyncToTransportRequired = false;
+    }
+
+    if(prop == te::IDs::lastSignificantChange) {
+        projectState.setFigureEditHasUnsavedChanges(true);
     }
 }
 
-void Sequencer::prepareTracks(int noOfTracks)
+void Sequencer::save()
 {
-    edit->ensureNumberOfAudioTracks(noOfTracks);
-    repaint();
-}
-
-juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
-Sequencer::addClipToTrack(const juce::File &file,
-                          const int trackIndex,
-                          const double &clipStart,
-                          const double &clipEnd,
-                          const double &offset)
-{
-    /*
-        NB: ClipPosition has the following structure: { {startClip, endClip},
-       offset } Where the above mean:
-        - startClip: the start position of the clip as placed on the track,
-       e.g. 1.0 would mean the clip starts at 1 second from the beginning of the
-       transport start
-        - endClip: the end of the clip; the difference between clipEnd and
-       clipStart gives you the length of the clip
-        - offset: the start of the clip in relation to the start of the audio
-       file, e.g. 1.0 would mean the clip start is 1 second from the beginning
-       of the audio file
-
-        Mapping figure and particle value trees to a ClipPosition:
-        - particle.rangeStart -> ClipPosition.offset
-        - figure.figureEvent.onset -> ClipPosition.clipStart
-        - (particle.rangeEnd - particle.rangeStart) + ClipPosition.clipStart ->
-       ClipPosition.clipEnd
-    */
-
-    edit->ensureNumberOfAudioTracks(trackIndex + 1);
-    auto track = te::getAudioTracks(*edit)[trackIndex];
-
-    auto newClip = track->insertWaveClip(file.getFileNameWithoutExtension(),
-                                         file,
-                                         {{clipStart, clipEnd}, offset},
-                                         false);
-
-    return newClip;
+    if(projectState.getStatus().figureEditHasUnsavedChanges) {
+        jassert(te::EditFileOperations(*edit).save(true, false, false));
+        projectState.setFigureEditHasUnsavedChanges(false);
+    }
 }

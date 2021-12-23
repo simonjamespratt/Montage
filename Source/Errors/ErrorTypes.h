@@ -95,6 +95,11 @@ class ProjectSaveFailed : public std::invalid_argument {
     ProjectSaveFailed();
 };
 
+class EditFileNotFoundForFigure : public std::invalid_argument {
+  public:
+    EditFileNotFoundForFigure();
+};
+
 // Source specific types ======================================================
 class FileAlreadyExists : public std::invalid_argument {
   public:

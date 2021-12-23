@@ -5,7 +5,7 @@
 Figures::Figures(te::Engine &e, ProjectState &ps)
 : engine(e),
   projectState(ps),
-  sequencer(engine),
+  figureList(ps.getFigureList()),
   figureGenerator(ps),
   figuresTable(ps),
   addFigureButton("Add figure",
@@ -16,8 +16,16 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
     projectState.onStatusChanged = [this](auto status, auto action) {
         if(action == ProjectState::Action::LoadProject ||
            action == ProjectState::Action::CreateProject) {
-            sequencer.clear();
+            sequencer = nullptr;
             eventsTable.clear();
+        }
+    };
+
+    figureList.onObjectRemoved = [this](Figure f) {
+        try {
+            projectState.deleteFileForFigure(f);
+        } catch(const std::exception &e) {
+            std::cerr << e.what() << '\n';
         }
     };
 
@@ -30,7 +38,7 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
     deleteFigureButton.setImages(Icons::getIcon(Icons::IconType::Dash).get());
     addChildComponent(deleteFigureButton);
     deleteFigureButton.onClick = [this] {
-        sequencer.clear();
+        sequencer = nullptr;
         eventsTable.clear();
         figuresTable.removeFigure();
     };
@@ -43,16 +51,26 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
 
     addChildComponent(&figureGenerator);
     addChildComponent(&eventsTable);
-    addChildComponent(&sequencer);
 
     addChildComponent(&figuresTable);
     figuresTable.onFigureDeselected = [this] {
-        sequencer.clear();
+        sequencer = nullptr;
         eventsTable.clear();
     };
     figuresTable.onFigureSelected = [this](Figure f) {
-        sequencer.readFigure(f, projectState);
-        eventsTable.setData(f, projectState);
+        try {
+            auto figureFile =
+                projectState.getFileForFigure(f); // this might throw error
+            sequencer = std::make_unique<Sequencer>(
+                Sequencer::createEdit(f, projectState, figureFile, engine),
+                f,
+                projectState);
+            addAndMakeVisible(*sequencer);
+            eventsTable.setData(f, projectState);
+            resized();
+        } catch(const std::exception &e) {
+            std::cerr << e.what() << '\n';
+        }
     };
 
     heading.setText("Figures", juce::dontSendNotification);
@@ -69,12 +87,6 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
 
     refreshView();
 }
-
-Figures::~Figures()
-{}
-
-void Figures::paint(juce::Graphics &g)
-{}
 
 void Figures::resized()
 {
@@ -122,7 +134,9 @@ void Figures::resized()
     figuresTable.setBounds(
         managerArea.removeFromLeft(managerArea.getWidth() / 2));
     eventsTable.setBounds(managerArea);
-    sequencer.setBounds(sequencerArea.reduced(margin));
+    if(sequencer) {
+        sequencer->setBounds(sequencerArea.reduced(margin));
+    }
 }
 
 void Figures::arrangeFigure(Figure f)
@@ -144,7 +158,9 @@ void Figures::refreshView()
     deleteFigureButton.setVisible(!showGenerator);
     figuresTable.setVisible(!showGenerator);
     eventsTable.setVisible(!showGenerator);
-    sequencer.setVisible(!showGenerator);
+    if(sequencer) {
+        sequencer->setVisible(!showGenerator);
+    }
 
     figureGenerator.setVisible(showGenerator);
     closeGeneratorButton.setVisible(showGenerator);

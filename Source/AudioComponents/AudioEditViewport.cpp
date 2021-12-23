@@ -42,17 +42,17 @@ void AudioEditViewport::syncToTransportPositionOnResize(
     setViewPosition(arrangementXOffset, existingYOffset);
 }
 
-void AudioEditViewport::syncToMouseDrag(const juce::MouseEvent event)
+void AudioEditViewport::syncToMouseDrag(const juce::Point<int> mousePosition)
 {
-    auto mousePosition = event.getPosition().getX();
+    auto mousePositionX = mousePosition.getX();
     auto viewArea = getViewArea();
     auto horizontalRangeOfViewArea = viewArea.getHorizontalRange();
     auto rangeStart = horizontalRangeOfViewArea.getStart();
     auto rangeEnd = horizontalRangeOfViewArea.getEnd();
     int tolerance = 20;
 
-    if(mousePosition > (rangeEnd - tolerance)) {
-        auto nudgeValue = mousePosition - (rangeEnd - tolerance);
+    if(mousePositionX > (rangeEnd - tolerance)) {
+        auto nudgeValue = mousePositionX - (rangeEnd - tolerance);
         auto newXOffset = rangeStart + nudgeValue;
 
         auto existingYOffset = viewArea.getY();
@@ -62,8 +62,8 @@ void AudioEditViewport::syncToMouseDrag(const juce::MouseEvent event)
         return;
     }
 
-    if(mousePosition < (rangeStart + tolerance)) {
-        auto nudgeValue = (rangeStart + tolerance) - mousePosition;
+    if(mousePositionX < (rangeStart + tolerance)) {
+        auto nudgeValue = (rangeStart + tolerance) - mousePositionX;
         auto newXOffset = rangeStart - nudgeValue;
 
         auto existingYOffset = viewArea.getY();

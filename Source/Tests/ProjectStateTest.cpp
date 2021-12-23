@@ -33,7 +33,7 @@ SCENARIO("Project state: create")
     };
 
     // Initial values
-    CHECK(projectState.getProjectDirectory() == nullptr);
+    CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
     CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
     CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
 
@@ -42,7 +42,7 @@ SCENARIO("Project state: create")
         juce::File directory;
         CHECK_THROWS_AS(projectState.create(directory), InvalidDirectoryPath);
 
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         CHECK_FALSE(cbCalled);
@@ -57,7 +57,7 @@ SCENARIO("Project state: create")
         file.create();
         CHECK_THROWS_AS(projectState.create(file), InvalidDirectoryPath);
 
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         CHECK_FALSE(cbCalled);
@@ -77,7 +77,7 @@ SCENARIO("Project state: create")
         CHECK_THROWS_AS(projectState.create(directory),
                         InvalidDirectoryForProjectCreation);
 
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         CHECK_FALSE(cbCalled);
@@ -97,7 +97,7 @@ SCENARIO("Project state: create")
         CHECK_THROWS_AS(projectState.create(directory),
                         InvalidDirectoryForProjectCreation);
 
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
         CHECK_FALSE(cbCalled);
@@ -128,23 +128,23 @@ SCENARIO("Project state: create")
 
         THEN("The directory is stored in project state")
         {
-            CHECK(*projectState.getProjectDirectory() == directory);
+            CHECK(projectState.getProjectDirectory() == directory);
         }
 
         THEN("The required files and directories are created for a project")
         {
             auto projectDirectory = projectState.getProjectDirectory();
-            CHECK(projectDirectory->getChildFile("project-state.xml")
+            CHECK(projectDirectory.getChildFile("project-state.xml")
                       .existsAsFile());
-            CHECK(projectDirectory->getChildFile("figures").isDirectory());
-            CHECK(projectDirectory->getChildFile("renders").isDirectory());
+            CHECK(projectDirectory.getChildFile("figures").isDirectory());
+            CHECK(projectDirectory.getChildFile("renders").isDirectory());
         }
 
         THEN("The main project state file has a valid xml representation of an "
              "empty project, discarding pre-existing state in the process")
         {
             auto projectStateFile =
-                projectState.getProjectDirectory()->getChildFile(
+                projectState.getProjectDirectory().getChildFile(
                     "project-state.xml");
             CHECK(projectStateFile.existsAsFile());
 
@@ -196,13 +196,13 @@ SCENARIO("Project state: save")
             };
 
         // Initial values
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK(projectState.getStatus().hasUnsavedChanges);
 
         CHECK_THROWS_AS(projectState.save(), ProjectDirectoryNotFound);
 
-        CHECK(projectState.getProjectDirectory() == nullptr);
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
         CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
         CHECK(projectState.getStatus().hasUnsavedChanges);
         CHECK_FALSE(cbCalled);
@@ -219,7 +219,7 @@ SCENARIO("Project state: save")
 
         projectState.create(directory);
 
-        CHECK_FALSE(projectState.getProjectDirectory() == nullptr);
+        CHECK(projectState.getProjectDirectory() == directory);
         CHECK(projectState.getStatus().hasProjectDirectory);
 
         // fill state
@@ -244,7 +244,7 @@ SCENARIO("Project state: save")
         THEN("state is saved to the file in the project directory")
         {
             auto projectStateFile =
-                projectState.getProjectDirectory()->getChildFile(
+                projectState.getProjectDirectory().getChildFile(
                     "project-state.xml");
             CHECK(projectStateFile.existsAsFile());
 
@@ -284,7 +284,7 @@ SCENARIO("Project state: load")
     fl.addObject(Figure());
 
     CHECK(state.getNumChildren() == 1);
-    CHECK(projectState.getProjectDirectory() == nullptr);
+    CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
     CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
     CHECK(projectState.getStatus().hasUnsavedChanges);
 
@@ -306,7 +306,7 @@ SCENARIO("Project state: load")
             juce::File directory;
             CHECK_THROWS_AS(projectState.load(directory), InvalidDirectoryPath);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -322,7 +322,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(file), InvalidDirectoryPath);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -344,7 +344,7 @@ SCENARIO("Project state: load")
             CHECK_THROWS_AS(projectState.load(directory),
                             InvalidDirectoryForProjectLoad);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -366,7 +366,7 @@ SCENARIO("Project state: load")
             CHECK_THROWS_AS(projectState.load(directory),
                             InvalidDirectoryForProjectLoad);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -388,7 +388,7 @@ SCENARIO("Project state: load")
             CHECK_THROWS_AS(projectState.load(directory),
                             InvalidDirectoryForProjectLoad);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -410,7 +410,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -440,7 +440,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -472,7 +472,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -503,7 +503,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -534,7 +534,7 @@ SCENARIO("Project state: load")
 
             CHECK_THROWS_AS(projectState.load(directory), InvalidProjectFile);
             CHECK(state.getNumChildren() == 1);
-            CHECK(projectState.getProjectDirectory() == nullptr);
+            CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
             CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
             CHECK(projectState.getStatus().hasUnsavedChanges);
             CHECK_FALSE(cbCalled);
@@ -575,7 +575,7 @@ SCENARIO("Project state: load")
                 CHECK_THROWS_AS(projectState.load(directory),
                                 InvalidProjectFile);
                 CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
                 CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
                 CHECK(projectState.getStatus().hasUnsavedChanges);
                 CHECK_FALSE(cbCalled);
@@ -592,7 +592,7 @@ SCENARIO("Project state: load")
                 CHECK_THROWS_AS(projectState.load(directory),
                                 InvalidProjectFile);
                 CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
                 CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
                 CHECK(projectState.getStatus().hasUnsavedChanges);
                 CHECK_FALSE(cbCalled);
@@ -609,7 +609,7 @@ SCENARIO("Project state: load")
                 CHECK_THROWS_AS(projectState.load(directory),
                                 InvalidProjectFile);
                 CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
                 CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
                 CHECK(projectState.getStatus().hasUnsavedChanges);
                 CHECK_FALSE(cbCalled);
@@ -626,7 +626,7 @@ SCENARIO("Project state: load")
                 CHECK_THROWS_AS(projectState.load(directory),
                                 InvalidProjectFile);
                 CHECK(state.getNumChildren() == 1);
-                CHECK(projectState.getProjectDirectory() == nullptr);
+                CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
                 CHECK_FALSE(projectState.getStatus().hasProjectDirectory);
                 CHECK(projectState.getStatus().hasUnsavedChanges);
                 CHECK_FALSE(cbCalled);
@@ -666,7 +666,7 @@ SCENARIO("Project state: load")
 
         THEN("the provided directory is stored in project state")
         {
-            CHECK(*projectState.getProjectDirectory() == directory);
+            CHECK(projectState.getProjectDirectory() == directory);
         }
 
         THEN("status is updated and callback is called with correct action")
@@ -867,6 +867,7 @@ SCENARIO("Project state: changes to state updates status")
         {
             CHECK_FALSE(projectState.getStatus().hasUnsavedChanges);
             CHECK(projectState.getStatus().hasProjectDirectory);
+            CHECK_FALSE(projectState.getStatus().figureEditHasUnsavedChanges);
         }
     }
 
@@ -956,6 +957,183 @@ SCENARIO("Project state: changes to state updates status")
             CHECK(cbStatus->hasUnsavedChanges);
             CHECK(*cbAction == ProjectState::Action::StateChange);
         }
+    }
+
+    directory.deleteRecursively(); // clean up
+}
+
+SCENARIO("Project state: getFileForFigure")
+{
+    juce::String filepath(CURRENT_BINARY_DIRECTORY);
+
+    // state empty
+    juce::ValueTree state(IDs::PROJECT_STATE);
+    ProjectState projectState(state);
+
+    auto projectName = FileHelpers::getTestFileName();
+    filepath += projectName;
+    juce::File directory(filepath);
+    directory.createDirectory();
+
+    Figure f;
+
+    auto expectedFilepath =
+        filepath + "/figures/" + f.getId().toString() + ".xml";
+
+    WHEN("There is no existing project directory")
+    {
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
+
+        THEN("should throw error")
+        {
+            CHECK_THROWS_AS(projectState.getFileForFigure(f),
+                            InvalidDirectoryPath);
+        }
+    }
+
+    WHEN("A file does not exist for a figure")
+    {
+        projectState.create(directory);
+        CHECK_FALSE(juce::File(expectedFilepath).existsAsFile());
+
+        THEN("it creates one in the figures dir and returns it")
+        {
+            auto returnedFile = projectState.getFileForFigure(f);
+            CHECK(returnedFile.existsAsFile());
+            CHECK(juce::File(expectedFilepath).existsAsFile());
+
+            auto returnedFilepath = returnedFile.getFullPathName();
+            CHECK(returnedFilepath == expectedFilepath);
+        }
+    }
+
+    WHEN("A file already exists for a figure")
+    {
+        projectState.create(directory);
+        juce::File(expectedFilepath).create();
+        CHECK(juce::File(expectedFilepath).existsAsFile());
+
+        THEN("it just returns it and doesn't try to create another file")
+        {
+            auto returnedFile = projectState.getFileForFigure(f);
+            auto returnedFilepath = returnedFile.getFullPathName();
+            CHECK(returnedFilepath == expectedFilepath);
+            CHECK(projectState.getProjectDirectory()
+                      .getChildFile("figures")
+                      .getNumberOfChildFiles(juce::File::TypesOfFileToFind::
+                                                 findFilesAndDirectories) == 1);
+        }
+    }
+
+    directory.deleteRecursively(); // clean up
+}
+
+SCENARIO("Project state: deleteFileForFigure")
+{
+    juce::String filepath(CURRENT_BINARY_DIRECTORY);
+
+    // state empty
+    juce::ValueTree state(IDs::PROJECT_STATE);
+    ProjectState projectState(state);
+
+    auto projectName = FileHelpers::getTestFileName();
+    filepath += projectName;
+    juce::File directory(filepath);
+    directory.createDirectory();
+
+    Figure f;
+
+    auto expectedFilepath =
+        filepath + "/figures/" + f.getId().toString() + ".xml";
+
+    WHEN("There is no existing project directory")
+    {
+        CHECK_FALSE(projectState.getProjectDirectory().isDirectory());
+
+        THEN("should throw error")
+        {
+            CHECK_THROWS_AS(projectState.deleteFileForFigure(f),
+                            InvalidDirectoryPath);
+        }
+    }
+
+    WHEN("A file does not exist for the figure")
+    {
+        projectState.create(directory);
+        CHECK_FALSE(juce::File(expectedFilepath).existsAsFile());
+
+        THEN("it throws an error")
+        {
+            CHECK_THROWS_AS(projectState.deleteFileForFigure(f),
+                            EditFileNotFoundForFigure);
+        }
+    }
+
+    WHEN("A file exists for the figure")
+    {
+        projectState.create(directory);
+        juce::File(expectedFilepath).create();
+        CHECK(juce::File(expectedFilepath).existsAsFile());
+
+        THEN("it deletes it")
+        {
+            projectState.deleteFileForFigure(f);
+            CHECK_FALSE(juce::File(expectedFilepath).existsAsFile());
+        }
+    }
+
+    directory.deleteRecursively(); // clean up
+}
+
+SCENARIO("Project state: setFigureEditHasUnsavedChanges")
+{
+    juce::String filepath(CURRENT_BINARY_DIRECTORY);
+
+    // state empty
+    juce::ValueTree state(IDs::PROJECT_STATE);
+    ProjectState projectState(state);
+
+    auto projectName = FileHelpers::getTestFileName();
+    filepath += projectName;
+    juce::File directory(filepath);
+    directory.createDirectory();
+
+    projectState.create(directory);
+
+    SECTION("it sets the state to whatever value it is given")
+    {
+        CHECK(projectState.getStatus().figureEditHasUnsavedChanges == false);
+
+        projectState.setFigureEditHasUnsavedChanges(true);
+
+        CHECK(projectState.getStatus().figureEditHasUnsavedChanges == true);
+
+        projectState.setFigureEditHasUnsavedChanges(false);
+
+        CHECK(projectState.getStatus().figureEditHasUnsavedChanges == false);
+    }
+
+    SECTION("calls the onStatusChanged callback correctly")
+    {
+        bool cbCalled = false;
+        std::unique_ptr<ProjectState::Status> cbStatus;
+        std::unique_ptr<ProjectState::Action> cbAction;
+        projectState.onStatusChanged =
+            [&cbCalled, &cbStatus, &cbAction](auto s, auto a) {
+                cbCalled = true;
+                cbStatus = std::make_unique<ProjectState::Status>(s);
+                cbAction = std::make_unique<ProjectState::Action>(a);
+            };
+
+        CHECK_FALSE(cbCalled);
+
+        projectState.setFigureEditHasUnsavedChanges(true);
+
+        CHECK(cbCalled);
+        CHECK(cbStatus);
+        CHECK(cbAction);
+        CHECK(cbStatus->figureEditHasUnsavedChanges);
+        CHECK(*cbAction == ProjectState::Action::StateChange);
     }
 
     directory.deleteRecursively(); // clean up

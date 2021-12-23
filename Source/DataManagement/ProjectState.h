@@ -10,8 +10,9 @@
 class ProjectState : public juce::ValueTree::Listener {
   public:
     struct Status {
-        bool hasUnsavedChanges = false;
-        bool hasProjectDirectory = false;
+        bool hasUnsavedChanges;
+        bool hasProjectDirectory;
+        bool figureEditHasUnsavedChanges;
     };
 
     enum Action {
@@ -40,7 +41,12 @@ class ProjectState : public juce::ValueTree::Listener {
     Status getStatus() const;
     std::function<void(Status s, Action a)> onStatusChanged;
 
-    const std::shared_ptr<const juce::File> getProjectDirectory() const;
+    juce::File getProjectDirectory() const;
+
+    juce::File getFileForFigure(const Figure &f) const;
+    void deleteFileForFigure(const Figure &f);
+
+    void setFigureEditHasUnsavedChanges(bool newValue);
 
     void valueTreeChildAdded(juce::ValueTree &parent,
                              juce::ValueTree &child) override;
@@ -55,8 +61,6 @@ class ProjectState : public juce::ValueTree::Listener {
   private:
     juce::ValueTree state;
     juce::ValueTree statusVt;
-    std::shared_ptr<juce::File> projectDirectory;
-    std::shared_ptr<juce::File> file;
     void saveStateToFile(const juce::File &file) const;
     void loadStateFromFile(const juce::File &file);
     bool loadedStateIsValid(const juce::ValueTree &vt);

@@ -1,4 +1,5 @@
 #pragma once
+#include "ProjectState.h"
 
 #include <tracktion_engine/tracktion_engine.h>
 
@@ -11,5 +12,6 @@ class AudioRenderer {
     https://forum.juce.com/t/render-example/37979
     https://forum.juce.com/t/how-to-render-an-edit-to-a-new-file-audio-file/35136
     */
-    static void renderFigureToFile(te::Edit &edit, juce::String filename);
+    static void
+    renderFigureToFile(te::Edit &edit, ProjectState &ps, juce::String filename);
 };

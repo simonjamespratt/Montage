@@ -39,6 +39,8 @@ target_compile_definitions(Montage PRIVATE
     PRE_POPULATE_DUMMY_DATA=1 # TODO: CMAKE: this should probably be in a gen expression
 )
 
+target_compile_options(Montage PRIVATE -g)
+
 target_link_libraries(Montage
     PRIVATE
         juce::juce_gui_basics

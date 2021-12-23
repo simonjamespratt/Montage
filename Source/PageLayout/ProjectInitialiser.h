@@ -9,7 +9,7 @@ class ProjectInitialiser : public juce::Component {
     void resized() override;
 
   private:
-    ProjectState &projectState;
+    ProjectState projectState;
     juce::Label explanationText;
     juce::TextButton createButton;
     juce::TextButton loadButton;

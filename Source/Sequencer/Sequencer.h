@@ -2,79 +2,54 @@
 
 #include "Arrangement.h"
 #include "AudioEditViewport.h"
-#include "Cursor.h"
 #include "Figure.h"
 #include "Identifiers.h"
 #include "ProjectState.h"
-#include "TimeScalingFactor.h"
+#include "SequencerControlsView.h"
+#include "SequencerViewState.h"
 #include "Timeline.h"
 #include "TrackControlPanel.h"
-#include "TransportController.h"
-#include "TransportInteractor.h"
 #include "TransportManager.h"
 
 #include <tracktion_engine/tracktion_engine.h>
 
 namespace te = tracktion_engine;
 
-struct ClipData {
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> clip;
-    int trackIndex;
-    double clipStart;
-    double clipEnd;
-    double offset;
-};
-
-class Sequencer : public juce::Component {
+class Sequencer : public juce::Component, private juce::ValueTree::Listener {
   public:
-    explicit Sequencer(te::Engine &eng);
+    explicit Sequencer(std::unique_ptr<te::Edit> e, Figure f, ProjectState &ps);
     ~Sequencer();
 
     void resized() override;
 
-    void readFigure(const Figure &figure, const ProjectState &projectState);
-    void clear();
+    static std::unique_ptr<te::Edit> createEdit(Figure figure,
+                                                const ProjectState &ps,
+                                                juce::File file,
+                                                te::Engine &e);
 
   private:
-    std::unique_ptr<Figure> currentFigure;
-    TimeScalingFactor timeScalingFactor;
-    float trackHeight;
+    void valueTreePropertyChanged(juce::ValueTree &tree,
+                                  const juce::Identifier &prop) override;
+
+    void save();
 
     std::unique_ptr<te::Edit> edit;
+    ProjectState projectState;
+    SequencerViewState sequencerViewState;
+
     te::TransportControl &transport;
     TransportManager transportManager;
 
-    Timeline timeline;
     AudioEditViewport timelineViewport;
+    Timeline timeline;
 
-    AudioEditViewport arrangementContainerViewport;
-    juce::Component arrangementContainer;
+    AudioEditViewport arrangementViewport;
     Arrangement arrangement;
-    Cursor cursor;
-    TransportInteractor transportInteractor;
 
-    AudioEditViewport trackControlPanelViewPort;
-    TrackControlPanel trackControlPanel;
+    AudioEditViewport panelsViewport;
+    TrackControlPanel panels;
 
-    TransportController transportController;
-
-    juce::Slider xZoom;
-    juce::Slider yZoom;
-
-    double trackControlPanelWidth;
-    juce::Slider trackControlPanelWidthAdjuster;
-
-    juce::TextButton renderButton;
-
-    void prepareForNewFigure(ParticleList particleList);
-    void clearTracks();
-    void prepareTracks(int noOfTracks);
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
-    addClipToTrack(const juce::File &file,
-                   const int trackIndex,
-                   const double &clipStart,
-                   const double &clipEnd,
-                   const double &offset);
+    SequencerControlsView controlsView;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Sequencer)
 };

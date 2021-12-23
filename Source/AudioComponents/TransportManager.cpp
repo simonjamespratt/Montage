@@ -1,6 +1,6 @@
 #include "TransportManager.h"
 
-TransportManager::TransportManager(te::Edit &e, Cursor &c) : edit(e), cursor(c)
+TransportManager::TransportManager(te::Edit &e) : edit(e)
 {}
 
 TransportManager::~TransportManager()
@@ -12,7 +12,6 @@ void TransportManager::startManager()
 {
     transportReporter.setCallback([this] {
         auto &transport = edit.getTransport();
-        cursor.updatePosition(edit.getLength(), transport.getCurrentPosition());
 
         if(transport.isPlaying()) {
             auto loopRange = transport.getLoopRange();

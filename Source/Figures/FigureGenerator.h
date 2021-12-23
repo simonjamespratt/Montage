@@ -21,7 +21,7 @@ class FigureGenerator : public juce::Component {
     std::function<void(Figure f)> onFigureGenerated;
 
   private:
-    ProjectState &projectState;
+    ProjectState projectState;
     ParticleList particleList;
 
     std::shared_ptr<aleatoric::CollectionsProducer<Particle>> particleProducer;

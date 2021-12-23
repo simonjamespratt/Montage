@@ -23,6 +23,9 @@ std::unique_ptr<juce::Drawable> Icons::getIcon(IconType type)
     case Stop:
         filepath += "/stop.svg";
         break;
+    case Cancel:
+        filepath += "/cancel.svg";
+        break;
 
     default:
         jassert(false);

@@ -1,125 +1,190 @@
 #include "Arrangement.h"
 
-PositionableThumbnail::PositionableThumbnail(te::TransportControl &tc,
-                                             te::AudioFile file,
-                                             double editLength,
-                                             double clipStart,
-                                             double clipEnd,
-                                             double offset,
-                                             int trackIndex)
-: thumbnail(tc), trackIndex(trackIndex)
-{
-    auto clipLength = clipEnd - clipStart;
-    thumbnail.setFile(file, offset, clipLength);
+#include "Helpers.h"
 
-    // Note that converting doubles to float may create precision
-    // issues. Doesn't seem to be an issue at the moment
-    normalisedStart = clipStart / editLength;
-    normalisedEnd = clipEnd / editLength;
+ArrangementTrack::ArrangementTrack(te::AudioTrack::Ptr t) : track(t)
+{
+    track->state.addListener(this);
+    markAndUpdate(updateClips);
+    markAndUpdate(updateAutoParamGraph);
+    setInterceptsMouseClicks(false, true); // allow events through to interactor
 }
 
-float PositionableThumbnail::getTop(float trackHeight)
+ArrangementTrack::~ArrangementTrack()
 {
-    return trackHeight * trackIndex;
+    track->state.removeListener(this);
 }
 
-float PositionableThumbnail::getBottom(float trackHeight)
+void ArrangementTrack::resized()
 {
-    return getTop(trackHeight) + trackHeight;
+    for(auto cv : clipViews) {
+        auto &clip = cv->getClip();
+        auto clipPosition = clip.getPosition();
+        auto editLength = track->edit.getLength();
+        auto x = Helpers::getNormalised(clipPosition.getStart(), editLength) *
+                 getWidth();
+        auto y = 0;
+        auto w = Helpers::getNormalised(clipPosition.getLength(), editLength) *
+                 getWidth();
+        auto h = getHeight();
+        cv->setBounds(x, y, w, h);
+    }
+
+    if(autoParamGraph) {
+        autoParamGraph->setBounds(getLocalBounds());
+    }
 }
 
-float PositionableThumbnail::getStart(int containerWidth)
+void ArrangementTrack::paint(juce::Graphics &g)
 {
-    return normalisedStart * containerWidth;
+    // draw track divider
+    g.setColour(juce::Colours::cornflowerblue);
+    g.fillRect(0.0, (getHeight() - 0.5), float(getWidth()), 0.5f);
 }
 
-float PositionableThumbnail::getEnd(int containerWidth)
+// Private methods
+void ArrangementTrack::valueTreeChildAdded(juce::ValueTree &p,
+                                           juce::ValueTree &c)
 {
-    return normalisedEnd * containerWidth;
+    if(te::Clip::isClipState(c)) {
+        markAndUpdate(updateClips);
+    }
+}
+
+void ArrangementTrack::valueTreeChildRemoved(juce::ValueTree &p,
+                                             juce::ValueTree &c,
+                                             int)
+{
+    if(te::Clip::isClipState(c)) {
+        markAndUpdate(updateClips);
+    }
+}
+
+void ArrangementTrack::valueTreePropertyChanged(juce::ValueTree &tree,
+                                                const juce::Identifier &prop)
+{
+    if(prop == te::IDs::currentAutoParamTag) {
+        markAndUpdate(updateAutoParamGraph);
+    }
+}
+
+void ArrangementTrack::handleAsyncUpdate()
+{
+    if(compareAndReset(updateClips)) {
+        createThumbnails();
+    }
+
+    if(compareAndReset(updateAutoParamGraph)) {
+        auto autoParam = track->getCurrentlyShownAutoParam();
+        if(autoParam) {
+            autoParamGraph = std::make_unique<AutoParamGraph>(autoParam);
+            addAndMakeVisible(*autoParamGraph);
+        } else {
+            autoParamGraph = nullptr;
+        }
+
+        resized();
+    }
+}
+
+void ArrangementTrack::createThumbnails()
+{
+    clipViews.clear();
+
+    for(auto clip : track->getClips()) {
+        if(dynamic_cast<te::WaveAudioClip *>(clip)) {
+            auto thumb = new AudioClipView(clip);
+            clipViews.add(thumb);
+            addAndMakeVisible(thumb);
+            thumb->setInterceptsMouseClicks(
+                false,
+                false); // allow events through to interactor
+        }
+    }
+
+    resized();
 }
 
 // ==========================================================
 
-Arrangement::Arrangement(te::Edit &e,
-                         te::TransportControl &tc,
-                         float initialTrackHeight)
-: edit(e), transport(tc), trackHeight(initialTrackHeight)
+Arrangement::Arrangement(te::Edit &e, SequencerViewState &vs)
+: edit(e), sequencerViewState(vs), cursor(edit), transportInteractor(edit)
 {
-    noOfTracks = 0;
+    edit.state.addListener(this);
+    sequencerViewState.state.addListener(this);
+    triggerAsyncUpdate();
+
+    transportInteractor.onSelectionChangeInProgress =
+        [this](const juce::MouseEvent) {
+            sequencerViewState.viewportSyncToMouseRequired = true;
+        };
+
+    addAndMakeVisible(transportInteractor);
+    addAndMakeVisible(cursor);
 }
 
 Arrangement::~Arrangement()
-{}
-
-void Arrangement::paint(juce::Graphics &g)
 {
-    if(noOfTracks > 0) {
-        drawTrackDividers(g);
-    }
+    edit.state.removeListener(this);
+    sequencerViewState.state.removeListener(this);
 }
 
 void Arrangement::resized()
 {
-    for(auto &&t : thumbnails) {
-        auto start = t->getStart(getWidth());
-        auto end = t->getEnd(getWidth());
-        auto top = t->getTop(trackHeight);
-        auto bottom = t->getBottom(trackHeight);
+    auto area = getLocalBounds();
 
-        t->thumbnail.setBounds(start, top, (end - start), (bottom - top));
+    transportInteractor.setBounds(area);
+    cursor.setBounds(area);
+
+    for(auto track : tracks) {
+        track->setBounds(area.removeFromTop(sequencerViewState.trackHeight));
     }
-}
-
-void Arrangement::prepare(int noOfTracksToMake)
-{
-    thumbnails.clear();
-    noOfTracks = noOfTracksToMake;
-    resized();
-    repaint();
-}
-
-void Arrangement::clear()
-{
-    thumbnails.clear();
-    noOfTracks = 0;
-    resized();
-    repaint();
-}
-
-void Arrangement::addClip(
-    juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip> newClip,
-    const int trackIndex,
-    const double &clipStart,
-    const double &clipEnd,
-    const double &offset)
-{
-    auto thumbnail =
-        std::make_unique<PositionableThumbnail>(transport,
-                                                newClip->getPlaybackFile(),
-                                                edit.getLength(),
-                                                clipStart,
-                                                clipEnd,
-                                                offset,
-                                                trackIndex);
-
-    addAndMakeVisible(thumbnail->thumbnail);
-    thumbnails.emplace_back(std::move(thumbnail));
-    resized();
-}
-
-void Arrangement::setTrackHeight(float newHeight)
-{
-    trackHeight = newHeight;
 }
 
 // Private methods
-void Arrangement::drawTrackDividers(juce::Graphics &g)
+void Arrangement::valueTreePropertyChanged(juce::ValueTree &,
+                                           const juce::Identifier &prop)
 {
-    g.setColour(juce::Colours::cornflowerblue);
-
-    float currentPosition = 0;
-    for(int i = 0; i < noOfTracks; i++) {
-        currentPosition += trackHeight;
-        g.fillRect(0.0, (currentPosition - 0.5), float(getWidth()), 0.5f);
+    if(prop == IDs::trackHeight) {
+        resized();
     }
+}
+
+void Arrangement::valueTreeChildAdded(juce::ValueTree &parent,
+                                      juce::ValueTree &child)
+{
+    if(te::TrackList::isTrack(child)) {
+        triggerAsyncUpdate();
+    }
+}
+
+void Arrangement::valueTreeChildRemoved(juce::ValueTree &parent,
+                                        juce::ValueTree &child,
+                                        int)
+{
+    if(te::TrackList::isTrack(child)) {
+        triggerAsyncUpdate();
+    }
+}
+
+void Arrangement::handleAsyncUpdate()
+{
+    createArrangementTracks();
+}
+
+void Arrangement::createArrangementTracks()
+{
+    tracks.clear();
+
+    for(auto t : te::getAudioTracks(edit)) {
+        ArrangementTrack *at = new ArrangementTrack(t);
+        tracks.add(at);
+        addAndMakeVisible(at);
+    }
+
+    cursor.toFront(false);
+    transportInteractor.toBack(); // ensure it's behind the AutoParamGraphs in
+                                  // ArrangementTracks
+
+    resized();
 }
