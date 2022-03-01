@@ -12,10 +12,11 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
       eng, juce::File())), // NB: We're not saving edits in ParticleEditor so
                            // just provide an empty (unvalid) juce::File
   transport(edit->getTransport()),
-  transportManager(*edit, cursor),
+  transportManager(*edit),
   thumbnail(transport),
+  cursor(*edit),
   transportController(transport),
-  transportInteractor(transport, *edit),
+  transportInteractor(*edit),
   timeScalingFactor {100, 100, 0, 1000},
   xZoom(juce::Slider::SliderStyle::LinearHorizontal,
         juce::Slider::TextEntryBoxPosition::NoTextBox)
@@ -35,7 +36,7 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
 
     transportInteractor.onSelectionChangeInProgress =
         [this](const juce::MouseEvent event) {
-            thumbnailViewport.syncToMouseDrag(event);
+            thumbnailViewport.syncToMouseDrag(event.getPosition());
         };
 
     startEditor.onChange = [this] {
@@ -84,10 +85,10 @@ ParticleEditor::ParticleEditor(const Particle &p, te::Engine &eng)
     thumbnailContainer.addAndMakeVisible(&cursor);
     thumbnailContainer.addAndMakeVisible(&transportInteractor);
 
-    transportInteractor.onSelectionChange = [this] {
+    transportInteractor.onSelectionChanged = [this] {
         auto newRange = transportInteractor.getSelectionRange();
-        model.start = newRange.rangeStart;
-        model.end = newRange.rangeEnd;
+        model.start = newRange.start;
+        model.end = newRange.end;
         startEditor.update();
         endEditor.update();
     };

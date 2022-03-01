@@ -6,7 +6,7 @@
 namespace te = tracktion_engine;
 
 class TransportController : public juce::Component,
-                            public juce::ChangeListener {
+                            private juce::ChangeListener {
   public:
     TransportController(te::TransportControl &tc);
     ~TransportController();
@@ -14,12 +14,15 @@ class TransportController : public juce::Component,
     void paint(juce::Graphics &) override;
     void resized() override;
 
-    void togglePlayPause();
-    void stop();
-    bool handleKeyPress(const juce::KeyPress &key);
     std::function<void()> onTransportStopped;
 
   private:
+    void changeListenerCallback(juce::ChangeBroadcaster *) override;
+    void updatePlayPauseButtonIcon();
+    void togglePlayPause();
+    void stop();
+    bool handleKeyPress(const juce::KeyPress &key);
+
     te::TransportControl &transport;
 
     juce::DrawableButton stopButton;
@@ -27,10 +30,6 @@ class TransportController : public juce::Component,
     juce::DrawableButton loopButton;
 
     TimeDisplay transportPosition;
-
-    void updatePlayPauseButtonIcon();
-
-    void changeListenerCallback(juce::ChangeBroadcaster *) override;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TransportController)
 };

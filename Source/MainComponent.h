@@ -15,5 +15,8 @@ class MainComponent : public juce::Component {
     ProjectState projectState;
     ProjectInitialiser projectInitialiser;
     ContentContainer contentContainer;
+    juce::SharedResourcePointer<juce::TooltipWindow>
+        tooltip; // creates a tooltip window that can be used by all components
+                 // that use tooltips to display their messages, at any depth
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

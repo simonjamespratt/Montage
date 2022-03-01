@@ -11,6 +11,7 @@ ProjectState::ProjectState()
     statusVt.setProperty(IDs::action, Action::NoAction, nullptr);
     statusVt.setProperty(IDs::has_unsaved_changes, false, nullptr);
     statusVt.setProperty(IDs::has_project_loaded, false, nullptr);
+    statusVt.setProperty(IDs::figure_edit_has_unsaved_changes, false, nullptr);
     statusVt.addListener(this);
 }
 
@@ -23,6 +24,7 @@ ProjectState::ProjectState(juce::ValueTree vt)
     statusVt.setProperty(IDs::action, Action::NoAction, nullptr);
     statusVt.setProperty(IDs::has_unsaved_changes, false, nullptr);
     statusVt.setProperty(IDs::has_project_loaded, false, nullptr);
+    statusVt.setProperty(IDs::figure_edit_has_unsaved_changes, false, nullptr);
     statusVt.addListener(this);
 }
 
@@ -74,12 +76,14 @@ void ProjectState::create(const juce::File &directory)
         throw InvalidDirectoryForProjectCreation();
     }
 
-    projectDirectory = std::make_shared<juce::File>(directory);
+    statusVt.setProperty(IDs::project_directory_filepath,
+                         directory.getFullPathName(),
+                         nullptr);
 
-    auto projectFile = projectDirectory->getChildFile("project-state.xml");
+    auto projectFile = directory.getChildFile("project-state.xml");
     projectFile.create();
-    projectDirectory->getChildFile("figures").createDirectory();
-    projectDirectory->getChildFile("renders").createDirectory();
+    directory.getChildFile("figures").createDirectory();
+    directory.getChildFile("renders").createDirectory();
 
     // NB: this block ensures that the created project state file has a valid
     // empty project that can be loaded again
@@ -94,12 +98,14 @@ void ProjectState::create(const juce::File &directory)
 
 void ProjectState::save()
 {
-    if(projectDirectory == nullptr) {
+    juce::File projectDirectory(statusVt[IDs::project_directory_filepath]);
+
+    if(!projectDirectory.isDirectory()) {
         statusVt.setProperty(IDs::has_project_loaded, false, nullptr);
         throw ProjectDirectoryNotFound();
     }
 
-    auto projectStateFile = projectDirectory->getChildFile("project-state.xml");
+    auto projectStateFile = projectDirectory.getChildFile("project-state.xml");
     jassert(projectStateFile.existsAsFile());
 
     saveStateToFile(projectStateFile);
@@ -122,7 +128,9 @@ void ProjectState::load(const juce::File &directory)
 
     loadStateFromFile(directory.getChildFile("project-state.xml"));
 
-    projectDirectory = std::make_shared<juce::File>(directory);
+    statusVt.setProperty(IDs::project_directory_filepath,
+                         directory.getFullPathName(),
+                         nullptr);
 
     statusVt.setProperty(IDs::action, Action::LoadProject, nullptr);
     statusVt.setProperty(IDs::has_project_loaded, true, nullptr);
@@ -132,13 +140,56 @@ void ProjectState::load(const juce::File &directory)
 ProjectState::Status ProjectState::getStatus() const
 {
     return Status {bool(statusVt[IDs::has_unsaved_changes]),
-                   bool(statusVt[IDs::has_project_loaded])};
+                   bool(statusVt[IDs::has_project_loaded]),
+                   bool(statusVt[IDs::figure_edit_has_unsaved_changes])};
 }
 
-const std::shared_ptr<const juce::File>
-ProjectState::getProjectDirectory() const
+juce::File ProjectState::getProjectDirectory() const
 {
-    return projectDirectory;
+    return juce::File(statusVt[IDs::project_directory_filepath]);
+}
+
+juce::File ProjectState::getFileForFigure(const Figure &f) const
+{
+    juce::File projectDirectory(statusVt[IDs::project_directory_filepath]);
+
+    if(!projectDirectory.isDirectory()) {
+        throw InvalidDirectoryPath();
+    }
+
+    auto file = projectDirectory.getChildFile("figures").getChildFile(
+        f.getId().toString() + ".xml");
+
+    if(!file.existsAsFile()) {
+        file.create();
+    }
+    return file;
+}
+
+void ProjectState::deleteFileForFigure(const Figure &f)
+{
+    juce::File projectDirectory(statusVt[IDs::project_directory_filepath]);
+
+    if(!projectDirectory.isDirectory()) {
+        throw InvalidDirectoryPath();
+    }
+
+    auto file = projectDirectory.getChildFile("figures").getChildFile(
+        f.getId().toString() + ".xml");
+
+    if(!file.existsAsFile()) {
+        throw EditFileNotFoundForFigure();
+    }
+
+    file.deleteFile();
+}
+
+void ProjectState::setFigureEditHasUnsavedChanges(bool newValue)
+{
+    statusVt.setProperty(IDs::action, Action::StateChange, nullptr);
+    statusVt.setProperty(IDs::figure_edit_has_unsaved_changes,
+                         newValue,
+                         nullptr);
 }
 
 // VT Listeners
@@ -169,11 +220,13 @@ void ProjectState::valueTreePropertyChanged(juce::ValueTree &vt,
         statusVt.setProperty(IDs::has_unsaved_changes, true, nullptr);
     }
 
-    if(vt.hasType(IDs::PROJECT_STATE_STATUS) && property != IDs::action) {
+    if(vt.hasType(IDs::PROJECT_STATE_STATUS)) {
         if(onStatusChanged) {
-            onStatusChanged(Status {bool(statusVt[IDs::has_unsaved_changes]),
-                                    bool(statusVt[IDs::has_project_loaded])},
-                            static_cast<Action>(int(statusVt[IDs::action])));
+            onStatusChanged(
+                Status {bool(statusVt[IDs::has_unsaved_changes]),
+                        bool(statusVt[IDs::has_project_loaded]),
+                        bool(statusVt[IDs::figure_edit_has_unsaved_changes])},
+                static_cast<Action>(int(statusVt[IDs::action])));
         }
     }
 }

@@ -17,7 +17,7 @@ class AudioEditViewport : public juce::Viewport {
                                             double editLength);
     void syncToTransportPositionOnResize(double transportPosition,
                                          double editLength);
-    void syncToMouseDrag(const juce::MouseEvent event);
+    void syncToMouseDrag(const juce::Point<int> mousePosition);
 
   private:
     double

@@ -1,61 +1,73 @@
 #pragma once
 
+#include "AutoParamGraph.h"
+#include "Cursor.h"
+#include "Helpers.h"
+#include "SequencerViewState.h"
 #include "TracktionThumbnail.h"
+#include "TransportInteractor.h"
 
 #include <memory>
 
 namespace te = tracktion_engine;
 
-struct PositionableThumbnail {
-    PositionableThumbnail(te::TransportControl &tc,
-                          te::AudioFile file,
-                          double editLength,
-                          double clipStart,
-                          double clipEnd,
-                          double offset,
-                          int trackIndex);
-
-    TracktionThumbnail thumbnail;
-
-    float getTop(float trackHeight);
-    float getBottom(float trackHeight);
-    float getStart(int containerWidth);
-    float getEnd(int containerWidth);
+class ArrangementTrack : public juce::Component,
+                         private juce::ValueTree::Listener,
+                         private FlaggedAsyncUpdater {
+  public:
+    ArrangementTrack(te::AudioTrack::Ptr t);
+    ~ArrangementTrack();
+    void resized() override;
+    void paint(juce::Graphics &g) override;
 
   private:
-    int trackIndex;
-    float normalisedStart;
-    float normalisedEnd;
+    void valueTreeChildAdded(juce::ValueTree &p, juce::ValueTree &c) override;
+    void
+    valueTreeChildRemoved(juce::ValueTree &p, juce::ValueTree &c, int) override;
+    void valueTreePropertyChanged(juce::ValueTree &tree,
+                                  const juce::Identifier &prop) override;
+    void handleAsyncUpdate() override;
+
+    void createThumbnails();
+
+    te::AudioTrack::Ptr track;
+    juce::OwnedArray<AudioClipView> clipViews;
+    std::unique_ptr<AutoParamGraph> autoParamGraph;
+
+    bool updateClips = false;
+    bool updateAutoParamGraph = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ArrangementTrack)
 };
 
-class Arrangement : public juce::Component {
+class Arrangement : public juce::Component,
+                    private juce::ValueTree::Listener,
+                    private juce::AsyncUpdater {
   public:
-    Arrangement(te::Edit &e,
-                te::TransportControl &tc,
-                float initialTrackHeight);
+    Arrangement(te::Edit &e, SequencerViewState &vs);
     ~Arrangement();
 
-    void paint(juce::Graphics &) override;
     void resized() override;
-    void prepare(int noOfTracksToMake);
-    void clear();
-    void
-    addClip(juce::ReferenceCountedObjectPtr<tracktion_engine::WaveAudioClip>
-                newClip,
-            const int trackIndex,
-            const double &clipStart,
-            const double &clipEnd,
-            const double &offset);
-    void setTrackHeight(float newHeight);
 
   private:
-    te::Edit &edit;
-    te::TransportControl &transport;
-    float trackHeight;
-    int noOfTracks;
-    std::vector<std::unique_ptr<PositionableThumbnail>> thumbnails;
+    void valueTreePropertyChanged(juce::ValueTree &,
+                                  const juce::Identifier &prop) override;
+    void valueTreeChildAdded(juce::ValueTree &parent,
+                             juce::ValueTree &child) override;
+    void valueTreeChildRemoved(juce::ValueTree &parent,
+                               juce::ValueTree &child,
+                               int) override;
 
-    void drawTrackDividers(juce::Graphics &g);
+    void handleAsyncUpdate() override;
+
+    void createArrangementTracks();
+
+    te::Edit &edit;
+    SequencerViewState &sequencerViewState;
+    juce::OwnedArray<ArrangementTrack> tracks;
+
+    Cursor cursor;
+    TransportInteractor transportInteractor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Arrangement)
 };

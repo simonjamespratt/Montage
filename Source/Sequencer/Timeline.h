@@ -44,7 +44,6 @@ class Timeline : public juce::Component {
   public:
     Timeline(te::Edit &e);
     void paint(juce::Graphics &) override;
-    void recalculate();
 
   private:
     te::Edit &edit;

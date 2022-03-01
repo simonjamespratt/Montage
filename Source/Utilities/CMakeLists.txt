@@ -18,6 +18,7 @@ target_sources(Montage PRIVATE
     SliderWithLabel.h
     StringEditorWithLabel.cpp
     StringEditorWithLabel.h
+    Helpers.h
 )
 
 target_include_directories(Montage

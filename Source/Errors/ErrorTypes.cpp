@@ -99,6 +99,10 @@ ProjectSaveFailed::ProjectSaveFailed()
 : std::invalid_argument("Failed to save project")
 {}
 
+EditFileNotFoundForFigure::EditFileNotFoundForFigure()
+: std::invalid_argument("Edit file not found for figure.")
+{}
+
 // Source specific types ======================================================
 FileAlreadyExists::FileAlreadyExists()
 : std::invalid_argument(

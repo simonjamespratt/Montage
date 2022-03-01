@@ -1,45 +1,31 @@
 #include "TransportInteractor.h"
 
-TransportInteractor::TransportInteractor(te::TransportControl &tc, te::Edit &e)
-: transport(tc), edit(e)
+#include "Helpers.h"
+
+TransportInteractor::TransportInteractor(te::Edit &e)
+: edit(e), transport(edit.getTransport())
 {
+    edit.state.addListener(this);
     interactionState = ControlCursor;
-    rangeStart = 0;
-    rangeEnd = 0;
 }
 
 TransportInteractor::~TransportInteractor()
-{}
-
-void TransportInteractor::paint(juce::Graphics &g)
 {
-    auto mousePositionA = calculateUIPosition(rangeStart);
-    auto mousePositionB = calculateUIPosition(rangeEnd);
-
-    g.setColour(juce::Colour::fromFloatRGBA(0.0f, 1.0f, 0.0f, 0.5f));
-    g.fillRect(mousePositionA,
-               0.0f,
-               (mousePositionB - mousePositionA),
-               float(getHeight()));
+    edit.state.removeListener(this);
 }
 
 void TransportInteractor::mouseDown(const juce::MouseEvent &event)
 {
-    if(event.mods.isShiftDown()) {
-        interactionState = ControlRangeSelection;
-    } else {
-        interactionState = ControlCursor;
-    }
+    interactionState =
+        event.mods.isShiftDown() ? ControlRangeSelection : ControlCursor;
 
     transport.setUserDragging(true);
 
     if(interactionState == ControlCursor) {
         auto wasPlaying = transport.isPlaying();
 
-        rangeStart = 0;
-        rangeEnd = 0;
-        if(onSelectionChange) {
-            onSelectionChange();
+        if(onSelectionChanged) {
+            onSelectionChanged();
         }
 
         transport.looping = false;
@@ -50,14 +36,14 @@ void TransportInteractor::mouseDown(const juce::MouseEvent &event)
             transport.play(false);
         }
 
-        repaint();
         mouseDrag(event);
     }
 
     if(interactionState == ControlRangeSelection) {
         transport.stop(false, false);
         mouseDownPosition = event.getPosition().getX();
-        rangeStart = calculateAudioPosition(mouseDownPosition);
+        auto rangeStart = xToTime(mouseDownPosition);
+        transport.setLoopRange({rangeStart, rangeStart});
         transport.setCurrentPosition(rangeStart);
     }
 }
@@ -65,7 +51,7 @@ void TransportInteractor::mouseDown(const juce::MouseEvent &event)
 void TransportInteractor::mouseDrag(const juce::MouseEvent &event)
 {
     if(interactionState == ControlCursor) {
-        transport.position = calculateAudioPosition(event.position.x);
+        transport.position = xToTime(event.position.x);
     }
 
     if(interactionState == ControlRangeSelection) {
@@ -84,53 +70,56 @@ void TransportInteractor::mouseUp(const juce::MouseEvent &event)
     if(interactionState == ControlRangeSelection) {
         handleMouseMovement(event.getPosition().getX());
 
-        transport.setCurrentPosition(rangeStart);
-        transport.setLoopRange({rangeStart, rangeEnd});
+        auto loopRange = transport.getLoopRange();
+        transport.setCurrentPosition(loopRange.getStart());
 
-        if(onSelectionChange) {
-            onSelectionChange();
+        if(onSelectionChanged) {
+            onSelectionChanged();
         }
     }
 }
 
 SelectionRange TransportInteractor::getSelectionRange()
 {
-    return {rangeStart, rangeEnd};
+    auto loopRange = transport.getLoopRange();
+    return {loopRange.getStart(), loopRange.getEnd()};
 }
 
 void TransportInteractor::setSelectionRange(SelectionRange newRange)
 {
-    rangeStart = newRange.rangeStart;
-    rangeEnd = newRange.rangeEnd;
-    transport.setCurrentPosition(rangeStart);
-    transport.setLoopRange({rangeStart, rangeEnd});
-    repaint();
+    transport.setCurrentPosition(newRange.start);
+    transport.setLoopRange({newRange.start, newRange.end});
 }
 
 void TransportInteractor::clearSelectionRange()
 {
-    rangeStart = 0;
-    rangeEnd = 0;
+    transport.setLoopRange({});
 
-    if(onSelectionChange) {
-        onSelectionChange();
+    if(onSelectionChanged) {
+        onSelectionChanged();
     }
 }
 
 // Private methods
-double TransportInteractor::calculateAudioPosition(float mousePosition)
+void TransportInteractor::valueTreePropertyChanged(juce::ValueTree &,
+                                                   const juce::Identifier &prop)
 {
-    jassert(getWidth() > 0);
-    const double proportion = mousePosition / getWidth();
-    return proportion * edit.getLength();
+    if(prop == te::IDs::loopPoint1 || prop == te::IDs::loopPoint2) {
+        triggerAsyncUpdate();
+    }
 }
 
-float TransportInteractor::calculateUIPosition(double rangePosition)
+void TransportInteractor::handleAsyncUpdate()
+{
+    if(onSelectionChanged) {
+        onSelectionChanged();
+    }
+}
+
+double TransportInteractor::xToTime(float mousePosition)
 {
     jassert(getWidth() > 0);
-    auto editLength = edit.getLength();
-    auto proportion = editLength ? rangePosition / editLength : 0;
-    return getWidth() * proportion;
+    return Helpers::xToTime(mousePosition, edit.getLength(), getWidth());
 }
 
 void TransportInteractor::handleMouseMovement(int mousePosition)
@@ -141,15 +130,16 @@ void TransportInteractor::handleMouseMovement(int mousePosition)
         mousePosition = 0;
     }
 
+    double rangeStart, rangeEnd;
+
     if(mousePosition >= mouseDownPosition) {
         // set the audio segment params
-        rangeStart = calculateAudioPosition(mouseDownPosition);
-        rangeEnd = calculateAudioPosition(mousePosition);
+        rangeStart = xToTime(mouseDownPosition);
+        rangeEnd = xToTime(mousePosition);
     } else {
         // set the audio segment params
-        rangeStart = calculateAudioPosition(mousePosition);
-        rangeEnd = calculateAudioPosition(mouseDownPosition);
+        rangeStart = xToTime(mousePosition);
+        rangeEnd = xToTime(mouseDownPosition);
     }
-
-    repaint();
+    transport.setLoopRange({rangeStart, rangeEnd});
 }

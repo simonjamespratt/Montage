@@ -1,3 +1,5 @@
+// NB: CHANGES TO THIS FILE ARE RESULT OF M1 MACS NOT BEING SUPPORRED FOR DEBUGGING VIA CPPTOOLS.
+// SO CURRENTLY USING CodeLLDB vscode extension as suggested here: https://github.com/microsoft/vscode-cpptools/issues/6779
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
@@ -6,7 +8,8 @@
     "configurations": [
         {
             "name": "(lldb) Debugger Launch",
-            "type": "cppdbg",
+            // "type": "cppdbg",
+            "type": "lldb",
             "request": "launch",
             // Resolved by CMake Tools:
             "program": "${command:cmake.launchTargetPath}",
@@ -21,13 +24,13 @@
                     "value": "$PATH:${command:cmake.launchTargetDirectory}"
                 }
             ],
-            "MIMode": "lldb",
+            // "MIMode": "lldb",
             // NB: miDebuggerPath is required because
             // /Users/<username>/.vscode/extensions/ms-vscode.cpptools-<version>/debugAdapters/lldb/bin/lldb-mi
             // (which is the default path that cpptools uses), will not work with the xcode version of the LLDB.framework at:
             // /Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/Versions/A/LLDB.
             // So use the xcode version of lldb-mi at the following path to ensure lldb-mi and LLDB.framework are in sync
-            "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-mi",
+            // "miDebuggerPath": "/Applications/Xcode.app/Contents/Developer/usr/bin/lldb-mi",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for lldb",
@@ -36,11 +39,11 @@
                 }
             ],
             // Logging - uncomment below when encounter issues with debugging
-            // "logging": {
-            //     "trace": true,
-            //     "traceResponse": true,
-            //     "engineLogging": true
-            // }
+            "logging": {
+                "trace": true,
+                "traceResponse": true,
+                "engineLogging": true
+            }
         }
     ]
 }

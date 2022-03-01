@@ -121,8 +121,9 @@ void MainHeader::showAudioDeviceSettings(te::Engine &engine)
 
 void MainHeader::refreshView(ProjectState::Status status)
 {
-    saveButton.setVisible(status.hasUnsavedChanges &&
-                          status.hasProjectDirectory);
+    saveButton.setVisible(
+        (status.hasUnsavedChanges || status.figureEditHasUnsavedChanges) &&
+        status.hasProjectDirectory);
     resized();
 }
 

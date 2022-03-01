@@ -3,7 +3,7 @@
 
 class Icons {
   public:
-    enum IconType { Cross, Dash, Stop, Play, Pause, Loop };
+    enum IconType { Cross, Dash, Stop, Play, Pause, Loop, Cancel };
 
     static std::unique_ptr<juce::Drawable> getIcon(IconType type);
 

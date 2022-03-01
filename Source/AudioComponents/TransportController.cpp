@@ -55,7 +55,9 @@ TransportController::TransportController(te::TransportControl &tc)
 }
 
 TransportController::~TransportController()
-{}
+{
+    transport.removeChangeListener(this);
+}
 
 void TransportController::paint(juce::Graphics &g)
 {
@@ -87,6 +89,7 @@ void TransportController::resized()
     transportContainer.performLayout(getLocalBounds().toFloat());
 }
 
+// Private methods
 void TransportController::changeListenerCallback(juce::ChangeBroadcaster *)
 {
     updatePlayPauseButtonIcon();

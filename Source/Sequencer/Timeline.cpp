@@ -140,8 +140,3 @@ void Timeline::paint(juce::Graphics &g)
         scale->drawScale(editLength, g);
     }
 }
-
-void Timeline::recalculate()
-{
-    repaint();
-}

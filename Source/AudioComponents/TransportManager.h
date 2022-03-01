@@ -1,5 +1,4 @@
 #pragma once
-#include "Cursor.h"
 
 #include <functional>
 #include <tracktion_engine/tracktion_engine.h>
@@ -8,7 +7,7 @@ namespace te = tracktion_engine;
 
 class TransportManager {
   public:
-    TransportManager(te::Edit &e, Cursor &c);
+    TransportManager(te::Edit &e);
     ~TransportManager();
     void startManager();
     std::function<void()> onChange;
@@ -16,5 +15,4 @@ class TransportManager {
   private:
     te::LambdaTimer transportReporter;
     te::Edit &edit;
-    Cursor &cursor;
 };

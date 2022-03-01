@@ -1,10 +1,14 @@
 #include "AudioRenderer.h"
 
-void AudioRenderer::renderFigureToFile(te::Edit &edit, juce::String filename)
+void AudioRenderer::renderFigureToFile(te::Edit &edit,
+                                       ProjectState &ps,
+                                       juce::String filename)
 {
-    juce::FileChooser fileChooser(
-        "Choose directory to save rendered figure",
-        juce::File::getSpecialLocation(juce::File::userDesktopDirectory));
+    auto rendersDir = ps.getProjectDirectory().getChildFile("renders");
+    jassert(rendersDir.isDirectory());
+
+    juce::FileChooser fileChooser("Choose directory to save rendered figure",
+                                  rendersDir);
 
     if(fileChooser.browseForDirectory()) {
         juce::File outputFile {

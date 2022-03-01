@@ -6,13 +6,13 @@ include(FetchContent)
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY  https://github.com/juce-framework/JUCE
-    GIT_TAG         develop # develop branch on 23-11-2021
+    GIT_TAG         461192b35506ef0c5feb43235c916d7b7db2d802
 )
 
 FetchContent_Declare(
     tracktion
     GIT_REPOSITORY  https://github.com/Tracktion/tracktion_engine
-    GIT_TAG         develop # develop branch on 24-11-2021
+    GIT_TAG         df5cd92666b4ab3179c617ea72e9655f3ffa507a
 )
 
 FetchContent_Declare(
