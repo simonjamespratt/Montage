@@ -53,10 +53,6 @@ void PrescribedProtocolController::resized()
 // Private methods
 void PrescribedProtocolController::setProtocol()
 {
-    for(auto &&i : m_params.prescribed.durations) {
-        DBG("duration: " << i);
-    }
-
     try {
         m_producer->setDurationProtocol(
             aleatoric::DurationProtocol::createPrescribed(

@@ -105,8 +105,6 @@ void Sequencer::resized()
     // if(editLength > 0) {
     //     sequencerViewState.timeScalingFactorMin =
     //         arrangementViewportArea.getWidth() / editLength;
-    //     DBG("time scaling factor min: "
-    //         << sequencerViewState.timeScalingFactorMin);
     //     xZoom.setRange(sequencerViewState.timeScalingFactorMin,
     //                    sequencerViewState.timeScalingFactorMax);
     // }
