@@ -100,17 +100,8 @@ void MultiplesProtocolController::resized()
 void MultiplesProtocolController::setProtocol()
 {
     auto &params = m_params.multiples;
-    DBG("base increment: " << params.baseIncrement);
-    DBG("dev factor: " << params.deviationFactor);
-    DBG("range start: " << params.rangeStart);
-    DBG("range end: " << params.rangeEnd);
-    for(auto &&i : params.multipliers) {
-        DBG("multiplier value: " << i);
-    }
 
     if(currentMultiplierStrategy == MultiplierStrategy::range) {
-        DBG("range strategy is active");
-
         try {
             m_producer->setDurationProtocol(
                 aleatoric::DurationProtocol::createMultiples(
@@ -134,8 +125,6 @@ void MultiplesProtocolController::setProtocol()
     }
 
     if(currentMultiplierStrategy == MultiplierStrategy::hand) {
-        DBG("hand strategy is active");
-
         try {
             m_producer->setDurationProtocol(
                 aleatoric::DurationProtocol::createMultiples(
