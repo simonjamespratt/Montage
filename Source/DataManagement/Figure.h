@@ -10,8 +10,13 @@ class Figure : public juce::ValueTree::Listener {
     ~Figure();
 
     juce::Uuid getId() const;
+
     juce::String getName() const;
     void setName(juce::String newName);
+
+    bool getIsGenerated() const;
+    void setIsGenerated(bool isGenerated);
+
     juce::ValueTree getState() const;
 
     std::function<void(juce::Identifier propertyChanged)> onUpdated;

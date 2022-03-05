@@ -14,12 +14,18 @@ NumericValueEditorWithLabel::NumericValueEditorWithLabel(int &editableValue,
             onChange();
         }
     };
+    input.addListener(this);
 
     label.setText(labelText + ": ", juce::dontSendNotification);
     label.attachToComponent(&input, true);
 
     addAndMakeVisible(&input);
     addAndMakeVisible(&label);
+}
+
+NumericValueEditorWithLabel::~NumericValueEditorWithLabel()
+{
+    input.removeListener(this);
 }
 
 void NumericValueEditorWithLabel::resized()
@@ -33,4 +39,12 @@ void NumericValueEditorWithLabel::resized()
 void NumericValueEditorWithLabel::update()
 {
     input.setText(juce::String(value));
+}
+
+// Private methods
+void NumericValueEditorWithLabel::textEditorFocusLost(juce::TextEditor &)
+{
+    if(onFocusLost) {
+        onFocusLost();
+    }
 }

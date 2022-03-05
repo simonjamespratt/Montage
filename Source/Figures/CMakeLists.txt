@@ -7,10 +7,6 @@ target_sources(Montage PRIVATE
     DurationProtocolSelector.h
     FigureGenerator.cpp
     FigureGenerator.h
-    FigureOnsetSelection.cpp
-    FigureOnsetSelection.h
-    FigureParticleSelection.cpp
-    FigureParticleSelection.h
     FigureProcessor.cpp
     FigureProcessor.h
     NumberProtocolConfig.cpp

@@ -67,15 +67,18 @@ juce::ValueTree StateHelpers::createFigureState()
     juce::ValueTree figure(IDs::FIGURE);
     figure.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
     figure.setProperty(IDs::name, juce::String("name"), nullptr);
+    figure.setProperty(IDs::is_generated, false, nullptr);
     return figure;
 }
 
 juce::ValueTree StateHelpers::createFigureState(juce::Uuid id,
-                                                juce::String name)
+                                                juce::String name,
+                                                bool isGenerated)
 {
     juce::ValueTree figure(IDs::FIGURE);
     figure.setProperty(IDs::id, id.toString(), nullptr);
     figure.setProperty(IDs::name, name, nullptr);
+    figure.setProperty(IDs::is_generated, isGenerated, nullptr);
     return figure;
 }
 

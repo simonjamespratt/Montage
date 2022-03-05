@@ -14,24 +14,7 @@ NumberProtocolSelector::NumberProtocolSelector(
 : m_durationsProducer(durationsProducer)
 {
     initialise();
-    m_durationsProducerListenerToken =
-        m_durationsProducer->addListenerForParamsChange(
-            [this]() { resetParams(); });
-
-    durationsSelectablesSize =
-        m_durationsProducer->getSelectableDurations().size();
 }
-
-NumberProtocolSelector::~NumberProtocolSelector()
-{
-    if(m_durationsProducer != nullptr) {
-        m_durationsProducer->removeListenerForParamsChange(
-            m_durationsProducerListenerToken);
-    }
-}
-
-void NumberProtocolSelector::paint(juce::Graphics &g)
-{}
 
 void NumberProtocolSelector::resized()
 {
@@ -44,11 +27,6 @@ void NumberProtocolSelector::resized()
         chooseProtocolArea.removeFromLeft(protocolColWidth).reduced(margin));
     protocolSelector.setBounds(chooseProtocolArea.reduced(margin));
 
-    if(paramsChangedWarningMessage.isVisible()) {
-        paramsChangedWarningMessage.setBounds(
-            area.removeFromTop(80).reduced(margin));
-    }
-
     auto controlsArea = area;
 
     if(controller != nullptr) {
@@ -56,46 +34,21 @@ void NumberProtocolSelector::resized()
     }
 }
 
-void NumberProtocolSelector::resetParams()
+void NumberProtocolSelector::updateParams()
 {
-    if(controller != nullptr) {
-        if(m_particleProducer != nullptr) {
-            controller->setParams(m_particleProducer->getParams());
-
-            paramsChangedWarningMessage.setText(
-                "Number Protocol params have been reset to defaults "
-                "because the the number of particles has "
-                "changed.",
-                juce::dontSendNotification);
-            paramsChangedWarningMessage.setVisible(true);
-            resized();
-            startTimer(5000);
-        }
-
-        if(m_durationsProducer != nullptr) {
-            auto newSelectablesSize =
-                m_durationsProducer->getSelectableDurations().size();
-
-            if(newSelectablesSize != durationsSelectablesSize) {
-                controller->setParams(m_durationsProducer->getParams());
-                paramsChangedWarningMessage.setText(
-                    "Number Protocol params have been reset to defaults "
-                    "because the Duration Protocol collection size has "
-                    "changed.",
-                    juce::dontSendNotification);
-                paramsChangedWarningMessage.setVisible(true);
-                resized();
-                durationsSelectablesSize = newSelectablesSize;
-                startTimer(5000);
-            }
-        }
+    if(controller == nullptr) {
+        return;
     }
-}
 
-void NumberProtocolSelector::timerCallback()
-{
-    paramsChangedWarningMessage.setVisible(false);
-    resized();
+    auto params = controller->getParams();
+
+    if(m_particleProducer != nullptr) {
+        m_particleProducer->setParams(params);
+    }
+
+    if(m_durationsProducer != nullptr) {
+        m_durationsProducer->setParams(params);
+    }
 }
 
 // Private methods
@@ -110,12 +63,6 @@ void NumberProtocolSelector::initialise()
     protocolSelector.onChange = [this] {
         protocolChanged();
     };
-
-    paramsChangedWarningMessage.setColour(juce::Label::outlineColourId,
-                                          juce::Colours::orangered);
-    paramsChangedWarningMessage.setColour(juce::Label::textColourId,
-                                          juce::Colours::orangered);
-    addChildComponent(&paramsChangedWarningMessage);
 
     setInitialActiveProtocol();
 }
@@ -151,24 +98,8 @@ void NumberProtocolSelector::protocolChanged()
                                              m_durationsProducer->getParams());
     }
 
-    controller->attach([this](aleatoric::NumberProtocolParams newParams) {
-        updateParams(newParams);
-    });
-
     addAndMakeVisible(*controller);
     resized();
-}
-
-void NumberProtocolSelector::updateParams(
-    aleatoric::NumberProtocolParams newParams)
-{
-    if(m_particleProducer != nullptr) {
-        m_particleProducer->setParams(newParams);
-    }
-
-    if(m_durationsProducer != nullptr) {
-        m_durationsProducer->setParams(newParams);
-    }
 }
 
 void NumberProtocolSelector::setInitialActiveProtocol()

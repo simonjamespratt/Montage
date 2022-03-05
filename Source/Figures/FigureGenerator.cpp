@@ -1,97 +1,265 @@
 #include "FigureGenerator.h"
 
-#include "DurationProtocolParams.h"
-#include "ErrorMessageModal.h"
 #include "FigureProcessor.h"
 
-FigureGenerator::FigureGenerator(ProjectState &ps)
-: projectState(ps), particleList(ps.getParticleList())
+StageIndicator::StageIndicator()
+{}
+
+void StageIndicator::setStage(int stage)
 {
-    particleList.onObjectAdded = [this](Particle) {
-        onParticleAdded();
-    };
-    particleList.onObjectRemoved = [this](Particle) {
-        onParticleRemoved();
-    };
-
-    addAndMakeVisible(&blockedMessage);
-    blockedMessage.setText("Not enough particles to generate a figure",
-                           juce::dontSendNotification);
-
-    globalSettingsHeading.setText("Global settings",
-                                  juce::dontSendNotification);
-    addChildComponent(&globalSettingsHeading);
-    globalSettingsHeading.setFont(juce::Font(20.0f, juce::Font::bold));
-
-    numEventsInput.setText("0", juce::dontSendNotification);
-    addChildComponent(&numEventsInput);
-    numEventsInput.setInputRestrictions(0, "0123456789");
-    numEventsInput.setJustification(juce::Justification::centredLeft);
-
-    numEventsLabel.setText("Number of events: ", juce::dontSendNotification);
-    addChildComponent(&numEventsLabel);
-
-    generateButton.setButtonText("Generate");
-    addAndMakeVisible(&generateButton);
-    generateButton.onClick = [this] {
-        generateFigure();
-    };
+    stageIndex = stage - 1;
+    repaint();
 }
 
-void FigureGenerator::resized()
+void StageIndicator::paint(juce::Graphics &g)
 {
-    auto margin = 10;
+    float circleDiameter = 15.0f;
+    float marginX = (circleDiameter / 2) + 1; // +1 for breathing space
+    float width = getWidth() - (marginX * 2);
+    float centreY = getHeight() / 2;
+    float lineThickness = 2;
+    float pointSpacing = width / 3;
+    juce::Rectangle<float> circleBounds(circleDiameter, circleDiameter);
+
+    g.setColour(juce::Colours::cornflowerblue);
+    g.fillRect(marginX, centreY - (lineThickness / 2), width, lineThickness);
+
+    for(int i = 0; i < 4; i++) {
+        juce::Point<float> point((pointSpacing * i) + marginX, centreY);
+        circleBounds.setCentre(point);
+
+        g.setColour(juce::Colours::darkgrey);
+        g.fillEllipse(circleBounds);
+
+        g.setColour(juce::Colours::cornflowerblue);
+        if(i == stageIndex) {
+            g.fillEllipse(circleBounds);
+
+        } else {
+            g.drawEllipse(circleBounds, 2);
+        }
+    }
+}
+
+// =====================================================================
+
+StageDescription::StageDescription(juce::String titleText,
+                                   juce::String descriptionText)
+: title({}, titleText)
+{
+    title.setFont(juce::Font(24.0f));
+    addAndMakeVisible(title);
+
+    description.setText(descriptionText, juce::dontSendNotification);
+    description.setMultiLine(true, true);
+    description.setReadOnly(true);
+    description.setCaretVisible(false);
+    description.setColour(juce::TextEditor::ColourIds::backgroundColourId,
+                          juce::Colours::transparentBlack);
+    description.setColour(juce::TextEditor::ColourIds::outlineColourId,
+                          juce::Colours::transparentWhite);
+    addAndMakeVisible(description);
+}
+
+void StageDescription::resized()
+{
     auto area = getLocalBounds();
-    auto colWidth = area.getWidth() / 4;
-    auto globalSettingsArea = area.removeFromLeft(colWidth);
-    auto particleSelectionArea = area.removeFromLeft(colWidth);
-    auto onsetSelectionArea = area;
+    title.setBounds(area.removeFromTop(50));
+    description.setBounds(area);
+}
 
-    blockedMessage.setBounds(area);
+// =========================================================================
 
-    globalSettingsHeading.setBounds(globalSettingsArea.removeFromTop(50));
+FigGenStage::FigGenStage(FigureGenerator &fg) : figGen(fg)
+{}
 
-    auto numEventsArea = globalSettingsArea.removeFromTop(45);
-    auto numEventsColWidth = numEventsArea.getWidth() / 3;
-    numEventsLabel.setBounds(
-        numEventsArea.removeFromLeft(numEventsColWidth * 2).reduced(margin));
-    numEventsInput.setBounds(
-        numEventsArea.removeFromRight(numEventsColWidth).reduced(margin));
+FigGenStage::~FigGenStage()
+{
+    figGen.errorMessage.setVisible(false);
+}
 
-    auto generateButtonArea =
-        globalSettingsArea.removeFromTop(50).reduced(margin);
-    generateButton.setBounds(generateButtonArea);
+// =========================================================================
 
-    if(figureParticleSelection != nullptr) {
-        figureParticleSelection->setBounds(particleSelectionArea);
-    }
+DurationProtocolStage::DurationProtocolStage(FigureGenerator &fg)
+: FigGenStage(fg),
+  durationProtocolParams(DurationProtocolController::Type::prescribed),
+  durationProtocolSelector(durationProtocolParams)
+{
+    jassert(figGen.durationsProducer == nullptr);
+    addAndMakeVisible(stageDescription);
+    addAndMakeVisible(durationProtocolSelector);
+    figGen.previousBtn.setVisible(false);
+    figGen.stageIndicator.setStage(1);
+}
 
-    if(figureOnsetSelection != nullptr) {
-        figureOnsetSelection->setBounds(onsetSelectionArea);
+DurationProtocolStage::~DurationProtocolStage()
+{
+    figGen.previousBtn.setVisible(true);
+}
+
+void DurationProtocolStage::resized()
+{
+    auto area = getLocalBounds();
+    stageDescription.setBounds(area.removeFromTop(100));
+    durationProtocolSelector.setBounds(area);
+}
+
+void DurationProtocolStage::nextStage()
+{
+    try {
+        figGen.durationsProducer =
+            std::make_shared<aleatoric::DurationsProducer>(
+                DurationProtocolController::createProtocol(
+                    durationProtocolParams),
+                aleatoric::NumberProtocol::create(
+                    aleatoric::NumberProtocol::Type::basic));
+
+        figGen.figGenStage = std::make_unique<DurationSelectionStage>(figGen);
+        figGen.addAndMakeVisible(*figGen.figGenStage);
+    } catch(const std::exception &e) {
+        figGen.errorMessage.setText(e.what(), juce::dontSendNotification);
+        figGen.errorMessage.setVisible(true);
+        figGen.resized();
     }
 }
 
-void FigureGenerator::generateFigure()
+void DurationProtocolStage::previousStage()
+{}
+
+// ===================================================================
+
+DurationSelectionStage::DurationSelectionStage(FigureGenerator &fg)
+: FigGenStage(fg), durationNumberProtocolSelector(figGen.durationsProducer)
 {
-    jassert(particleProducer != nullptr);
+    jassert(figGen.durationsProducer);
+    addAndMakeVisible(stageDescription);
+    addAndMakeVisible(durationNumberProtocolSelector);
+    figGen.stageIndicator.setStage(2);
+}
 
-    auto numOfEventsToMake = numEventsInput.getText().getIntValue();
+void DurationSelectionStage::resized()
+{
+    auto area = getLocalBounds();
+    stageDescription.setBounds(area.removeFromTop(100));
+    durationNumberProtocolSelector.setBounds(area);
+}
 
-    if(numOfEventsToMake == 0) {
-        std::make_shared<ErrorMessageModal>(
-            "The number of events specified for a "
-            "figure must be greater than 0");
+void DurationSelectionStage::nextStage()
+{
+    try {
+        durationNumberProtocolSelector.updateParams();
+        figGen.figGenStage = std::make_unique<ParticleSelectionStage>(figGen);
+        figGen.addAndMakeVisible(*figGen.figGenStage);
+    } catch(const std::exception &e) {
+        figGen.errorMessage.setText(e.what(), juce::dontSendNotification);
+        figGen.errorMessage.setVisible(true);
+        figGen.resized();
+    }
+}
+
+void DurationSelectionStage::previousStage()
+{
+    figGen.durationsProducer = nullptr;
+    figGen.figGenStage = std::make_unique<DurationProtocolStage>(figGen);
+    figGen.addAndMakeVisible(*figGen.figGenStage);
+}
+
+// ===================================================================
+
+ParticleSelectionStage::ParticleSelectionStage(FigureGenerator &fg)
+: FigGenStage(fg)
+{
+    jassert(figGen.particlesProducer == nullptr);
+    auto particles = figGen.projectState.getParticleList().getObjects();
+    figGen.particlesProducer =
+        std::make_shared<aleatoric::CollectionsProducer<Particle>>(
+            particles,
+            aleatoric::NumberProtocol::create(
+                aleatoric::NumberProtocol::Type::basic));
+
+    particleProtocolSelector =
+        std::make_unique<NumberProtocolSelector>(figGen.particlesProducer);
+    addAndMakeVisible(stageDescription);
+    addAndMakeVisible(*particleProtocolSelector);
+    figGen.stageIndicator.setStage(3);
+}
+
+void ParticleSelectionStage::resized()
+{
+    auto area = getLocalBounds();
+    stageDescription.setBounds(area.removeFromTop(100));
+    particleProtocolSelector->setBounds(area);
+}
+
+void ParticleSelectionStage::nextStage()
+{
+    try {
+        particleProtocolSelector->updateParams();
+        figGen.figGenStage = std::make_unique<NoOfEventsStage>(figGen);
+        figGen.addAndMakeVisible(*figGen.figGenStage);
+
+    } catch(const std::exception &e) {
+        figGen.errorMessage.setText(e.what(), juce::dontSendNotification);
+        figGen.errorMessage.setVisible(true);
+        figGen.resized();
+    }
+}
+
+void ParticleSelectionStage::previousStage()
+{
+    figGen.particlesProducer = nullptr;
+    figGen.figGenStage = std::make_unique<DurationSelectionStage>(figGen);
+    figGen.addAndMakeVisible(*figGen.figGenStage);
+}
+
+// ===================================================================
+
+NoOfEventsStage::NoOfEventsStage(FigureGenerator &fg)
+: FigGenStage(fg), noOfEventsInput(noOfEvents, "Number of events")
+{
+    jassert(figGen.durationsProducer);
+    jassert(figGen.particlesProducer);
+
+    addAndMakeVisible(stageDescription);
+    addAndMakeVisible(noOfEventsInput);
+    figGen.nextBtn.setButtonText("Generate");
+    figGen.stageIndicator.setStage(4);
+}
+
+NoOfEventsStage::~NoOfEventsStage()
+{
+    figGen.nextBtn.setButtonText("Next");
+}
+
+void NoOfEventsStage::resized()
+{
+    auto area = getLocalBounds();
+    stageDescription.setBounds(area.removeFromTop(100));
+    noOfEventsInput.setBounds(area.removeFromTop(50));
+}
+
+void NoOfEventsStage::nextStage()
+{
+    if(noOfEvents == 0) {
+        figGen.errorMessage.setText("The number of events specified for a "
+                                    "figure must be greater than 0",
+                                    juce::dontSendNotification);
+        figGen.errorMessage.setVisible(true);
+        figGen.resized();
         return;
     }
 
     FigureProcessor processor;
+
     try {
-        auto newFigure = processor.composeFigure(numOfEventsToMake,
-                                                 *onsetProducer,
-                                                 *particleProducer,
-                                                 projectState);
-        if(onFigureGenerated) {
-            onFigureGenerated(newFigure);
+        auto newFigure = processor.composeFigure(noOfEvents,
+                                                 *figGen.durationsProducer,
+                                                 *figGen.particlesProducer,
+                                                 figGen.projectState);
+
+        // close the modal from inside
+        if(auto dw = figGen.findParentComponentOfClass<juce::DialogWindow>()) {
+            dw->exitModalState(0);
         }
     } catch(const std::exception &e) {
         /*
@@ -104,78 +272,80 @@ void FigureGenerator::generateFigure()
             - ObjectAlreadyExists,
             - EventFigureInvalidForEventList
         */
-        std::make_shared<ErrorMessageModal>(juce::String(e.what()));
+        figGen.errorMessage.setText(e.what(), juce::dontSendNotification);
+        figGen.errorMessage.setVisible(true);
+        figGen.resized();
         return;
     }
 }
 
-// Private methods
-void FigureGenerator::onParticleAdded()
+void NoOfEventsStage::previousStage()
 {
-    auto particles = particleList.getObjects();
-
-    if(particles.size() > 1) {
-        if(particleProducer == nullptr) {
-            particleProducer =
-                std::make_shared<aleatoric::CollectionsProducer<Particle>>(
-                    particles,
-                    aleatoric::NumberProtocol::create(
-                        aleatoric::NumberProtocol::Type::basic));
-        } else {
-            particleProducer->setSource(particles);
-        }
-
-        if(figureParticleSelection == nullptr) {
-            figureParticleSelection =
-                std::make_unique<FigureParticleSelection>(particleProducer);
-            addAndMakeVisible(*figureParticleSelection);
-        } else {
-            figureParticleSelection->resetParams();
-        }
-
-        if(onsetProducer == nullptr) {
-            onsetProducer = std::make_shared<aleatoric::DurationsProducer>(
-                aleatoric::DurationProtocol::createPrescribed(
-                    std::vector<int> {1000, 2000}),
-                aleatoric::NumberProtocol::create(
-                    aleatoric::NumberProtocol::Type::basic));
-        }
-
-        if(figureOnsetSelection == nullptr) {
-            figureOnsetSelection = std::make_unique<FigureOnsetSelection>(
-                onsetProducer,
-                DurationProtocolParams(
-                    DurationProtocolController::Type::prescribed));
-            addAndMakeVisible(*figureOnsetSelection);
-        }
-
-        blockedMessage.setVisible(false);
-        globalSettingsHeading.setVisible(true);
-        numEventsInput.setVisible(true);
-        numEventsLabel.setVisible(true);
-
-        resized();
-    }
+    figGen.particlesProducer = nullptr;
+    figGen.figGenStage = std::make_unique<ParticleSelectionStage>(figGen);
+    figGen.addAndMakeVisible(*figGen.figGenStage);
 }
 
-void FigureGenerator::onParticleRemoved()
+// ===================================================================
+
+FigureGenerator::FigureGenerator(ProjectState &ps) : projectState(ps)
 {
-    auto particles = particleList.getObjects();
+    addAndMakeVisible(stageIndicator);
 
-    if(particles.size() < 2) {
-        particleProducer = nullptr;
-        figureParticleSelection = nullptr;
-        onsetProducer = nullptr;
-        figureOnsetSelection = nullptr;
+    nextBtn.onClick = [this] {
+        if(figGenStage) {
+            figGenStage->nextStage();
+            resized();
+        }
+    };
+    addAndMakeVisible(nextBtn);
 
-        blockedMessage.setVisible(true);
-        globalSettingsHeading.setVisible(false);
-        numEventsInput.setVisible(false);
-        numEventsLabel.setVisible(false);
+    previousBtn.onClick = [this] {
+        if(figGenStage) {
+            figGenStage->previousStage();
+            resized();
+        }
+    };
+    addAndMakeVisible(previousBtn);
 
-        resized();
-    } else {
-        particleProducer->setSource(particles);
-        figureParticleSelection->resetParams();
+    // order is important here - this must come after buttons are added to
+    // component
+    figGenStage = std::make_unique<DurationProtocolStage>(*this);
+    addAndMakeVisible(*figGenStage);
+
+    errorMessage.setColour(juce::Label::outlineColourId, juce::Colours::orange);
+    errorMessage.setColour(juce::Label::textColourId, juce::Colours::orange);
+    addChildComponent(errorMessage);
+}
+
+void FigureGenerator::resized()
+{
+    auto margin = 20;
+    auto area = getLocalBounds().reduced(margin);
+
+    // Stage
+    stageIndicator.setBounds(area.removeFromTop(20));
+
+    // Buttons
+    auto btnsArea = area.removeFromBottom(30);
+    auto leftBtnArea = btnsArea.removeFromLeft(100);
+    auto rightBtnArea = btnsArea.removeFromRight(100);
+
+    if(nextBtn.isVisible()) {
+        nextBtn.setBounds(rightBtnArea);
+    }
+
+    if(previousBtn.isVisible()) {
+        previousBtn.setBounds(leftBtnArea);
+    }
+
+    auto errorArea = area.removeFromBottom(50);
+
+    if(errorMessage.isVisible()) {
+        errorMessage.setBounds(errorArea.reduced(0, margin / 2));
+    }
+
+    if(figGenStage) {
+        figGenStage->setBounds(area);
     }
 }

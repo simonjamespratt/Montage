@@ -15,6 +15,8 @@ struct GeometricProtocolParams {
 };
 
 struct MultiplesProtocolParams {
+    enum MultiplierStrategy { range, hand };
+    MultiplierStrategy strategy {MultiplierStrategy::range};
     int rangeStart = 1;
     int rangeEnd = 10;
     std::vector<int> multipliers = {1000, 2000};

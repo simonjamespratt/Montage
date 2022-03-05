@@ -3,9 +3,8 @@
 #include "DurationProtocolConfig.h"
 
 DurationProtocolSelector::DurationProtocolSelector(
-    std::shared_ptr<aleatoric::DurationsProducer> durationsProducer,
-    DurationProtocolParams durationParams)
-: producer(durationsProducer), params(durationParams)
+    DurationProtocolParams &durationParams)
+: params(durationParams)
 {
     protocolSelectorLabel.setText("Durations strategy: ",
                                   juce::dontSendNotification);
@@ -18,9 +17,6 @@ DurationProtocolSelector::DurationProtocolSelector(
     };
     setInitialActiveProtocol();
 }
-
-void DurationProtocolSelector::paint(juce::Graphics &g)
-{}
 
 void DurationProtocolSelector::resized()
 {
@@ -53,8 +49,7 @@ void DurationProtocolSelector::protocolChanged()
     auto selectedConfig = DurationProtocolConfig::findById(id);
     controller =
         DurationProtocolController::create(selectedConfig.getProtocolType(),
-                                           params,
-                                           producer);
+                                           params);
     addAndMakeVisible(*controller);
     resized();
 }

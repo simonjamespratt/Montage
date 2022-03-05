@@ -24,7 +24,8 @@ class StateHelpers {
     // Figure
     static juce::ValueTree createFigureState();
     static juce::ValueTree createFigureState(juce::Uuid id,
-                                             juce::String name = "name");
+                                             juce::String name = "name",
+                                             bool isGenerated = false);
 
     // Event
     static juce::ValueTree createEventState();

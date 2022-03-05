@@ -22,10 +22,12 @@ SCENARIO("Figure: receive existing state")
         {
             juce::ValueTree state(IDs::FIGURE);
             juce::String name("figure name");
+            bool isGenerated = false;
 
             SECTION("No id")
             {
                 state.setProperty(IDs::name, name, nullptr);
+                state.setProperty(IDs::is_generated, isGenerated, nullptr);
                 REQUIRE_THROWS_AS(Figure(state),
                                   ValueTreeCompulsoryPropertyMissing);
             }
@@ -33,6 +35,15 @@ SCENARIO("Figure: receive existing state")
             SECTION("No name")
             {
                 state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
+                state.setProperty(IDs::is_generated, isGenerated, nullptr);
+                REQUIRE_THROWS_AS(Figure(state),
+                                  ValueTreeCompulsoryPropertyMissing);
+            }
+
+            SECTION("No isGenerated")
+            {
+                state.setProperty(IDs::id, juce::Uuid().toString(), nullptr);
+                state.setProperty(IDs::name, name, nullptr);
                 REQUIRE_THROWS_AS(Figure(state),
                                   ValueTreeCompulsoryPropertyMissing);
             }
@@ -82,6 +93,11 @@ SCENARIO("Figure: create state")
         REQUIRE(figure.getName() == "untitled");
     }
 
+    THEN("isGenerated is set to false")
+    {
+        REQUIRE_FALSE(figure.getIsGenerated());
+    }
+
     THEN("Underlying state is as expected")
     {
         REQUIRE_FALSE(figure.getId().isNull());
@@ -89,6 +105,7 @@ SCENARIO("Figure: create state")
         REQUIRE(returnedState.hasType(IDs::FIGURE));
         REQUIRE(juce::Uuid(returnedState[IDs::id]) == figure.getId());
         REQUIRE(returnedState[IDs::name] == "untitled");
+        REQUIRE(bool(returnedState[IDs::is_generated]) == false);
     }
 }
 
@@ -129,5 +146,39 @@ SCENARIO("Figure: set name")
         REQUIRE(propChanged == IDs::name);
         REQUIRE(otherCallbackHasBeenCalled);
         REQUIRE(otherPropChanged == IDs::name);
+    }
+}
+
+SCENARIO("Figure:: set isGenerated")
+{
+    Figure figure;
+
+    REQUIRE_FALSE(figure.getIsGenerated());
+
+    bool callbackHasBeenCalled;
+    juce::Identifier propChanged;
+    figure.onUpdated = [&callbackHasBeenCalled,
+                        &propChanged](juce::Identifier propertyChanged) {
+        callbackHasBeenCalled = true;
+        propChanged = propertyChanged;
+    };
+
+    Figure otherFigure(figure.getState());
+    bool otherCallbackHasBeenCalled;
+    juce::Identifier otherPropChanged;
+    otherFigure.onUpdated = [&otherCallbackHasBeenCalled, &otherPropChanged](
+                                juce::Identifier propertyChanged) {
+        otherCallbackHasBeenCalled = true;
+        otherPropChanged = propertyChanged;
+    };
+
+    SECTION("is sets the value correctly")
+    {
+        figure.setIsGenerated(true);
+        REQUIRE(figure.getIsGenerated() == true);
+        REQUIRE(callbackHasBeenCalled);
+        REQUIRE(propChanged == IDs::is_generated);
+        REQUIRE(otherCallbackHasBeenCalled);
+        REQUIRE(otherPropChanged == IDs::is_generated);
     }
 }
