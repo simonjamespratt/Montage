@@ -24,5 +24,7 @@ Figure FigureProcessor::composeFigure(
         onsetCount += durationsProducer.getDuration();
     }
 
+    newFigure.setIsGenerated(true);
+
     return newFigure;
 }

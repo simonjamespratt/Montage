@@ -15,12 +15,10 @@ class DurationProtocolController : public juce::Component {
 
     enum class Type { geometric, multiples, prescribed };
 
-    // Factory
+    // Factories
     static std::unique_ptr<DurationProtocolController>
-    create(Type type,
-           DurationProtocolParams &params,
-           std::shared_ptr<aleatoric::DurationsProducer> producer);
+    create(Type type, DurationProtocolParams &params);
 
-  private:
-    virtual void setProtocol() = 0;
+    static std::unique_ptr<aleatoric::DurationProtocol>
+    createProtocol(DurationProtocolParams &params);
 };

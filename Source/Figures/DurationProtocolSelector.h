@@ -2,22 +2,17 @@
 #include "DurationProtocolController.h"
 #include "DurationProtocolParams.h"
 
-#include <DurationsProducer.hpp>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <memory>
 
 class DurationProtocolSelector : public juce::Component {
   public:
-    DurationProtocolSelector(
-        std::shared_ptr<aleatoric::DurationsProducer> durationsProducer,
-        DurationProtocolParams durationParams);
+    DurationProtocolSelector(DurationProtocolParams &durationParams);
 
-    void paint(juce::Graphics &) override;
     void resized() override;
 
   private:
-    std::shared_ptr<aleatoric::DurationsProducer> producer;
-    DurationProtocolParams params;
+    DurationProtocolParams &params;
     std::unique_ptr<DurationProtocolController> controller;
 
     juce::Label protocolSelectorLabel;

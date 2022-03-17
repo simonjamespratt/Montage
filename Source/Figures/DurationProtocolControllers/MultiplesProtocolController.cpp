@@ -1,21 +1,14 @@
 #include "MultiplesProtocolController.h"
 
 MultiplesProtocolController::MultiplesProtocolController(
-    DurationProtocolParams &params,
-    std::shared_ptr<aleatoric::DurationsProducer> producer)
-: m_params(params),
-  m_producer(producer),
-  baseIncrementEditor(m_params.multiples.baseIncrement, "Base increment"),
-  rangeStartEditor(m_params.multiples.rangeStart, "Range start"),
-  rangeEndEditor(m_params.multiples.rangeEnd, "Range end"),
-  deviationFactorEditor(m_params.multiples.deviationFactor,
-                        "Deviation factor",
-                        0,
-                        1.0,
-                        "",
-                        1,
-                        50),
-  multipliersEditor(m_params.multiples.multipliers)
+    DurationProtocolParams &p)
+: params(p),
+  baseIncrementEditor(params.multiples.baseIncrement, "Base increment"),
+  rangeStartEditor(params.multiples.rangeStart, "Range start"),
+  rangeEndEditor(params.multiples.rangeEnd, "Range end"),
+  deviationFactorEditor(
+      params.multiples.deviationFactor, "Deviation factor", 0, 1.0, "", 1, 50),
+  multipliersEditor(params.multiples.multipliers)
 {
     addAndMakeVisible(&baseIncrementEditor);
     addAndMakeVisible(&deviationFactorEditor);
@@ -25,18 +18,6 @@ MultiplesProtocolController::MultiplesProtocolController(
     multipliersEditorViewport.setViewedComponent(&multipliersEditor, false);
     multipliersEditorViewport.setScrollBarsShown(true, false);
     addChildComponent(&multipliersEditorViewport);
-
-    saveButton.setButtonText("Set protocol");
-    saveButton.onClick = [this] {
-        setProtocol();
-    };
-    addAndMakeVisible(&saveButton);
-
-    // TODO: GENERAL-UI: ErrorMessage: see PrescribedProtocolController
-    errorMessage.setColour(juce::Label::outlineColourId,
-                           juce::Colours::orangered);
-    errorMessage.setColour(juce::Label::textColourId, juce::Colours::orangered);
-    addChildComponent(&errorMessage);
 
     multipliersSelectionHeading.setText("Multipliers",
                                         juce::dontSendNotification);
@@ -49,19 +30,18 @@ MultiplesProtocolController::MultiplesProtocolController(
     addAndMakeVisible(&multipliersByHandButton);
 
     multipliersByRangeButton.onClick = [this] {
-        toggleMultiplierStrategy(&multipliersByRangeButton,
-                                 MultiplierStrategy::range);
+        toggleMultiplierStrategy(
+            &multipliersByRangeButton,
+            MultiplesProtocolParams::MultiplierStrategy::range);
     };
     multipliersByHandButton.onClick = [this] {
-        toggleMultiplierStrategy(&multipliersByHandButton,
-                                 MultiplierStrategy::hand);
+        toggleMultiplierStrategy(
+            &multipliersByHandButton,
+            MultiplesProtocolParams::MultiplierStrategy::hand);
     };
 
     multipliersByRangeButton.setToggleState(true, juce::sendNotification);
 }
-
-void MultiplesProtocolController::paint(juce::Graphics &g)
-{}
 
 void MultiplesProtocolController::resized()
 {
@@ -71,11 +51,6 @@ void MultiplesProtocolController::resized()
 
     // params
     auto paramsArea = area.removeFromLeft(250);
-
-    if(errorMessage.isVisible()) {
-        errorMessage.setBounds(paramsArea.removeFromTop(80).reduced(margin));
-    }
-
     baseIncrementEditor.setBounds(paramsArea.removeFromTop(45));
     deviationFactorEditor.setBounds(paramsArea.removeFromTop(45));
 
@@ -84,8 +59,6 @@ void MultiplesProtocolController::resized()
 
     rangeStartEditor.setBounds(paramsArea.removeFromTop(45));
     rangeEndEditor.setBounds(paramsArea.removeFromTop(45));
-
-    saveButton.setBounds(area.removeFromTop(45).reduced(margin));
 
     multipliersSelectionHeading.setBounds(
         area.removeFromTop(30).reduced(marginSmall));
@@ -97,73 +70,23 @@ void MultiplesProtocolController::resized()
 }
 
 // Private methods
-void MultiplesProtocolController::setProtocol()
-{
-    auto &params = m_params.multiples;
-
-    if(currentMultiplierStrategy == MultiplierStrategy::range) {
-        try {
-            m_producer->setDurationProtocol(
-                aleatoric::DurationProtocol::createMultiples(
-                    params.baseIncrement,
-                    aleatoric::Range(params.rangeStart, params.rangeEnd),
-                    params.deviationFactor));
-
-            if(errorMessage.isVisible()) {
-                errorMessage.setVisible(false);
-                resized();
-            }
-
-        } catch(const std::invalid_argument &e) {
-            errorMessage.setText(
-                "New protocol was not set. When using range based multipliers, "
-                "the range must be 2 or greater",
-                juce::dontSendNotification);
-            errorMessage.setVisible(true);
-            resized();
-        }
-    }
-
-    if(currentMultiplierStrategy == MultiplierStrategy::hand) {
-        try {
-            m_producer->setDurationProtocol(
-                aleatoric::DurationProtocol::createMultiples(
-                    params.baseIncrement,
-                    params.multipliers,
-                    params.deviationFactor));
-
-            if(errorMessage.isVisible()) {
-                errorMessage.setVisible(false);
-                resized();
-            }
-        } catch(const std::invalid_argument &e) {
-            errorMessage.setText("New protocol was not set. When using hand "
-                                 "crafted multipliers, you must provide 2 or "
-                                 "more duration values",
-                                 juce::dontSendNotification);
-            errorMessage.setVisible(true);
-            resized();
-        }
-    }
-}
-
 void MultiplesProtocolController::toggleMultiplierStrategy(
-    juce::Button *button, MultiplierStrategy strategy)
+    juce::Button *button, MultiplesProtocolParams::MultiplierStrategy strategy)
 {
     auto newState = button->getToggleState();
     auto isActive = newState;
 
-    if(strategy == MultiplierStrategy::hand) {
+    if(strategy == MultiplesProtocolParams::MultiplierStrategy::hand) {
         multipliersEditorViewport.setVisible(newState);
     }
 
-    if(strategy == MultiplierStrategy::range) {
+    if(strategy == MultiplesProtocolParams::MultiplierStrategy::range) {
         rangeStartEditor.setVisible(newState);
         rangeEndEditor.setVisible(newState);
     }
 
     if(isActive) {
-        currentMultiplierStrategy = strategy;
+        params.multiples.strategy = strategy;
     }
 
     resized();

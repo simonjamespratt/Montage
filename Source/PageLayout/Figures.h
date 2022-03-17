@@ -16,24 +16,21 @@ class Figures : public juce::Component {
     void resized() override;
 
   private:
-    void arrangeFigure(Figure f);
-    void toggleGenerateManagerState();
-    void refreshView();
+    void showFigGenModal();
+    void setAddButtonEnabled();
 
     te::Engine &engine;
     ProjectState projectState;
     FigureList figureList;
+    ParticleList particleList;
 
     std::unique_ptr<Sequencer> sequencer;
-    FigureGenerator figureGenerator;
     FiguresTable figuresTable;
     EventsTable eventsTable;
 
     juce::Label heading;
     juce::DrawableButton addFigureButton;
     juce::DrawableButton deleteFigureButton;
-    bool showGenerator {false};
-    juce::TextButton closeGeneratorButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Figures)
 };

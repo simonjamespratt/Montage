@@ -6,8 +6,8 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
 : engine(e),
   projectState(ps),
   figureList(ps.getFigureList()),
-  figureGenerator(ps),
   figuresTable(ps),
+  particleList(ps.getParticleList()),
   addFigureButton("Add figure",
                   juce::DrawableButton::ButtonStyle::ImageOnButtonBackground),
   deleteFigureButton("Delete figure",
@@ -29,36 +29,46 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
         }
     };
 
+    figureList.onObjectUpdated = [this](Figure f, juce::Identifier prop) {
+        if(prop == IDs::is_generated) {
+            figuresTable.setSelectedFigure(f);
+        }
+    };
+
+    particleList.onObjectAdded = [this](Particle p) {
+        setAddButtonEnabled();
+    };
+    particleList.onObjectRemoved = [this](Particle p) {
+        setAddButtonEnabled();
+    };
+
     addFigureButton.setImages(Icons::getIcon(Icons::IconType::Cross).get());
-    addChildComponent(addFigureButton);
+    addAndMakeVisible(addFigureButton);
+    setAddButtonEnabled();
     addFigureButton.onClick = [this] {
-        toggleGenerateManagerState();
+        showFigGenModal();
     };
 
     deleteFigureButton.setImages(Icons::getIcon(Icons::IconType::Dash).get());
-    addChildComponent(deleteFigureButton);
+    addAndMakeVisible(deleteFigureButton);
+    deleteFigureButton.setEnabled(false);
     deleteFigureButton.onClick = [this] {
         sequencer = nullptr;
         eventsTable.clear();
         figuresTable.removeFigure();
     };
 
-    addAndMakeVisible(&closeGeneratorButton);
-    closeGeneratorButton.setButtonText("Close generator");
-    closeGeneratorButton.onClick = [this] {
-        toggleGenerateManagerState();
-    };
+    addAndMakeVisible(&eventsTable);
 
-    addChildComponent(&figureGenerator);
-    addChildComponent(&eventsTable);
-
-    addChildComponent(&figuresTable);
+    addAndMakeVisible(&figuresTable);
     figuresTable.onFigureDeselected = [this] {
         sequencer = nullptr;
         eventsTable.clear();
+        deleteFigureButton.setEnabled(false);
     };
     figuresTable.onFigureSelected = [this](Figure f) {
         try {
+            deleteFigureButton.setEnabled(true);
             auto figureFile =
                 projectState.getFileForFigure(f); // this might throw error
             sequencer = std::make_unique<Sequencer>(
@@ -76,16 +86,6 @@ Figures::Figures(te::Engine &e, ProjectState &ps)
     heading.setText("Figures", juce::dontSendNotification);
     heading.setFont(juce::Font(24.0f, juce::Font::bold));
     addAndMakeVisible(&heading);
-
-    // better to have this callback here than to listen for changes to state, as
-    // all the events will not have been created yet when the listener is
-    // triggered for having added a new figure to the state. By listening to
-    // this, you can be sure all the events will have been created.
-    figureGenerator.onFigureGenerated = [this](Figure f) {
-        arrangeFigure(f);
-    };
-
-    refreshView();
 }
 
 void Figures::resized()
@@ -102,68 +102,51 @@ void Figures::resized()
         juce::FlexItem(heading).withHeight(24.0f).withWidth(100.0f).withMargin(
             juce::FlexItem::Margin(5.0f)));
 
-    if(showGenerator) {
-        headerContainer.items.add(
-            juce::FlexItem(closeGeneratorButton)
-                .withHeight(24.0f)
-                .withWidth(150.0f)
-                .withMargin(juce::FlexItem::Margin(5.0f)));
-
-    } else {
-        headerContainer.items.add(
-            juce::FlexItem(addFigureButton)
-                .withHeight(24.0f)
-                .withWidth(24.0f)
-                .withMargin(juce::FlexItem::Margin(5.0f)));
-        headerContainer.items.add(
-            juce::FlexItem(deleteFigureButton)
-                .withHeight(24.0f)
-                .withWidth(24.0f)
-                .withMargin(juce::FlexItem::Margin(5.0f)));
-    }
+    headerContainer.items.add(juce::FlexItem(addFigureButton)
+                                  .withHeight(24.0f)
+                                  .withWidth(24.0f)
+                                  .withMargin(juce::FlexItem::Margin(5.0f)));
+    headerContainer.items.add(juce::FlexItem(deleteFigureButton)
+                                  .withHeight(24.0f)
+                                  .withWidth(24.0f)
+                                  .withMargin(juce::FlexItem::Margin(5.0f)));
 
     headerContainer.performLayout(headingArea);
 
     auto heightUnit = area.getHeight() / 3;
 
-    auto generatorArea = area;
     auto managerArea = area.removeFromTop(heightUnit);
     auto sequencerArea = area;
 
-    figureGenerator.setBounds(generatorArea);
     figuresTable.setBounds(
         managerArea.removeFromLeft(managerArea.getWidth() / 2));
     eventsTable.setBounds(managerArea);
+
     if(sequencer) {
         sequencer->setBounds(sequencerArea.reduced(margin));
     }
 }
 
-void Figures::arrangeFigure(Figure f)
-{
-    toggleGenerateManagerState();
-    figuresTable.setSelectedFigure(f);
-}
-
 // Private methods
-void Figures::toggleGenerateManagerState()
+void Figures::showFigGenModal()
 {
-    showGenerator = !showGenerator;
-    refreshView();
+    juce::DialogWindow::LaunchOptions o;
+    o.content.setOwned(new FigureGenerator(projectState));
+    o.content->setSize(400, 600);
+    o.dialogBackgroundColour = juce::Colours::darkgrey;
+    o.dialogTitle = "Figure Generator";
+    o.launchAsync();
 }
 
-void Figures::refreshView()
+void Figures::setAddButtonEnabled()
 {
-    addFigureButton.setVisible(!showGenerator);
-    deleteFigureButton.setVisible(!showGenerator);
-    figuresTable.setVisible(!showGenerator);
-    eventsTable.setVisible(!showGenerator);
-    if(sequencer) {
-        sequencer->setVisible(!showGenerator);
+    auto numParticles = particleList.getObjects().size();
+    if(numParticles > 1) {
+        addFigureButton.setEnabled(true);
+        addFigureButton.setTooltip("");
+    } else {
+        addFigureButton.setEnabled(false);
+        addFigureButton.setTooltip(
+            "At least 2 particles need to exist to create figures");
     }
-
-    figureGenerator.setVisible(showGenerator);
-    closeGeneratorButton.setVisible(showGenerator);
-
-    resized();
 }
