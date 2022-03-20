@@ -3,7 +3,7 @@
 #include <algorithm>
 
 DurationProtocolConfig::DurationProtocolConfig(
-    int id, juce::String name, DurationProtocolController::Type protocolType)
+    int id, juce::String name, DurationProtocolType protocolType)
 : m_id(id), m_name(name), m_protocolType(protocolType)
 {}
 
@@ -17,19 +17,16 @@ juce::String DurationProtocolConfig::getName() const
     return m_name;
 }
 
-DurationProtocolController::Type DurationProtocolConfig::getProtocolType() const
+DurationProtocolType DurationProtocolConfig::getProtocolType() const
 {
     return m_protocolType;
 }
 
 // Static stuff
 std::vector<DurationProtocolConfig> DurationProtocolConfig::configs {
-    DurationProtocolConfig(
-        1, "Geometric", DurationProtocolController::Type::geometric),
-    DurationProtocolConfig(
-        2, "Multiples", DurationProtocolController::Type::multiples),
-    DurationProtocolConfig(
-        3, "Prescribed", DurationProtocolController::Type::prescribed)};
+    DurationProtocolConfig(1, "Geometric", DurationProtocolType::geometric),
+    DurationProtocolConfig(2, "Multiples", DurationProtocolType::multiples),
+    DurationProtocolConfig(3, "Prescribed", DurationProtocolType::prescribed)};
 
 std::vector<DurationProtocolConfig> DurationProtocolConfig::getConfigurations()
 {
@@ -48,7 +45,7 @@ DurationProtocolConfig DurationProtocolConfig::findById(const int &id)
 }
 
 DurationProtocolConfig
-DurationProtocolConfig::findByType(const DurationProtocolController::Type &type)
+DurationProtocolConfig::findByType(const DurationProtocolType &type)
 {
     auto it = std::find_if(configs.begin(),
                            configs.end(),

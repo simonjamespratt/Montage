@@ -82,7 +82,7 @@ FigGenStage::~FigGenStage()
 
 DurationProtocolStage::DurationProtocolStage(FigureGenerator &fg)
 : FigGenStage(fg),
-  durationProtocolParams(DurationProtocolController::Type::prescribed),
+  durationProtocolParams(DurationProtocolType::prescribed),
   durationProtocolSelector(durationProtocolParams)
 {
     jassert(figGen.durationsProducer == nullptr);
@@ -114,6 +114,10 @@ void DurationProtocolStage::nextStage()
                 aleatoric::NumberProtocol::create(
                     aleatoric::NumberProtocol::Type::basic));
 
+        figGen.durationProtocolSettings =
+            std::make_shared<DurationProtocolSettings>(durationProtocolParams);
+        figGen.durationsReview.setMessage(*figGen.durationProtocolSettings);
+        figGen.durationsReview.setVisible(true);
         figGen.figGenStage = std::make_unique<DurationSelectionStage>(figGen);
         figGen.addAndMakeVisible(*figGen.figGenStage);
     } catch(const std::exception &e) {
@@ -148,6 +152,10 @@ void DurationSelectionStage::nextStage()
 {
     try {
         durationNumberProtocolSelector.updateParams();
+        auto params = figGen.durationsProducer->getParams();
+        NumberProtocolSettings settings(params);
+        figGen.durationsSelectionsReview.setMessage(settings);
+        figGen.durationsSelectionsReview.setVisible(true);
         figGen.figGenStage = std::make_unique<ParticleSelectionStage>(figGen);
         figGen.addAndMakeVisible(*figGen.figGenStage);
     } catch(const std::exception &e) {
@@ -160,8 +168,11 @@ void DurationSelectionStage::nextStage()
 void DurationSelectionStage::previousStage()
 {
     figGen.durationsProducer = nullptr;
+    figGen.durationProtocolSettings = nullptr;
     figGen.figGenStage = std::make_unique<DurationProtocolStage>(figGen);
     figGen.addAndMakeVisible(*figGen.figGenStage);
+    figGen.durationsReview.clear();
+    figGen.durationsReview.setVisible(false);
 }
 
 // ===================================================================
@@ -195,6 +206,10 @@ void ParticleSelectionStage::nextStage()
 {
     try {
         particleProtocolSelector->updateParams();
+        auto params = figGen.particlesProducer->getParams();
+        NumberProtocolSettings settings(params);
+        figGen.particleSelectionsReview.setMessage(settings);
+        figGen.particleSelectionsReview.setVisible(true);
         figGen.figGenStage = std::make_unique<NoOfEventsStage>(figGen);
         figGen.addAndMakeVisible(*figGen.figGenStage);
 
@@ -210,6 +225,8 @@ void ParticleSelectionStage::previousStage()
     figGen.particlesProducer = nullptr;
     figGen.figGenStage = std::make_unique<DurationSelectionStage>(figGen);
     figGen.addAndMakeVisible(*figGen.figGenStage);
+    figGen.durationsSelectionsReview.clear();
+    figGen.durationsSelectionsReview.setVisible(false);
 }
 
 // ===================================================================
@@ -257,6 +274,24 @@ void NoOfEventsStage::nextStage()
                                                  *figGen.particlesProducer,
                                                  figGen.projectState);
 
+        newFigure.setIsGenerated(true);
+
+        // Save settings on Figure
+        auto durationSelectionParams = figGen.durationsProducer->getParams();
+        NumberProtocolSettings durationSelectionSettings(
+            durationSelectionParams);
+
+        auto particleSelectionParams = figGen.particlesProducer->getParams();
+        NumberProtocolSettings particleSelectionSettings(
+            particleSelectionParams);
+
+        auto creationSettings =
+            FigureCreationSettings(*figGen.durationProtocolSettings,
+                                   durationSelectionSettings,
+                                   particleSelectionSettings);
+
+        newFigure.setCreationSettings(creationSettings);
+
         // close the modal from inside
         if(auto dw = figGen.findParentComponentOfClass<juce::DialogWindow>()) {
             dw->exitModalState(0);
@@ -284,11 +319,17 @@ void NoOfEventsStage::previousStage()
     figGen.particlesProducer = nullptr;
     figGen.figGenStage = std::make_unique<ParticleSelectionStage>(figGen);
     figGen.addAndMakeVisible(*figGen.figGenStage);
+    figGen.particleSelectionsReview.clear();
+    figGen.particleSelectionsReview.setVisible(false);
 }
 
 // ===================================================================
 
-FigureGenerator::FigureGenerator(ProjectState &ps) : projectState(ps)
+FigureGenerator::FigureGenerator(ProjectState &ps)
+: projectState(ps),
+  durationsReview("1: Duration Creation Settings"),
+  durationsSelectionsReview("2: Duration Selection Settings"),
+  particleSelectionsReview("3: Particle Selection Settings")
 {
     addAndMakeVisible(stageIndicator);
 
@@ -316,18 +357,23 @@ FigureGenerator::FigureGenerator(ProjectState &ps) : projectState(ps)
     errorMessage.setColour(juce::Label::outlineColourId, juce::Colours::orange);
     errorMessage.setColour(juce::Label::textColourId, juce::Colours::orange);
     addChildComponent(errorMessage);
+
+    addChildComponent(durationsReview);
+    addChildComponent(durationsSelectionsReview);
+    addChildComponent(particleSelectionsReview);
 }
 
 void FigureGenerator::resized()
 {
-    auto margin = 20;
-    auto area = getLocalBounds().reduced(margin);
+    auto area = getLocalBounds();
+    auto mainArea = area.removeFromLeft(mainAreaWidth).reduced(margin);
+    auto reviewArea = area.reduced(margin);
 
     // Stage
-    stageIndicator.setBounds(area.removeFromTop(20));
+    stageIndicator.setBounds(mainArea.removeFromTop(20));
 
     // Buttons
-    auto btnsArea = area.removeFromBottom(30);
+    auto btnsArea = mainArea.removeFromBottom(30);
     auto leftBtnArea = btnsArea.removeFromLeft(100);
     auto rightBtnArea = btnsArea.removeFromRight(100);
 
@@ -339,13 +385,37 @@ void FigureGenerator::resized()
         previousBtn.setBounds(leftBtnArea);
     }
 
-    auto errorArea = area.removeFromBottom(50);
+    auto errorArea = mainArea.removeFromBottom(50);
 
     if(errorMessage.isVisible()) {
         errorMessage.setBounds(errorArea.reduced(0, margin / 2));
     }
 
     if(figGenStage) {
-        figGenStage->setBounds(area);
+        figGenStage->setBounds(mainArea);
     }
+
+    // Settings Review
+    auto singleReviewHeight = reviewArea.getHeight() / 3;
+    if(durationsReview.isVisible()) {
+        durationsReview.setBounds(reviewArea.removeFromTop(singleReviewHeight));
+    }
+    if(durationsSelectionsReview.isVisible()) {
+        durationsSelectionsReview.setBounds(
+            reviewArea.removeFromTop(singleReviewHeight));
+    }
+    if(particleSelectionsReview.isVisible()) {
+        particleSelectionsReview.setBounds(
+            reviewArea.removeFromTop(singleReviewHeight));
+    }
+}
+
+void FigureGenerator::paint(juce::Graphics &g)
+{
+    g.setColour(juce::Colours::grey);
+    auto x = mainAreaWidth;
+    auto y = margin;
+    auto w = 1;
+    auto h = getHeight() - (margin * 2);
+    g.fillRect(x, y, w, h);
 }

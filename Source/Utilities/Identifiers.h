@@ -35,6 +35,58 @@ DECLARE_ID(end)
 DECLARE_ID(FIGURE)
 DECLARE_ID(is_generated)
 
+// FIGURE CREATION SETTINGS
+DECLARE_ID(active_type)
+
+// Duration
+DECLARE_ID(DURATION_SETTINGS)
+
+DECLARE_ID(GEOMETRIC_SETTINGS)
+DECLARE_ID(geo_range_start)
+DECLARE_ID(geo_range_end)
+DECLARE_ID(geo_collection_size)
+
+DECLARE_ID(PRESCRIBED_SETTINGS)
+DECLARE_ID(prescribed_durations)
+
+DECLARE_ID(MULTIPLES_SETTINGS)
+DECLARE_ID(multi_strategy)
+DECLARE_ID(multi_range_start)
+DECLARE_ID(multi_range_end)
+DECLARE_ID(multi_multipliers)
+DECLARE_ID(multi_base_increment)
+DECLARE_ID(multi_deviation_factor)
+
+// Number
+DECLARE_ID(NUMBER_SETTINGS)
+DECLARE_ID(number_settings_context)
+
+DECLARE_ID(CYCLE_SETTINGS)
+DECLARE_ID(cycle_bidirectional)
+DECLARE_ID(cycle_reverse_direction)
+
+DECLARE_ID(GRANULAR_WALK_SETTINGS)
+DECLARE_ID(granular_walk_deviation_factor)
+
+DECLARE_ID(GROUPED_REPETITION_SETTINGS)
+DECLARE_ID(grouped_repetition_groupings)
+
+DECLARE_ID(PERIODIC_SETTINGS)
+DECLARE_ID(periodic_chance_of_repetition)
+
+DECLARE_ID(PRECISION_SETTINGS)
+DECLARE_ID(precision_distribution)
+
+DECLARE_ID(RATIO_SETTINGS)
+DECLARE_ID(ratio_ratios)
+
+DECLARE_ID(SUBSET_SETTINGS)
+DECLARE_ID(subset_min)
+DECLARE_ID(subset_max)
+
+DECLARE_ID(WALK_SETTINGS)
+DECLARE_ID(walk_max_step)
+
 // EVENT
 DECLARE_ID(EVENT)
 DECLARE_ID(onset)

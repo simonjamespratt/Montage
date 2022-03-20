@@ -4,6 +4,8 @@
 #include "Identifiers.h"
 #include "TestHelpers.h"
 
+#include <CollectionsProducer.hpp>
+#include <DurationsProducer.hpp>
 #include <catch2/catch.hpp>
 #include <juce_data_structures/juce_data_structures.h>
 #include <stdexcept>
@@ -180,5 +182,113 @@ SCENARIO("Figure:: set isGenerated")
         REQUIRE(propChanged == IDs::is_generated);
         REQUIRE(otherCallbackHasBeenCalled);
         REQUIRE(otherPropChanged == IDs::is_generated);
+    }
+}
+
+int stateCount(juce::Identifier id, juce::ValueTree v)
+{
+    int noOfStatesWithId = 0;
+    for(int i = 0; i < v.getNumChildren(); i++) {
+        auto child = v.getChild(i);
+        if(child.hasType(id)) {
+            noOfStatesWithId++;
+        }
+    }
+
+    return noOfStatesWithId;
+};
+
+SCENARIO("Figure: set and get creation settings")
+{
+    Figure f;
+
+    SECTION("get before set returns nullptr")
+    {
+        REQUIRE(f.getCreationSettings() == nullptr);
+    }
+
+    SECTION("set then get - returns correct values")
+    {
+        DurationProtocolSettings newDurations;
+        newDurations.activeType = DurationProtocolType::geometric;
+        newDurations.geometric.rangeStart = 100;
+        newDurations.geometric.rangeEnd = 300;
+        newDurations.geometric.collectionSize = 400;
+
+        aleatoric::DurationsProducer durationsProducer(
+            aleatoric::DurationProtocol::createGeometric(
+                aleatoric::Range(1, 10),
+                10),
+            aleatoric::NumberProtocol::create(
+                aleatoric::NumberProtocol::Type::cycle));
+        durationsProducer.setParams(aleatoric::CycleParams(true, true));
+
+        auto durationsSelectionParams = durationsProducer.getParams();
+        NumberProtocolSettings newDurationsSelections(
+            durationsSelectionParams,
+            CreationContext::duration_selection);
+
+        aleatoric::CollectionsProducer<int> particlesProducer(
+            std::vector<int> {1, 2, 3},
+            aleatoric::NumberProtocol::create(
+                aleatoric::NumberProtocol::Type::cycle));
+        particlesProducer.setParams(aleatoric::CycleParams(true, true));
+
+        auto particleSelectionParams = particlesProducer.getParams();
+        NumberProtocolSettings newParticlesSelections(
+            particleSelectionParams,
+            CreationContext::particle_selection);
+
+        FigureCreationSettings newSettings(newDurations,
+                                           newDurationsSelections,
+                                           newParticlesSelections);
+
+        f.setCreationSettings(newSettings);
+        auto returnedSettings = f.getCreationSettings();
+
+        REQUIRE(returnedSettings->durations.activeType ==
+                DurationProtocolType::geometric);
+        REQUIRE(returnedSettings->durations.geometric.rangeStart == 100);
+        REQUIRE(returnedSettings->durations.geometric.rangeEnd == 300);
+        REQUIRE(returnedSettings->durations.geometric.collectionSize == 400);
+
+        REQUIRE(returnedSettings->durationSelection.context ==
+                CreationContext::duration_selection);
+        REQUIRE(returnedSettings->durationSelection.activeType ==
+                NumberProtocolType::cycle);
+        REQUIRE(returnedSettings->durationSelection.cycle.bidirectional ==
+                true);
+        REQUIRE(returnedSettings->durationSelection.cycle.reverseDirection ==
+                true);
+
+        REQUIRE(returnedSettings->particleSelection.context ==
+                CreationContext::particle_selection);
+        REQUIRE(returnedSettings->particleSelection.activeType ==
+                NumberProtocolType::cycle);
+        REQUIRE(returnedSettings->particleSelection.cycle.bidirectional ==
+                true);
+        REQUIRE(returnedSettings->particleSelection.cycle.reverseDirection ==
+                true);
+
+        SECTION("set again replaces settings state rather than adds another")
+        {
+            auto stateBefore = f.getState();
+
+            REQUIRE(stateCount(IDs::DURATION_SETTINGS, stateBefore) == 1);
+            REQUIRE(stateCount(IDs::NUMBER_SETTINGS, stateBefore) == 2);
+
+            FigureCreationSettings moreSettings(
+                (DurationProtocolSettings()),
+                (NumberProtocolSettings(juce::ValueTree(IDs::NUMBER_SETTINGS))),
+                (NumberProtocolSettings(
+                    juce::ValueTree(IDs::NUMBER_SETTINGS))));
+
+            f.setCreationSettings(moreSettings);
+
+            auto stateAfter = f.getState();
+
+            REQUIRE(stateCount(IDs::DURATION_SETTINGS, stateAfter) == 1);
+            REQUIRE(stateCount(IDs::NUMBER_SETTINGS, stateAfter) == 2);
+        }
     }
 }

@@ -1,15 +1,18 @@
 target_sources(Tests PRIVATE
     main.cpp
+    DurationProtocolParamsTest.cpp
     EventTest.cpp
     EventListTest.cpp
     FigureListTest.cpp
     FigureProcessorTest.cpp
     FigureTest.cpp
+    NumberProtocolSettingsTest.cpp
     ParticleListTest.cpp
     ParticleTest.cpp
     ProjectStateTest.cpp
     SourceTest.cpp
     SourceListTest.cpp
+    VariantConvertersTest.cpp
 )
 
 add_subdirectory(Helpers)

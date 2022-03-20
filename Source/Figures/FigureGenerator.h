@@ -6,6 +6,7 @@
 #include "NumberProtocolSelector.h"
 #include "NumericValueEditorWithLabel.h"
 #include "ProjectState.h"
+#include "SettingsReview.h"
 
 #include <CollectionsProducer.hpp>
 #include <DurationsProducer.hpp>
@@ -122,7 +123,9 @@ class FigureGenerator : public juce::Component {
   public:
     FigureGenerator(ProjectState &ps);
     void resized() override;
+    void paint(juce::Graphics &g) override;
 
+    std::shared_ptr<DurationProtocolSettings> durationProtocolSettings;
     std::shared_ptr<aleatoric::DurationsProducer> durationsProducer;
     std::shared_ptr<aleatoric::CollectionsProducer<Particle>> particlesProducer;
     ProjectState projectState;
@@ -132,7 +135,12 @@ class FigureGenerator : public juce::Component {
     juce::TextButton nextBtn {"Next"};
     juce::TextButton previousBtn {"Previous"};
     juce::Label errorMessage;
+    SettingsReview durationsReview;
+    SettingsReview durationsSelectionsReview;
+    SettingsReview particleSelectionsReview;
 
   private:
+    int margin {20};
+    int mainAreaWidth {400};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FigureGenerator)
 };

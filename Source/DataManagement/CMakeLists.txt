@@ -26,6 +26,7 @@ target_sources(Montage PRIVATE
     SourceManager.h
     StateService.cpp
     StateService.h
+    VariantConverters.h
 )
 
 target_include_directories(Montage
@@ -55,6 +56,7 @@ target_sources(Tests PRIVATE
     SourceList.h
     StateService.cpp
     StateService.h
+    VariantConverters.h
 )
 
 target_include_directories(Tests
