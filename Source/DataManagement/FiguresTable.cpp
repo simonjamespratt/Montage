@@ -28,6 +28,11 @@ FiguresTable::FiguresTable(const ProjectState &ps)
                                 400);
     table.getHeader().addColumn("Name", Columns::name, 100, 50, 400);
     table.getHeader().addColumn("ID", Columns::id, 100, 50, 400);
+    table.getHeader().addColumn("Creation settings",
+                                Columns::showCreationSettings,
+                                100,
+                                50,
+                                400);
 }
 
 void FiguresTable::resized()
@@ -181,6 +186,18 @@ juce::Component *FiguresTable::refreshComponentForCell(
         return textLabel;
     }
 
+    if(columnId == Columns::showCreationSettings) {
+        auto *settingsBtn =
+            static_cast<CreationSettingsCell *>(existingComponentToUpdate);
+
+        if(settingsBtn == nullptr) {
+            settingsBtn = new CreationSettingsCell(*this);
+        }
+
+        settingsBtn->setRowAndColumn(rowNumber, columnId);
+        return settingsBtn;
+    }
+
     jassert(existingComponentToUpdate == nullptr);
     return nullptr;
 }
@@ -214,6 +231,12 @@ juce::String FiguresTable::getText(const int columnNumber,
     return juce::String("");
 }
 
+Figure FiguresTable::getFigureByRow(int rowNumber) const
+{
+    // see above in setText() re. why access via vector index is not ideal
+    return figureList.getObjects()[rowNumber];
+}
+
 // Private methods
 void FiguresTable::refreshTable()
 {
@@ -222,7 +245,7 @@ void FiguresTable::refreshTable()
     table.updateContent();
 }
 
-// ======================================================
+// ===================================================================
 EditableCell::EditableCell(FiguresTable &ft) : owner(ft)
 {
     setEditable(false, true);
@@ -245,4 +268,71 @@ void EditableCell::setRowAndColumn(const int newRow, const int newColumn)
     row = newRow;
     columnId = newColumn;
     setText(owner.getText(columnId, row), juce::dontSendNotification);
+}
+
+// ===================================================================
+FigureSettings::FigureSettings(Figure f)
+: durationsReview("Duration Creation Settings", juce::Colours::white),
+  durationsSelectionsReview("Duration Selection Settings",
+                            juce::Colours::white),
+  particleSelectionsReview("Particle Selection Settings", juce::Colours::white)
+{
+    auto settings = f.getCreationSettings();
+
+    if(settings == nullptr) {
+        addAndMakeVisible(noContentMessage);
+    } else {
+        durationsReview.setMessage(settings->durations);
+        durationsSelectionsReview.setMessage(settings->durationSelection);
+        particleSelectionsReview.setMessage(settings->particleSelection);
+
+        addAndMakeVisible(durationsReview);
+        addAndMakeVisible(durationsSelectionsReview);
+        addAndMakeVisible(particleSelectionsReview);
+    }
+}
+
+void FigureSettings::resized()
+{
+    auto area = getLocalBounds();
+    area.reduce(10, 10);
+    auto h = area.getHeight() / 3;
+
+    noContentMessage.setBounds(area);
+
+    durationsReview.setBounds(area.removeFromTop(h));
+    durationsSelectionsReview.setBounds(area.removeFromTop(h));
+    particleSelectionsReview.setBounds(area.removeFromTop(h));
+}
+
+// ===================================================================
+CreationSettingsCell::CreationSettingsCell(FiguresTable &ft) : owner(ft)
+{
+    addAndMakeVisible(btn);
+    btn.onClick = [this] {
+        auto f = owner.getFigureByRow(row);
+        showSettingsModal(f);
+    };
+}
+
+void CreationSettingsCell::resized()
+{
+    btn.setBoundsInset(juce::BorderSize<int>(2, 8, 2, 8));
+}
+
+void CreationSettingsCell::setRowAndColumn(const int newRow,
+                                           const int newColumn)
+{
+    row = newRow;
+    columnId = newColumn;
+}
+
+void CreationSettingsCell::showSettingsModal(Figure f)
+{
+    juce::DialogWindow::LaunchOptions o;
+    o.content.setOwned(new FigureSettings(f));
+    o.content->setSize(300, 600);
+    o.dialogBackgroundColour = juce::Colours::darkgrey;
+    o.dialogTitle = "Figure Settings";
+    o.launchAsync();
 }

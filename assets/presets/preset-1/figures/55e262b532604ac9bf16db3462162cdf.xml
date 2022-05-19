@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<EDIT appVersion="Unknown" projectID="0/1995f1" creationTime="1646163178414"
+<EDIT appVersion="Unknown" projectID="0/3161038" creationTime="1652212213361"
       modifiedBy="Simon Pratt">
   <TRANSPORT/>
   <MACROPARAMETERS id="1001"/>
@@ -65,32 +65,20 @@
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="brick" start="6.0" length="0.3899999999999997" offset="0.16"
-               id="1041" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
-               pan="0.0" colour="ffff0000">
-      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
-                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
-    </AUDIOCLIP>
     <AUDIOCLIP name="brick" start="8.0" length="0.3900000000000006" offset="0.16"
-               id="1045" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               id="1043" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffff0000">
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="brick" start="12.0" length="0.3900000000000006" offset="0.16"
-               id="1051" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="brick" start="13.0" length="0.3900000000000006" offset="0.16"
+               id="1049" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffff0000">
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="brick" start="14.0" length="0.3900000000000006" offset="0.16"
+    <AUDIOCLIP name="brick" start="16.0" length="0.3900000000000006" offset="0.16"
                id="1053" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
-               pan="0.0" colour="ffff0000">
-      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
-                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
-    </AUDIOCLIP>
-    <AUDIOCLIP name="brick" start="18.0" length="0.3900000000000006" offset="0.16"
-               id="1057" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffff0000">
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
@@ -101,8 +89,38 @@
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="brick" start="28.0" length="0.3900000000000006" offset="0.16"
+    <AUDIOCLIP name="brick" start="23.0" length="0.3900000000000006" offset="0.16"
+               id="1063" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffff0000">
+      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="brick" start="27.0" length="0.3900000000000006" offset="0.16"
                id="1069" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffff0000">
+      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="brick" start="29.0" length="0.3900000000000006" offset="0.16"
+               id="1071" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffff0000">
+      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="brick" start="30.0" length="0.3900000000000006" offset="0.16"
+               id="1073" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffff0000">
+      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="brick" start="32.0" length="0.3900000000000006" offset="0.16"
+               id="1075" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffff0000">
+      <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="brick" start="44.0" length="0.3900000000000006" offset="0.16"
+               id="1091" source="../../../audio/brick.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffff0000">
       <LOOPINFO rootNote="-1" numBeats="3.510839002267574" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
@@ -127,56 +145,68 @@
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="5.0" length="0.2000000000000002" offset="0.0"
-               id="1039" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="click" start="3.0" length="0.2000000000000002" offset="0.0"
+               id="1037" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
     <AUDIOCLIP name="click" start="7.0" length="0.2000000000000002" offset="0.0"
-               id="1043" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+               id="1041" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="10.0" length="0.1999999999999993" offset="0.0"
-               id="1047" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="click" start="14.0" length="0.1999999999999993" offset="0.0"
+               id="1051" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="11.0" length="0.1999999999999993" offset="0.0"
-               id="1049" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
-               pan="0.0" colour="ffffaa00">
-      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
-                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
-    </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="16.0" length="0.1999999999999993" offset="0.0"
+    <AUDIOCLIP name="click" start="17.0" length="0.1999999999999993" offset="0.0"
                id="1055" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="24.0" length="0.1999999999999993" offset="0.0"
-               id="1063" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="click" start="19.0" length="0.1999999999999993" offset="0.0"
+               id="1057" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffffaa00">
+      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="click" start="21.0" length="0.1999999999999993" offset="0.0"
+               id="1061" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
     <AUDIOCLIP name="click" start="26.0" length="0.1999999999999993" offset="0.0"
-               id="1065" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
-               pan="0.0" colour="ffffaa00">
-      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
-                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
-    </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="27.0" length="0.1999999999999993" offset="0.0"
                id="1067" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="click" start="30.0" length="0.1999999999999993" offset="0.0"
-               id="1071" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="click" start="34.0" length="0.2000000000000028" offset="0.0"
+               id="1079" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffffaa00">
+      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="click" start="35.0" length="0.2000000000000028" offset="0.0"
+               id="1081" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffffaa00">
+      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="click" start="36.0" length="0.2000000000000028" offset="0.0"
+               id="1083" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffffaa00">
+      <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="click" start="40.0" length="0.2000000000000028" offset="0.0"
+               id="1087" source="../../../audio/click.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffffaa00">
       <LOOPINFO rootNote="-1" numBeats="0.4197278911564626" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
@@ -195,14 +225,44 @@
     <PLUGIN type="level" id="1030" enabled="1">
       <MACROPARAMETERS id="1031"/>
     </PLUGIN>
-    <AUDIOCLIP name="glass" start="3.0" length="0.165" offset="0.125" id="1037"
+    <AUDIOCLIP name="glass" start="5.0" length="0.165" offset="0.125" id="1039"
                source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffaaff00">
       <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
     </AUDIOCLIP>
-    <AUDIOCLIP name="glass" start="22.0" length="0.1649999999999991" offset="0.125"
-               id="1061" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+    <AUDIOCLIP name="glass" start="10.0" length="0.1649999999999991" offset="0.125"
+               id="1045" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffaaff00">
+      <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="glass" start="12.0" length="0.1649999999999991" offset="0.125"
+               id="1047" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffaaff00">
+      <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="glass" start="25.0" length="0.1649999999999991" offset="0.125"
+               id="1065" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffaaff00">
+      <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="glass" start="33.0" length="0.1649999999999991" offset="0.125"
+               id="1077" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffaaff00">
+      <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="glass" start="38.0" length="0.1649999999999991" offset="0.125"
+               id="1085" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
+               pan="0.0" colour="ffaaff00">
+      <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
+                numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>
+    </AUDIOCLIP>
+    <AUDIOCLIP name="glass" start="42.0" length="0.1649999999999991" offset="0.125"
+               id="1089" source="../../../audio/glass.wav" sync="0" elastiqueMode="0"
                pan="0.0" colour="ffaaff00">
       <LOOPINFO rootNote="-1" numBeats="2.915600907029479" oneShot="0" denominator="4"
                 numerator="4" bpm="0.0" inMarker="0" outMarker="-1"/>

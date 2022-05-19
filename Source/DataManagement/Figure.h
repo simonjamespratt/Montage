@@ -1,7 +1,21 @@
 #pragma once
 
+#include "DurationProtocolParams.h"
+#include "NumberProtocolSettings.h"
+
 #include <functional>
 #include <juce_data_structures/juce_data_structures.h>
+
+struct FigureCreationSettings {
+    FigureCreationSettings(const DurationProtocolSettings &d,
+                           const NumberProtocolSettings &ds,
+                           const NumberProtocolSettings &ps)
+    : durations(d), durationSelection(ds), particleSelection(ps)
+    {}
+    DurationProtocolSettings durations;
+    NumberProtocolSettings durationSelection;
+    NumberProtocolSettings particleSelection;
+};
 
 class Figure : public juce::ValueTree::Listener {
   public:
@@ -16,6 +30,9 @@ class Figure : public juce::ValueTree::Listener {
 
     bool getIsGenerated() const;
     void setIsGenerated(bool isGenerated);
+
+    std::unique_ptr<FigureCreationSettings> getCreationSettings() const;
+    void setCreationSettings(const FigureCreationSettings &settings);
 
     juce::ValueTree getState() const;
 

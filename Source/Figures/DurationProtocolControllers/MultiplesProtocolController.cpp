@@ -30,14 +30,12 @@ MultiplesProtocolController::MultiplesProtocolController(
     addAndMakeVisible(&multipliersByHandButton);
 
     multipliersByRangeButton.onClick = [this] {
-        toggleMultiplierStrategy(
-            &multipliersByRangeButton,
-            MultiplesProtocolParams::MultiplierStrategy::range);
+        toggleMultiplierStrategy(&multipliersByRangeButton,
+                                 MultiplierStrategy::range);
     };
     multipliersByHandButton.onClick = [this] {
-        toggleMultiplierStrategy(
-            &multipliersByHandButton,
-            MultiplesProtocolParams::MultiplierStrategy::hand);
+        toggleMultiplierStrategy(&multipliersByHandButton,
+                                 MultiplierStrategy::hand);
     };
 
     multipliersByRangeButton.setToggleState(true, juce::sendNotification);
@@ -71,16 +69,16 @@ void MultiplesProtocolController::resized()
 
 // Private methods
 void MultiplesProtocolController::toggleMultiplierStrategy(
-    juce::Button *button, MultiplesProtocolParams::MultiplierStrategy strategy)
+    juce::Button *button, MultiplierStrategy strategy)
 {
     auto newState = button->getToggleState();
     auto isActive = newState;
 
-    if(strategy == MultiplesProtocolParams::MultiplierStrategy::hand) {
+    if(strategy == MultiplierStrategy::hand) {
         multipliersEditorViewport.setVisible(newState);
     }
 
-    if(strategy == MultiplesProtocolParams::MultiplierStrategy::range) {
+    if(strategy == MultiplierStrategy::range) {
         rangeStartEditor.setVisible(newState);
         rangeEndEditor.setVisible(newState);
     }

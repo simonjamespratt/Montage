@@ -7,19 +7,19 @@
 #include <stdexcept>
 
 std::unique_ptr<DurationProtocolController>
-DurationProtocolController::create(Type type, DurationProtocolParams &params)
+DurationProtocolController::create(DurationProtocolType type,
+                                   DurationProtocolParams &params)
 {
+    params.activeType = type;
+
     switch(type) {
-    case Type::geometric:
-        params.activeType = DurationProtocolController::Type::geometric;
+    case DurationProtocolType::geometric:
         return std::make_unique<GeometricProtocolController>(params);
         break;
-    case Type::multiples:
-        params.activeType = DurationProtocolController::Type::multiples;
+    case DurationProtocolType::multiples:
         return std::make_unique<MultiplesProtocolController>(params);
         break;
-    case Type::prescribed:
-        params.activeType = DurationProtocolController::Type::prescribed;
+    case DurationProtocolType::prescribed:
         return std::make_unique<PrescribedProtocolController>(params);
         break;
 
@@ -32,22 +32,20 @@ std::unique_ptr<aleatoric::DurationProtocol>
 DurationProtocolController::createProtocol(DurationProtocolParams &params)
 {
     switch(params.activeType) {
-    case DurationProtocolController::Type::geometric: {
+    case DurationProtocolType::geometric: {
         auto &geoParams = params.geometric;
         return aleatoric::DurationProtocol::createGeometric(
             aleatoric::Range(geoParams.rangeStart, geoParams.rangeEnd),
             geoParams.collectionSize);
     } break;
-    case DurationProtocolController::Type::multiples: {
+    case DurationProtocolType::multiples: {
         auto &multiParams = params.multiples;
-        if(multiParams.strategy ==
-           MultiplesProtocolParams::MultiplierStrategy::range) {
+        if(multiParams.strategy == MultiplierStrategy::range) {
             return aleatoric::DurationProtocol::createMultiples(
                 multiParams.baseIncrement,
                 aleatoric::Range(multiParams.rangeStart, multiParams.rangeEnd),
                 multiParams.deviationFactor);
-        } else if(multiParams.strategy ==
-                  MultiplesProtocolParams::MultiplierStrategy::hand) {
+        } else if(multiParams.strategy == MultiplierStrategy::hand) {
             return aleatoric::DurationProtocol::createMultiples(
                 multiParams.baseIncrement,
                 multiParams.multipliers,
@@ -58,7 +56,7 @@ DurationProtocolController::createProtocol(DurationProtocolParams &params)
         }
 
     } break;
-    case DurationProtocolController::Type::prescribed: {
+    case DurationProtocolType::prescribed: {
         return aleatoric::DurationProtocol::createPrescribed(
             params.prescribed.durations);
     } break;

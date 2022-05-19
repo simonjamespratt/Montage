@@ -132,7 +132,7 @@ void Figures::showFigGenModal()
 {
     juce::DialogWindow::LaunchOptions o;
     o.content.setOwned(new FigureGenerator(projectState));
-    o.content->setSize(400, 600);
+    o.content->setSize(700, 600);
     o.dialogBackgroundColour = juce::Colours::darkgrey;
     o.dialogTitle = "Figure Generator";
     o.launchAsync();

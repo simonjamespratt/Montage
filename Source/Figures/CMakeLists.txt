@@ -13,6 +13,10 @@ target_sources(Montage PRIVATE
     NumberProtocolConfig.h
     NumberProtocolSelector.cpp
     NumberProtocolSelector.h
+    NumberProtocolSettings.cpp
+    NumberProtocolSettings.h
+    SettingsReview.h
+    SettingsReview.cpp
 )
 
 target_include_directories(Montage
@@ -21,8 +25,12 @@ target_include_directories(Montage
 )
 
 target_sources(Tests PRIVATE
+    DurationProtocolParams.cpp
+    DurationProtocolParams.h
     FigureProcessor.cpp
     FigureProcessor.h
+    NumberProtocolSettings.cpp
+    NumberProtocolSettings.h
 )
 
 target_include_directories(Tests

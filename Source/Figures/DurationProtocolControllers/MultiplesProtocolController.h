@@ -30,9 +30,8 @@ class MultiplesProtocolController : public DurationProtocolController {
     juce::ToggleButton multipliersByRangeButton {"By Range"};
     juce::ToggleButton multipliersByHandButton {"By hand"};
     int multipliersRadioGroup = 1001;
-    void toggleMultiplierStrategy(
-        juce::Button *button,
-        MultiplesProtocolParams::MultiplierStrategy strategy);
+    void toggleMultiplierStrategy(juce::Button *button,
+                                  MultiplierStrategy strategy);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MultiplesProtocolController)
 };

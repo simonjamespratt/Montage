@@ -1,5 +1,6 @@
 #pragma once
 #include "ProjectState.h"
+#include "SettingsReview.h"
 
 #include <functional>
 #include <juce_gui_basics/juce_gui_basics.h>
@@ -43,10 +44,17 @@ class FiguresTable : public juce::Component, public juce::TableListBoxModel {
 
     juce::String getText(const int columnNumber, const int rowNumber) const;
 
+    Figure getFigureByRow(int rowNumber) const;
+
     juce::TableListBox table;
 
   private:
-    enum Columns : int { figureNum = 1, name = 2, id = 3 };
+    enum Columns : int {
+        figureNum = 1,
+        name = 2,
+        id = 3,
+        showCreationSettings = 4
+    };
 
     juce::Label heading;
 
@@ -72,4 +80,34 @@ class EditableCell : public juce::Label {
     int row;
     int columnId;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EditableCell)
+};
+
+class FigureSettings : public juce::Component {
+  public:
+    FigureSettings(Figure f);
+    void resized() override;
+
+  private:
+    SettingsReview durationsReview;
+    SettingsReview durationsSelectionsReview;
+    SettingsReview particleSelectionsReview;
+    juce::Label noContentMessage {"", "No information to display"};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FigureSettings)
+};
+
+class CreationSettingsCell : public juce::Component {
+  public:
+    CreationSettingsCell(FiguresTable &ft);
+    void resized() override;
+    void setRowAndColumn(const int newRow, const int newColumn);
+
+  private:
+    void showSettingsModal(Figure f);
+
+    FiguresTable &owner;
+    juce::TextButton btn {"View"};
+    int row;
+    int columnId;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CreationSettingsCell)
 };
