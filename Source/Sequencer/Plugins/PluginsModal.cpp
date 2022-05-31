@@ -209,7 +209,21 @@ void PluginsModal::handleAsyncUpdate()
 
 void PluginsModal::loadPlugins()
 {
-    plugins = track->pluginList.getPlugins();
+    auto tempPlugs = track->pluginList.getPlugins();
+    juce::ReferenceCountedArray<te::Plugin> removees;
+
+    for(auto p : tempPlugs) {
+        if(p->getIdentifierString() == "volume" ||
+           p->getIdentifierString() == "level") {
+            removees.add(p);
+        }
+    }
+
+    for(auto p : removees) {
+        tempPlugs.removeObject(p);
+    }
+
+    plugins = tempPlugs;
     pluginsList.updateContent();
     pluginsList.repaint();
 }
